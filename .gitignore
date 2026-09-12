@@ -1,0 +1,197 @@
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# =============================================================================
+# Virtual Environment
+# =============================================================================
+.venv/
+venv/
+ENV/
+env/
+
+# =============================================================================
+# IDE / 编辑器
+# =============================================================================
+.idea/
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+*.suo
+*.user
+
+# =============================================================================
+# 敏感信息（绝不上传 GitHub）
+# =============================================================================
+API_Key.txt
+*.key
+*.secret
+.env
+.env.*
+secrets/
+config.local.*
+config.local.yml
+config.local.json
+credentials.*
+
+# =============================================================================
+# 操作系统垃圾
+# =============================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
+# =============================================================================
+# 大型二进制数据（不应入库，留本地使用）
+#   ArcGIS / GeoTIFF / 影像 / MapInfo / FileGDB / Geopackage / ESRI / OSM / 自家 GeoJSON
+# =============================================================================
+Dynamic_*/
+*.json
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.sbn
+*.sbx
+*.lyr
+*.shp.xml
+*.mxd
+*.gdb/
+*.gpkg
+*.mdb
+*.accdb
+*.tif
+*.tiff
+*.img
+*.ecw
+*.mrf
+*.mrfsid
+*.las
+*.laz
+*.pdf
+# ↑ 大型 PDF（如 LTA 用户指南）默认不入库，按需单独 track
+
+# =============================================================================
+# 中间 / 临时产物
+# =============================================================================
+sg_feasibility_outputs/
+scripts/tests/__pycache__/
+*.bak
+*.tmp
+*.swp
+*.orig
+*.rej
+*.gz
+
+# 临时 / 未命名文件
+无标题.mxd
+Untitled.*
+~$*
+.~lock.*
+
+# =============================================================================
+# 大型压缩包 / JDK / MATSim 安装包
+# =============================================================================
+tools/*.zip
+tools/jdk-*/
+tools/matsim-*/
+
+# =============================================================================
+# 大型数据格式 / 数据列存储
+# =============================================================================
+*.parquet
+*.docx
+*.doc
+*.xls
+*.xlsx       # GHS 2025 等数据集：本仓库不推大文件
+*.pptx
+*.png        # 报告中的大图，README 引用即可
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.bmp
+
+# reports/ 输出：本仓库不存仿真输出，仅保留 .md 报告
+/reports/**/*.csv
+/reports/**/*.txt
+/reports/**/*.xml
+/reports/**/*.gz
+/reports/**/*.parquet
+/reports/**/*.png
+
+# =============================================================================
+# Singapore_OD_MATSim_FinalData/：完整数据集仓库（9 GB）
+#   不入库，使用前按 docs/DATASETS.md 下载后放置此目录
+#   10_Documentation/ 下的说明文件保留
+# =============================================================================
+/Singapore_OD_MATSim_FinalData/**/*.geojson
+/Singapore_OD_MATSim_FinalData/**/*.csv
+/Singapore_OD_MATSim_FinalData/**/*.xlsx
+/Singapore_OD_MATSim_FinalData/**/*.parquet
+/Singapore_OD_MATSim_FinalData/**/*.png
+/Singapore_OD_MATSim_FinalData/**/*.pdf
+/Singapore_OD_MATSim_FinalData/**/*.kml
+/Singapore_OD_MATSim_FinalData/**/*.kmz
+/Singapore_OD_MATSim_FinalData/**/*.gdb/
+/Singapore_OD_MATSim_FinalData/**/07_RoadNetwork/**
+/Singapore_OD_MATSim_FinalData/**/05_POI_Enterprise/ACRA/**
+
+# 但保留 10_Documentation 下的说明文件
+!/Singapore_OD_MATSim_FinalData/**/*.md
+!/Singapore_OD_MATSim_FinalData/**/.gitkeep
+!/Singapore_OD_MATSim_FinalData/README.md
+
+# =============================================================================
+# Static_ 2026_03/OTHER/goverment_open：政府开放数据集
+#   包含 GHS 2025、ACRA、MasterPlan2019 等大型数据，不入库
+# =============================================================================
+/Static_ 2026_03/OTHER/goverment_open/**
+
+# 但保留 .md / .gitkeep
+!/Static_ 2026_03/OTHER/goverment_open/.gitkeep
+!/Static_ 2026_03/OTHER/goverment_open/README.md
+
+# siteselect_sg-main/dataset（也是数据集，不入源码仓库）
+/Static_ 2026_03/OTHER/siteselect_sg-main/dataset/**
+
+# =============================================================================
+# 云同步锁（百度网盘、OneDrive）
+# =============================================================================
+*.sr.lock.*
+*.sr-lock.*
+.baiduyun.uploading.cfg
+.baiduyun.cfg
+*.onedrive.sync
+*.OneDrive*
+
+# =============================================================================
+# 日志
+# =============================================================================
+*.log
+logs/
