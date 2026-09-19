@@ -1,0 +1,2 @@
+﻿experiment_id,lambda_per_min,lambda_tag,f_demand,f_demand_nominal,n_agents,scale_used,scale_rule,f_realized,sum_expansion_factor,persons,pop_source,pop_source_sum_ef,route_choice,f_cap,target,primary_metric,primary_window,reference_window,run_id
+W01,0.075,0p075,1.180222,1.180222,236044,2.29897,FROZEN_2.29897_NOT_RECOMPUTED,1.1801564117192442,542628.8371700381,236044,D:\Luan\2026-05\2_Singapore\reports\matsim_departure_6_3_3a\population_lambda_0p075.xml.gz,459793.99999298644,R01_rc_min,1.0,7.3.6A_FROZEN,MATCHED_SimObs_08_09,Qbar_10:19,Q_19,W01_rc_min

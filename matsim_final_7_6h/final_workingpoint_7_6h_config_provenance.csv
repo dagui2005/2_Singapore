@@ -1,0 +1,4 @@
+﻿experiment_id,module,param,r01_value,new_value,in_whitelist
+W01,controller,outputDirectory,D:\Luan\2026-05\2_Singapore\matsim_routechoice_7_6d\outputs\R01_rc_min,D:\Luan\2026-05\2_Singapore\matsim_final_7_6h\outputs\W01_rc_min,True
+W01,controller,runId,R01_rc_min,W01_rc_min,True
+W01,plans,inputPlansFile,D:\Luan\2026-05\2_Singapore\reports\matsim_departure_6_3_3a\population_lambda_0p075.xml.gz,D:\Luan\2026-05\2_Singapore\matsim_final_7_6h\populations\pop_W01\population_lambda_0p075.xml.gz,True

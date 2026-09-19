@@ -1,0 +1,23 @@
+﻿item,frozen_value,source_or_rule
+lambda_ref,0.075,7.6G 敏感度中心（⛔ 非数据最优 λ）
+f_demand_ref,1.180222,7.6G L75 直跑实测隐含 f*
+f_demand_interp,1.1803,7.6F-1 曲线插值（对照，非主值）
+N_base,"200,000",采样基准（仅作 SCALE 锚）
+N_sim,"236,044","round(f_ref × 200,000) ⇒ 物理加车"
+SCALE,2.29897,"★ΣT/N_base；⛔ 不得改为 459,794/N_sim"
+f_cap,1.00,冻结（非性能旋钮）
+route_choice,R01_rc_min,"7.6E 冻结：innovation 0.8 / [ReRoute .15, ChangeExpBeta .85] / lr .5 / randomness 0"
+iterations,20,判据取 it.19 linkstats
+target,7.3.6A Frozen Final Crosswalk,只读；要改须另立 7.3.6A-b
+primary_metric,MATCHED Sim/Obs 08-09,HRS8-9avg
+primary_window,Qbar_10:19,ΣHRS0-24avg（与 Sim/Obs 窗口⛔不可混用）
+reference_window,Q_19,同上
+band_lambda,"[1.1637, 1.1938]",7.6G λ 敏感带（动态响应）
+band_static_target,"[1.06945, 1.16418]",7.6C-2 静态靶场带（⛔ 不与 λ 带合并）
+
+# 派生量（仅披露）,,
+N_sim_if_f_rounded_to_1.1802,"236,040",与采用值差 4 agent
+SCALE_if_recomputed_sumEF_over_Nsim,1.947916,Δ=-152700 ppm ⇒ NOT USED
+f_realized,1.1801564,产物实测（ground truth）
+sum_expansion_factor,542628.8371700381,复制后人口实测 ΣEF
+checks,24/24,零仿真校验

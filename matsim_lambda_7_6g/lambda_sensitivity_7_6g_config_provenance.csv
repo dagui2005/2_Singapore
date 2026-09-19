@@ -1,0 +1,10 @@
+﻿experiment_id,module,param,r01_value,new_value,in_whitelist
+L05,controller,outputDirectory,D:\Luan\2026-05\2_Singapore\matsim_routechoice_7_6d\outputs\R01_rc_min,D:\Luan\2026-05\2_Singapore\matsim_lambda_7_6g\outputs\L05_rc_min,True
+L05,controller,runId,R01_rc_min,L05_rc_min,True
+L05,plans,inputPlansFile,D:\Luan\2026-05\2_Singapore\reports\matsim_departure_6_3_3a\population_lambda_0p075.xml.gz,D:\Luan\2026-05\2_Singapore\matsim_lambda_7_6g\populations\pop_L05\population_lambda_0p050.xml.gz,True
+L75,controller,outputDirectory,D:\Luan\2026-05\2_Singapore\matsim_routechoice_7_6d\outputs\R01_rc_min,D:\Luan\2026-05\2_Singapore\matsim_lambda_7_6g\outputs\L75_rc_min,True
+L75,controller,runId,R01_rc_min,L75_rc_min,True
+L75,plans,inputPlansFile,D:\Luan\2026-05\2_Singapore\reports\matsim_departure_6_3_3a\population_lambda_0p075.xml.gz,D:\Luan\2026-05\2_Singapore\matsim_lambda_7_6g\populations\pop_L75\population_lambda_0p075.xml.gz,True
+L10,controller,outputDirectory,D:\Luan\2026-05\2_Singapore\matsim_routechoice_7_6d\outputs\R01_rc_min,D:\Luan\2026-05\2_Singapore\matsim_lambda_7_6g\outputs\L10_rc_min,True
+L10,controller,runId,R01_rc_min,L10_rc_min,True
+L10,plans,inputPlansFile,D:\Luan\2026-05\2_Singapore\reports\matsim_departure_6_3_3a\population_lambda_0p075.xml.gz,D:\Luan\2026-05\2_Singapore\matsim_lambda_7_6g\populations\pop_L10\population_lambda_0p100.xml.gz,True

@@ -1,0 +1,9 @@
+﻿source,strategyName,weight
+R01_baseline,ReRoute,0.15
+R01_baseline,ChangeExpBeta,0.85
+F05,ReRoute,0.15
+F05,ChangeExpBeta,0.85
+F15,ReRoute,0.15
+F15,ChangeExpBeta,0.85
+F25,ReRoute,0.15
+F25,ChangeExpBeta,0.85

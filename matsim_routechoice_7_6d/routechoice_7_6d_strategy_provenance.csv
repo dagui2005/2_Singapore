@@ -1,0 +1,4 @@
+﻿source,strategyName,weight
+baseline,ReRoute,1.0
+new,ReRoute,0.15
+new,ChangeExpBeta,0.85
