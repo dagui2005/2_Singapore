@@ -3085,6 +3085,1046 @@ python scripts/od/audit_external_data_7_7a.py   # 零仿真审计（6/6 PASS）�
 `c1_group_envelope.csv`、`c1_radial_reciprocal.csv`、`c1_rank_preservation.csv`、`c1_summary.json`）。
 脚本 `scripts/od/audit_temporal_sensitivity_7_7c1.py`。**零仿真；未改冻结参数；未选 λ / demand scale。**
 
+### 2.44 Step 7.7D 空间残差归因收口（零仿真收口审计）
+
+**定位**：**收口审计**，不创造新解释变量；只把 7.6H / 7.7A / 7.7C-0 / 7.7C-1 的证据串成可正式关闭的归因链。
+**原则**：缺证据 ⇒ `BLOCKED`；有证据但不满足 ⇒ `FAIL`；**不猜**。
+
+**判决：`SPATIAL_RESIDUAL_ATTRIBUTION_CLOSED_WITH_UNRESOLVED_STRUCTURAL_LAYER`（硬门 7/7 + 软门 2/2 PASS；零仿真）**
+
+| 门 | 名称 | 类型 | 结果 |
+|---|---|---|---|
+| G1 | W01 独立验证锚点复核 | 硬 | PASS（SimObs `0.9993347696792919`；EAST `-0.3175244561953319` / radial_in `-0.3067274364274516` / NE `0.3388326175136829` 逐位） |
+| G2 | 7.7C-0 ↔ W01 口径一致性 | 硬 | PASS（对 7.6H **实测真值**逐位，tol `1e-12`；`14/14`） |
+| G3 | f 变化下空间残差稳定性 | 软 | PASS（R01/F05/F15/F25；EAST 恒最低、NE 恒最高；max span **1.851 pp**） |
+| G4 | λ 变化下空间残差稳定性 | 软 | PASS（R01/L05/L75/L10；排序保持；max span **3.227 pp**） |
+| G5 | `radial × reciprocal` 结构闭环 | 硬 | PASS（in\|False **0.9915**、out\|False **1.3546** > in\|False、in\|True **0.1738** < in\|False；f/λ **8/8** 且 C1 **7/7 profile** 结构保持） |
+| G6 | temporal 上界闭环 | 硬 | PASS（ratio **0.1104**；`TEMPORAL_SPATIAL_SENSITIVITY_FAIL_DEFER_HTS`） |
+| G7 | 车型/方式构成空间排除 | 硬 | PASS（`6/6`；`COMPOSITION_EXPLAINS_GLOBAL_LEVEL_NOT_SPATIAL_PATTERN`） |
+| G8 | 已排除层明确化 | 硬 | PASS（**机会校正** `eta2_excess` ≤ .001：road_class −0.0069 / section_crosswalk −0.0021 / observation_semantics −0.0004 / network_representation −0.0017） |
+| G9 | 剩余结构层明确化 | 硬 | PASS（机制层与排除层**不相交**） |
+| G10 | 收口判决 | 硬 | PASS（全部硬门 PASS） |
+
+**归因三类**：
+- **已解释**：全局水平 `f_work=1.180222`；阻抗 `λ_ref=0.075`（可检测不可识别）；车型构成 `car_share_pmv=0.682452`（**仅总量级**）。
+- **已排除**：`road_class` / `section aggregation` / `observation semantics` / `temporal realization` / `scalar demand·λ tuning`。
+- **未解释（收缩到结构层）**：`PA/OD spatial allocation`、`reciprocal-twin network representation`、`directionality`、`section-to-network correspondence`。
+
+**★结论边界（必须随结论引用）**：本步**不**证明 twin/directionality 已构成**因果机制**，仅证明**其他已检验层不足以解释剩余空间残差** ⇒ 问题被**收缩到结构性层**。
+
+产物：`reports/spatial_residual_closure_7_7d/`（`d_checks.csv` / `d_closure_summary.json` / `STEP7_7D_REPORT.md`，含证据 manifest sha256）。
+脚本 `scripts/od/audit_spatial_residual_closure_7_7d.py`（**适配器版**；预置占位路径版存 `.user_orig_backup`）。
+**零仿真；未跑 MATSim；未改 7.3.6A / f / λ / R01 route-choice。⛔ 不再为追 HRS8-9 聚合拟合跑 demand/λ grid 或 HTS MATSim 标定。**
+
+---
+
+### 2.45 Step 7.8 Final Model Freeze & Validation Package 最终模型冻结（**本轮完成；零仿真定版；判 `FINAL_MODEL_FROZEN_AND_REPRODUCIBLE`，硬门 23/23**）
+
+**定位**：7.7D 收口后，**从「研究」切换到「定版」** —— 不再产生新分析结论，只把 7.3→7.7D 的已验证链条整理成**不可歧义 / 可复现 / 可引用 / 可交付**的最终版本。⛔ **不跑 3×4 网格、不再细搜 f/λ、不再调 demand**。
+
+**脚本** `scripts/od/freeze_final_model_7_8.py`（零仿真；只读 14 件冻结输入；仅写入新目录 `reports/final_model_7_8/`）。
+
+#### 1) 7.8A 参数冻结
+
+| 项目 | 最终值 | 来源 |
+|---|---:|---|
+| `f_work` | **1.180222** | 7.6G `L75` direct（7.6H 冻结） |
+| `λ_ref` | **0.075** | 7.6G sensitivity center（⛔ **非最优 λ**） |
+| `SCALE` | **2.29897** | 7.4 / 全流程冻结（★ΣT/N_base，⛔ 不按 ΣEF/N_sim 重算） |
+| `f_cap` | **1.00** | 7.4 capacity freeze |
+| Route Choice | **`R01_rc_min`** | 7.6E |
+| Sim agents | **236,044** | `W01` = round(f_work × N_base) |
+| Crosswalk | **7.3.6A** | frozen（只读） |
+| Calibration target | **0.8589732** | 7.6C-2 `FROZEN`（主口径） |
+
+**★措辞纪律（强制，须随结论引用）**：
+> λ=0.075 作为经过灵敏度分析后的**工作中心参数**；7.6G 表明 λ 对**总体水平**具有**可检测**影响，但在**现有观测与误差边界下不足以实现可靠参数识别**。⛔ **不得写作「最优 λ / 数据最优 λ」**。
+
+> `f_work=1.180222` 是**最终工作点**，**不意味着需求规模参数具有唯一真实值**（总量证据只能给区间，见 7.6A/7.6G）。
+
+三层带**独立成列、⛔ 不得合并**：工作点 `f*=1.180222` / λ 敏感带 **[1.1637, 1.1938]** / 静态靶场带 **[1.06945, 1.16418]**。
+
+#### 2) 7.8B 输入与算法冻结（版本锁）
+
+| 层 | 冻结条目 |
+|---|---|
+| Input | Census 2020；ACRA / building / landuse / POI；OSM network；LTA TrafficFlow；existing network / zone mappings |
+| OD | 332 Subzones；gravity；λ=0.075；IPF；Census workplace controls；attraction disaggregation |
+| Sampling | `FLOOR_PLUS_1`；`N_base=200,000`；`SCALE=2.29897` |
+| Network | frozen MATSim network；`f_cap=1.00`；frozen zone→node/link realization |
+| Route Choice | `R01_rc_min` |
+| Crosswalk | 7.3.6A |
+
+> **版本语义**：7.8 之后**任何**修改上述条目，**都不属于「最终模型参数调整」，而属于新模型版本**（v1.1 Structural Repair）。
+
+#### 3) 7.8C 最终验证包（`W01`）
+
+`N_sim` **236,044** / `f_realized` **1.1801564** / `f_work` **1.180222** / `Sim/Obs FROZEN` **0.9993347697** / implied `f*` **1.180866**。
+稳定性：`A_10:19`(M/C/S) **0.8899 / 0.9038 / 0.8568 %**、`parity gap` **0.0964%**、`Q19/Q̄` **1.001972**、`never_arrived=0` / `max_stuck_car=0`、departure = arrival = **236,044**。
+跨步对账（口径未漂移）：X1 三口径 Δ ≤ **4.9e-8**、X2 四口径 **Δ = 0.00e+00**（逐位）。
+
+#### 4) 7.8D 空间残差边界（★保留，不藏）
+
+**Final Model — Known Spatial Residual Boundary**（55 行：region 5 / radial 3 / PA 37 / 关键 PA 10）。这不是「失败项」，而是最终模型**显式披露的已知边界**：
+
+| 层级 | 组 | ratio | rel_dev vs global |
+|---|---|---:|---:|
+| region | EAST | 0.6820 | **−31.75%** |
+| radial | `radial_in` | 0.6928 | **−30.67%** |
+| region | NORTH-EAST | 1.3379 | **+33.88%** |
+| pa | ORCHARD | 2.4184 | **+142.00%** |
+| pa | BUKIT TIMAH | 2.3845 | **+138.61%** |
+| pa | TUAS | 0.1300 | **−86.99%** |
+| pa | HOUGANG | 0.1301 | **−86.98%** |
+
+归因三类（7.7D 继承）：**已解释** f / λ / 构成·总量级；**已排除** road_class·section aggregation·observation semantics·temporal realization·scalar demand·λ；**未解释** ⇒ `PA/OD spatial allocation` · `reciprocal-twin network representation` · `directionality` · `section-to-network correspondence` ⇒ **`UNRESOLVED_STRUCTURAL_LAYER`**。**★这比强行把所有 section ratio 拉到 1 更有研究价值。**
+
+#### 5) 7.8E 最终模型 Manifest + #168 完整性门
+
+`FINAL_MODEL_MANIFEST.json` 固定模型身份：`model_version = Singapore_OD_MATSim_Final_v1.0`、`f_work=1.180222`、`lambda_ref=0.075`、`scale=2.29897`、`f_cap=1.0`、`route_choice=R01_rc_min`、`sim_agents=236044`、`crosswalk=7.3.6A`、`calibration_target=0.8589732`、`validation=W01`、`spatial_residual_status=UNRESOLVED_STRUCTURAL_LAYER`；并含 14 件冻结输入 sha256 证据 manifest + config 指纹。
+
+**★#168 完整性门（23 条，全 PASS）**：冻结真值逐位一致（G1–G7）/ config 继承 7.6E 四项（G8）/ 运行控制（G9）/ 冻结输入存在（G10–G11）/ OD 结构未变 71,136 正 cell（G12）/ `car_od_total` 459,794（G13）/ 三层带未合并（G14）/ 空间残差仍在（G15）/ 上游判决一致（G16–G19）/ 纪律（G20）/ 6 件产品落盘（G21）/ **跑前后冻结件 mtime+sha256 逐位未变（G22，read-only 硬证据）** / `W01` it.19 产物存在（G23）。
+
+#### 6) 产物
+
+`reports/final_model_7_8/`（9 件）：**6 件正式产品** = `FINAL_MODEL_SPECIFICATION.md` / `FINAL_VALIDATION_REPORT.md` / `FINAL_PARAMETER_FREEZE.json` / `FINAL_VALIDATION_METRICS.csv` / `FINAL_SPATIAL_RESIDUAL_BOUNDARY.csv` / `FINAL_MODEL_MANIFEST.json`；+ `STEP7_8_REPORT.md` / `f_integrity_checks.csv` / `step7_8_summary.json`。
+
+#### 7) ★停止规则（本项目节奏控制）
+
+**7.8 完成后 STOP。** 后续若继续研究，属**新研究问题** `7.9 Structural Repair / Model v1.1`，**而非**「继续把 v1.0 的 `Sim/Obs` 从 0.9993 调到 1.00」——两者性质完全不同。
+
+**纪律**：`zero_simulation=True` / `matsim_rerun=False` / `parameters_changed=False` / `lambda_selected=False` / `demand_scale_selected=False` / `frozen_artifacts_touched=False`。
+
+**★本步自查 2 处脚本缺陷（均为自身核对逻辑、非数据问题）**：① G6 曾以**发布用四舍五入常量**（0.8589732）配逐位比较 ⇒ 改为按 7.6C-2 自声明 `tol=1e-6` 核对并保留全精度真值（Δ=4.331e-08）；② G21 曾在 manifest 自身写入**前**扫描产品 ⇒ 改为落盘后**两遍写 + 全量重扫**（manifest 内 `products` 仅列非自身 5 件，避免自 hash 循环声明）。
+
+#### 8) ★7.8-VIZ 可视化看板 + **已录产物缺陷勘误**（附加件，非冻结产品）
+
+**新增 2 件附加件**（`reports/final_model_7_8/`，⛔ 不属于 6 件冻结产品）：
+
+| 文件 | 内容 |
+|---|---|
+| `FINAL_MODEL_DASHBOARD.html` | **自包含单文件看板**（219 KB；零 CDN / 零依赖 / 离线可开；浅深主题自适应）。12 面板：① 总体水平表盘 ② 收敛稳定性 ③ 三层区间数轴 ④ 归因 η²_excess 排序 ⑤ 已解释/已排除/未解释 ⑥ 空间残差边界（4 级 + 排序）⑦ **口径校验** ⑧ 断面 Sim-Obs log-log 散点 ⑨ SVY21 空间残差图 ⑩ 断面明细表（可排序）⑪ #168 门 23/23 ⑫ 版本线 + 停止规则 |
+| `ERRATUM_spatial_residual_boundary_pa_all.csv` | 勘误：`pa_all` 37 行的 frozen / true / Δ / 两种 rel_dev |
+
+生成器 `scripts/od/make_final_model_dashboard_7_8.py`（零仿真、只读；0.5 s）。
+
+**★★发现并定位 1 处冻结产物缺陷（仅限展示表，模型身份与 #168 全部 23 门不受影响）**
+
+- **症状**：`FINAL_SPATIAL_RESIDUAL_BOUNDARY.csv` 的 `pa_all` 层 ratio 出现**负值**（BEDOK −0.357807、HOUGANG −0.869825…）。
+- **根因**：源文件 `7.7C-0 / c0_6_pa_gradient.csv` 的列 **`R_PA` 实际语义是「Q−1（相对偏离）」**（核对：ANG MO KIO `R_PA`=0.681533 ⇒ 真值 ratio=Σsim/Σobs=**1.680415**；ORCHARD 1.419980 ⇒ **2.418370**）。而 `freeze_final_model_7_8.py` L366–367 把它当 ratio ⇒ **双重变换**：`ratio_FROZEN = R_PA`（偏 **−1.0**）、`rel_dev_vs_global = R_PA − 1`（再偏 **−1.0**）；该层 **37/37 行全部受影响**（max |Δ| = 0.9999）。
+- **其余三层正确**（从 576 断面表重算核对，|Δ| ≤ 4.6e-7 = 发布四舍五入精度）：`region` 5/5、`radial` 3/3、`pa_key` 10/10。
+- **处置**：⛔ **未就地改冻结件**（守 7.8 纪律：改锁 = v1.1）⇒ 看板按**真值**呈现 + 挂「口径校验」面板显式标注 + 另出 `ERRATUM_*.csv`。**是否升 `v1.0.1`（勘误版）待用户裁定。**
+
+**★本步自查 3 处口径陷阱（第 3 次出现同族错误，已固化为纪律）**
+
+1. **「逐位一致」不能随口说**：冻结 CSV 的 ratio 按**发布精度**四舍五入存储（region/radial 6 dp、pa_key 5 dp）⇒ 逐位比对必然 FAIL；判定容差须取 **1e-6**，并把精度事实写进产物文案。（与 7.7D G2 / 7.8 G6 同族。）
+2. **聚合样本必须与冻结口径同源**：按「有坐标」筛掉 2 个断面 ⇒ 全局 ratio 变化 ⇒ **所有 rel_dev 整体偏移 0.07 pp**（NE 33.95% vs 冻结 33.88%）。⇒ **分组聚合用全 576 行；坐标只决定「能否进图」**。
+3. **`rel_dev_vs_global` 定义 = `ratio / 全局ratio − 1`**，**不是** `ratio − 1`（EAST 上差 ~1e-3，足以让对账误判）。
+
+**★渲染验证链（自建，可复用）**：`node --check` 内联 JS → **jsdom 无头 DOM 执行**（`jsdom@22.1.0`；Node 20 需 CJS 版，装托管工作区 + `NODE_PATH`）断言 14 面板非空 + 表格 574 行 → **Chrome headless 截图**（`--blink-settings=preferredColorScheme=1/2` 双主题 + `--force-device-scale-factor=2` 局部放大）+ PIL 分片目检。L2 抓出 1 处对账 bug；L3 抓出 4 处视觉缺陷（`**` 未渲染 / 零流断面被画成最显眼点 / 灰条不可见 / 网格列宽为负）。
+
+---
+
+
+### 2.46 Step 7.8-VIZ-RUN 为 VIA 可视化重跑 W01 并开启 events（**输出层重执行；判 `VIA_EVENTS_REPRODUCTION_CONFIRMED_BITEXACT`，40/40**）
+
+**起因**：用户追问「用 VIA 看哪个 MATSim 文件夹是最终成果」。核查发现 **7.8 定版 W01 无 events**——`config_W01_rc_min.xml` 里 `writeEventsInterval = 0`；而 VIA 官方支持的输入 = network / events / plans / facilities / transit schedule，**车辆层（唯一能做车流动画的层）只能靠 events**。核对 **7.6 全家族**（`matsim_final_7_6h` / `matsim_demand_7_6f_1` / `matsim_lambda_7_6g`）**一律无 events**（当时为省 ~1.5 GB/次 × 9 次关掉）。
+
+**做法 = 输出层重执行（⛔ 非新模型版本）**：新目录 `matsim_viz_7_8/`，`matsim_final_7_6h/` **一字未动**。**白名单差异仅 3 项**：`controller.outputDirectory`、`controller.runId`（`W01_rc_min` → `W01_events`）、`controller.writeEventsInterval`（`0` → `19`）；**214 个参数全展开（含 `<parameterset>`）逐位比对，非白名单差异 = 0**。准备步 **29/29 PASS**（判 `PREPARED_AWAITING_RUN`），含 V0/V31「14 件冻结输入 sha256 == 7.8 登记值」、V1「源配置 sha256 == `8f44fb349bff9cf1`」、V5–V15c「7.6E route-choice 五项 + R01 + f_cap + 人口/路网引用逐项继承」。
+
+**MATSim 2026.0 注释实证 events 语义**：`iterationNumber % writeEventsInterval == 0` 写该迭代；`dumpDataAtEnd=true` 且 `lastIteration=19` 为间隔整数倍 ⇒ **在输出根目录再写一份** ⇒ it.0 + it.19 + 根目录 ≈ 4.5 GB；**it.0 是未收敛路线的流量、非最终模型 ⇒ 跑完即删（V48，释放 1.76 GB）**。
+
+**结果**（**117.67 min**，heap 24g，exit 0；过程门 **40/40 PASS**）：
+
+- **★重放 `BITEXACT`**：it.19 linkstats **693,575 / 693,575** 行 **max|Δ| = 0.0**、`relΣ = 0.00e+00` ⇒ **本轮与新模型无关，是同一模型的字节级等价重放**。
+- events **163,305,988** 条 / **1.69 GB**；`departure = arrival = **236,044**`（== 冻结 `N_sim`，**零滞留**）；`entered_link = left_link = **80,708,818**`；`PersonEntersVehicle = vehicle enters traffic = 236,044`。
+- **14 件冻结输入跑前后 sha256 + mtime 逐位未变**（V30/V31）；冻结 W01 配置仍 `writeEventsInterval=0`、其输出目录仍 **0 个 events**（V32/V33，未被污染）；`freeze_final_model_7_8.py` 复跑 **G22 `changed=[]`** ⇒ **v1.0 身份不变**。
+- **★两个 events 文件字节完全相同**（sha256 `c9b61fba06d8a9b0…`，各 1.69 GB，**非硬链接**）⇒ 目录内 **1.69 GB 冗余**，给 VIA 任选其一即可。新目录总占用 **3.9 GB**。
+
+**★VIA 食用方式**：要**车流动画** → 开 `matsim_viz_7_8/outputs/W01_events/`（network + events + plans + links.csv + vehicles）；要**定版基准** → `matsim_final_7_6h/outputs/W01_rc_min/`（静态层 + `output_links.csv.gz` 的 `vol_car` / WKT 几何，**无动画**）。完整步骤见 `matsim_viz_7_8/README.md`。
+
+**★本步自查 4 处缺陷（同族第 4 次，已固化为纪律）**
+
+1. **配置 diff 解析器漏 `<parameterset>`** —— 而 **route-choice 恰藏在 `<parameterset type="strategysettings">`** 里 ⇒ 原先的 diff 是「**假安全**」（覆盖不完整）。已改为**全展开 214 键**。
+2. **★键名必须从产物读、不能猜**：route-choice 真实键名不是 `strategy.ReRoute` / `planCalcScore.learningRate`，而是 `replanning[?].weight`（`strategyName=ReRoute` / `ChangeExpBeta`）、`replanning.fractionOfIterationsToDisableInnovation`、`scoring.learningRate`、`routing.routingRandomness`。
+3. **★重放判定不能写死「必须逐位」**：配置是 `qsim.numberOfThreads = 8` / `global.numberOfThreads = 8`，多线程跨次运行不保证逐位 ⇒ 改**分级** `BITEXACT` / `NUMERIC_EQUIVALENT`（max|Δ|≤1e-9 且 Σ 相对差≤1e-12）/ `APPROXIMATE`（≤0.5 且 ≤1e-6，**通过但带警告**）/ `DIVERGED`（FAIL）。
+4. **Edit 工具连中 3 次「报告成功但未落盘」**（`write_readme` 签名、`verify` 签名、`count_events`）⇒ 最终**整文件 Write 重写**才落地。再次印证既有教训。
+
+---
+
+
+### 2.47 Step 7.8-VIA-DIAG「VIA 早高峰不拥堵」三层诊断（**零仿真只读派生；非新版本**）
+
+**起因**：用户追问「为什么我用 VIA 看仿真结果，新加坡全市早高峰一点儿都不拥堵？」
+
+**结论：三层叠加**（⛔ 不是模型跑错）：
+
+| 层 | 原因 | 关键证据 |
+|---|---|---|
+| **① 可视化层（主因）** | VIA 的 **Network 层本身不带任何交通属性**；供 VIA 的 `output_links.csv.gz` 只有 **10 列**（`link, from_node, to_node, length, freespeed, capacity, lanes, modes, vol_car, geometry`），**无任何行程时间/速度/延误字段** ⇒ Link Coloring 只有静态字段，`freespeed` 是**设计速度**。 | VIA 手册 §3.2.5 **`Dynamic Link Attributes`**：*"Displays traffic volumes or average link speeds ... **Requires a loaded network file and an events file.**"* ⇒ **必须另加该层**，再把 **aggregation window 设 08:00–09:00**、颜色属性改 **`speed`**。按 volume 着色也不显堵（v/c 中位数 **0.0236**） |
+| **② 路网表征层** | **693,575 条有向碎段**，长度中位数 **11.0 m** / 均值 21.8 m（总长 15,126.5 km）；**>200 m 仅 3,463 / >500 m 167 / >1 km 仅 23**；单车道 51.1%。全市尺度下单段 < 1 像素；且 MATSim 行程时间**取整秒** ⇒ 几米路段倍率失真。 | 倍率 × 长度：**0–20 m 1.757** → 20–50 m 1.311 → 100–200 m 1.096 → **>500 m 1.018** |
+| **③ 模型层（真实）** | **v/c 恒 ≤1**（max **1.000000**，>1.0 的 **0 条**；>0.5 仅 **1.22% 路段 / 17.79% 车流**）⇒ 容量相对需求严重富余，仿真不会出现「堵死」红链。 | 全网拥堵指数 **1.4143**（全部）→ 剔 ≤20 m **1.2671** → 剔 ≤50 m **1.2091** → 剔 ≤100 m **1.1082**；需求 **236,044 辆全在 07–09 出发**，峰值在途 **36,799 辆** ≈ **2.4 辆/km** |
+
+**★「堵的很多」≠「看得见」**（同一批载流路段换口径结论相反）：
+
+| 倍率 | 按**条数** | 按**长度**（≈视觉面积） |
+|---|---|---|
+| ≤1.2 | 42.6% | **66.3%** |
+| 1.5–2.0 | 17.6% | 8.6% |
+| >2.0 | **16.1%** | 3.0% |
+
+⇒ 长路段（视觉占主导）恰好自由流，高倍率全是几米短段 ⇒ 地图「偏绿」是**面积权重**的必然结果。
+
+**★本步自查 2 处**：
+
+1. **按位置贴两表 ⇒ 整体错配**：首版把 linkstats 的值**按行号**贴到 network CSV 上，而**两表行序不同** ⇒ 地图配色与属性文件整体错位（地图仍「偏绿」，肉眼不易察觉）。改为 **按 `link id` 显式 `merge`** + 内建自检 `np.allclose(LENGTH, network.length)`；交叉校验链路 `e157170_157176`（期望 speed 86.09 / ratio 1.045 / load 0.9509）**逐位一致**。
+2. `pd.Categorical == label` 返回 **ndarray**（非 Series）⇒ `.to_numpy()` 报 `AttributeError`，用 `np.asarray(...)`；matplotlib 中文须 `addfont(msyh.ttc)` + `rcParams['font.sans-serif']`。
+
+**产物**（`reports/via_congestion_diagnosis_7_8/`，⛔ 非 7.8 冻结产品）：
+`VIA_CONGESTION_DIAGNOSIS.md`、`via_link_attributes_HRS8-9.tsv`（**693,575 行**，首列 `link`，含 `vol / speed_kmh / cong_ratio / load_vc / delay_s_per_km` × 0708/0809 ⇒ VIA **Attributes Manager** 可直接加载）、`congestion_map_and_diagnostics_HRS8-9.png`（A/B 地图 + C 倍率×长度 + D 条数vs长度 + E 出发时刻 + F v/c + G 指数塌缩）、`diagnosis_summary.json`。
+脚本 `scripts/od/diagnose_via_congestion_7_8.py`（零仿真，<2 min）。`matsim_viz_7_8/README.md` 已加「只加 Network 层不会显示拥堵」小节。
+
+---
+
+
+### 2.48 Step 7.7E 拥堵状态合理性审计（**零仿真只读事后审计；判 `CONGESTION_STATE_PLAUSIBILITY_AUDIT_COMPLETE`，硬门 20/20**）
+
+**起因**：用户在 7.8-VIA-DIAG 之后追加裁定 —— 「VIA 看不出拥堵」不能只归给可视化；必须回答
+**「当前模型匹配了断面*流量*，是否产生了*合理的拥堵状态*？」**，并**明令禁止为提高 demand 让动画变堵**。
+
+**性质**：⛔ **只读事后审计** —— 零 MATSim 重跑、未改任何冻结输入/参数/产物；模型仍是
+`Singapore_OD_MATSim_Final_v1.0`（23/23 门不受影响）。数据源仅 `matsim_viz_7_8/outputs/W01_events/`
+（输出层重执行、已判 `BITEXACT`）+ `reports/matsim_network/network_links_source_copy.csv`（含 OSM `highway`/`name`）。
+产物全在 `reports/congestion_plausibility_audit_7_7e/`（⛔ **非 7.8 冻结产品**）。
+
+**★0 两条必须先纠正的口径**（本轮推翻既有读法）：
+
+1. **`v/c ≤ 1` 是结构性质，不是「容量富余」**：MATSim 链路流出被容量截断，需求超额表现为**上游排队**而非该链路 `v/c > 1`
+   ⇒ `v/c = HRS8-9avg / CAPACITY` **恒 ≤ 1**；`v/c = 1.000000` = **已饱和 + 正在排队**。
+   （7.8-VIA-DIAG 曾把 `max v/c = 1.000000` 读成「容量富余」，此处**更正**。）
+2. **★★`qsim.timeStepSize = 1 s` ⇒ 既有「拥堵倍率」口径被量化污染**：本网络链路自由流时间
+   **中位 1.37 s / 均值 2.93 s**（>500 m 仅 29 条），多数链路不足一个时间步；1 s 步长下链路行程时间被
+   **向上取整**（`TT_recorded = ceil(FF)`）⇒ **即使零延误**，`TT/FF = ceil(FF)/FF ≫ 1`。
+
+**★E1 容量来源**：`capacity = lanes × capacityPerLane(road_type)`，每车道容量是 `road_type` 的**确定性函数**；
+限速与源副本**逐位一致**；源副本 `lanes` 有 27 万余条缺失（不参与比较），可比区间内车道数完全一致。
+快速路/高速（motorway 1900 / trunk 1800 / motorway_link 1700）**在 HCM 参考带内**、并未被抬高；
+**超出上沿的是干道与地方道路**（primary 1500>1200、secondary 1200>1000、residential 700>600）
+⇒ **H1「容量被设得离谱地大」不成立**。容量利用率：全部 **7.9%** / 已载流 **12.8%** / 快速路走廊 **28.5%** / 干道 7.8% / 地方 0.9%。
+
+**★E2/E2b 走廊与量化审计**（10 条快速路：PIE/AYE/CTE/ECP/TPE/SLE/BKE/KPE/KJE/MCE）：
+
+| 口径 | 结果 |
+|---|---|
+| 原始 `TT/FF` | 1.20–1.44，看起来「每条都在堵」 |
+| **`ceil(FF)/FF` 量化基准** | 1.20–1.40（**只由路网几何决定**） |
+| **扣量化后真实超额** | **9/10 条 ≈ 0（−0.002 ~ +0.008）；只有 CTE +0.085（105 车时）** |
+
+**跨时段对照（决定性）**：量化基准在所有时段恒定 **1.567–1.596**；实测倍率随需求 1.552–4.705；
+**几乎空网的 12–13 时（仅 18,694 车·链路）倍率仍有 1.552 ≈ 基准 1.596** ⇒ **该口径测的是量化、不是拥堵**。
+**82.56% 载流链路零延误**（`|TT/FF − ceil(FF)/FF| < 0.05`）。单车级样本：链路 `e138309_138310`
+（15.924 m，FF = 0.955 s）07:00 有 23 辆车，`sum_tt` **恰为 23.0 s** = 每车恰好 1 s = `ceil(0.955)`。
+
+**★按道路类型分解真实延误（本步最关键的新证据；08–09 全网 4,779 车时）**：
+
+| road_type | 载流链路 | **真实超额** | **扣量化延误 车时** | **占比** |
+|---|---:|---:|---:|---:|
+| **`service`** | 62,407 | **+5.580** | **4,509** | **94.4%** |
+| `motorway` | 4,025 | +0.017 | **105** | **2.2%** |
+| `motorway_link` | 8,113 | +0.052 | 68 | 1.4% |
+| `residential` | 71,237 | +0.027 | 25 | 0.5% |
+| `primary` | 23,979 | +0.005 | 20 | 0.4% |
+| `secondary` / `trunk` / `tertiary` | 17,722 / 4,302 / 17,756 | +0.006 ~ +0.032 | 16 / 14 / 13 | 0.3% 各 |
+
+⇒ **「真实拥堵延误」的主体是大量 20 km/h 单车道 `service` 接入短段（每车道容量仅 400 辆/h）的局部瓶颈**，
+**不是城市快速路的排队拥堵**；`motorway` 仅 **105 车时**且**全部落在 CTE**。
+**饱和链路 82 条 / 总长 1.15 km**：**74 条是 6 m 左右 `service` 短段**；**8 条是 CTE motorway**
+（4 车道 / 90 km/h / 容量 7600，节点 `7214→7215→…→7221→20261` 首尾相接，SVY21 x≈29.4–29.7k、y≈33.0–33.3k
+= CTE 中段 Jalan Toa Payoh / Kampong Java 一带），构成 **≈0.40 km 排队链**。
+
+**★E3 拥堵是否形成连续空间结构**（宇宙 = 载流且长度 ≥20 m，n = 82,167；按 `to_node == next.from_node` 串链；**200 次随机置换**）：
+
+| 判据 | 候选链路 | 最长连续链 | 随机均值 | p | z |
+|---|---:|---:|---:|---:|---:|
+| 原始 `TT/FF > 1.2` | 27,690 | 0.601 km | 1.402 km | 1.000 | −2.54 |
+| 原始 `TT/FF > 1.5` | 2,728 | 0.420 km | 0.623 km | 0.870 | −0.78 |
+| **★扣量化 真实超额 > 0.1** | 638 | **0.499 km** | 0.417 km | **0.165** | **+0.46** |
+
+两套**原始**口径的 z 为负 ⇒ 被量化伪影标记的链路**比随机散布更分散**（正符合伪影特征：`ceil(FF)/FF`
+只取决于该链路 FF 的小数部分，与地理/上下游无关）。**扣量化后的真实口径与随机散布不可区分（p = 0.165，不显著）**，
+最长仅 0.499 km ⇒ **模型没有形成任何「连续几公里的拥堵走廊」**。
+
+**★E4 07:00–09:00 峰值演化**：峰值在途 **36,799 辆 @ 08:55**（= `N_sim` 236,044 的 **15.6%**）、峰值/中位 **8.27**；
+15 min 网络 `Σ流量/Σ容量` 峰值仅 **0.102**；真实超额全程 **+0.083 ~ +0.221** ⇒ **无拥堵波**；
+events↔linkstats 交叉校验最大相对差 **0.0000%**。
+（⚠️ 09:15 后需求崩塌、仅 `service` 短段载流 ⇒ 倍率被动放大，属**伪影放大而非拥堵波**，图中已显式标注。）
+
+**裁决**：
+
+| 假设 | 证据 | 裁决 |
+|---|---|---|
+| H1 容量过大 | 快速路每车道容量在参考带内；已载流利用率 12.8% | **不成立** |
+| H2 OD 时空实现不足 | 峰值在途仅占 agents 的 15.6%；快速路走廊利用率 28.5% | **主因** |
+| H3 路网表征稀释 | 693,575 条中 65% 是 `service`；FF 中位 1.37 s | **成立（放大视觉错觉）** |
+| **H4 度量伪影（本步最重要）** | `timeStepSize = 1 s` ⇒ `TT/FF ≥ ceil(FF)/FF`；空网时段仍报 1.55；82.56% 链路零延误 | **决定性，推翻既有「拥堵倍率」口径** |
+
+**一句话**：不是「有点堵但 VIA 没显示」，而是**扣掉 1 秒量化伪影后全网基本不堵**；全网 4,779 车时真实延误中
+**94.4% 落在 `service` 接入短段**、**`motorway` 仅 105 车时（全在 CTE）**；
+**快速路走廊层面唯一成形的真实拥堵 = CTE 约 0.40 km 排队链**。
+
+**★★「交通流量校准成功 ≠ 拥堵状态校准成功」得到数据支持**：576 断面 `Sim/Obs = 0.9993348`（总量级匹配）
+vs 已载流利用率 12.8% / `Σ流量/Σ容量` 峰值 0.102 / 无拥堵波 / 快速路走廊真实超额 ≈ 0（9/10）
+⇒ **交通状态形成机制未被校准**。两者不矛盾。
+
+**★纪律（用户硬约束）**：⛔ **不得为「让动画堵起来」而放大 demand**（`f_work = 1.180222` / `Sim/Obs = 0.9993348` 是已冻结结果）；
+正确路径 = **7.9 Structural Repair / v1.1**（容量/车道/瓶颈/出发剖面结构修复 + **调小 `qsim.timeStepSize` 或改用逐车行程时间评价**），须另立版本 + 独立验证链。
+
+**产物**（`reports/congestion_plausibility_audit_7_7e/`，⛔ 非冻结产品）：
+`CONGESTION_PLAUSIBILITY_AUDIT_7_7E.md`（报告）、`congestion_plausibility_audit_7_7e.png`（6 面板）、
+`e1_capacity_provenance_by_roadtype.csv` / `e1_capacity_anomalies.csv` / `e1_network_supply_vs_demand.csv`、
+`e2_corridor_congestion_0809.csv` / `e2_roadclass_congestion_0809.csv` / `e2_saturated_links_0809.csv`、
+`e2b_hour_control.csv` / `e2b_length_bucket.csv` / `e2b_corridor_quantization.csv` / **`e2b_roadtype_quantization.csv`**、
+`e3_components_*.csv` ×3 / `e3_continuity_null_test.json`、
+`e4_events_15min_by_link.csv.gz`（缓存 2.03 M 行）/ `e4_network_temporal_15min.csv` / `e4_corridor_temporal_15min.csv` /
+`e4_leg_histogram_5min.csv` / `e4_crosscheck_linkstats.csv`、`audit_summary.json`。
+脚本 `scripts/od/audit_congestion_plausibility_7_7e.py`（零仿真；首次 events 扫描 ~19 min，之后走缓存 ~1 min）。
+
+**★本步自查 4 处**：① 把 `v/c = 1.000000` 读成「容量富余」（实为**饱和 + 排队**）；② 误用被 1 秒量化污染的
+`TT/FF` 口径作拥堵评价（**7.6/7.7 标定用的是断面*流量*（Sim/Obs），未受影响**）；③ 「CTE 是全网唯一真实拥堵」
+**过度概括** ⇒ 修正为「唯一真实拥堵的**快速路走廊**」，并补道路类型分解（`service` 才是延误主体）；④ E3 三判据中
+`真实超额 > 0.1` 的 z 为 **正** ⇒ **不得写「z 全为负」**。★**Edit 工具连 5 次静默丢改动** ⇒ 一律改走
+**Python 锚点补丁 + `assert count == 1`**（本步 14 处锚点全部一次命中）；★matplotlib 缺字形字符（`⛔`/`⇒`）
+须从图内文本剔除（仅影响 PNG，不影响 md）。
+
+---
+
+### 2.49 Step 7.9A-0 采样—容量一致性审计（**v1.0 冻结后的只读结构审查 = 7.9 第一阶段；判 `SAMPLING_CAPACITY_CONSISTENCY_AUDIT_COMPLETE`，硬门 22/22**）
+
+**定位（用户 2026-09-20 裁定）**：`7.8 v1.0 冻结 → 7.7E 事后只读诊断 → 发现状态形成机制结构性不足 → 7.9 Structural Repair / v1.1`。
+本步**不是** 7.8 的前置校准步骤，**不**把结果回灌 v1.0 的参数选择。零仿真、零参数改动、零冻结件触碰。
+**新增** `scripts/od/audit_sampling_capacity_7_9a0.py`（~10 s）⇒ 新目录 `reports/sampling_capacity_audit_7_9a0/`（8 件）。
+
+**一、四个实际生效值（用户指定核实）**
+
+| module | param | v1.0 | 生效? |
+|---|---|---|---|
+| `qsim` | `flowCapacityFactor` | **1.0** | ✅ 生效 |
+| `qsim` | `storageCapacityFactor` | **1.0** | ✅ 生效 |
+| `qsim` | `trafficDynamics` | **`queue`** | ✅ 生效 |
+| `qsim` | `timeStepSize` | **`00:00:01`** | ✅ 生效 |
+| `hermes` | `flow/storageCapacityFactor` | 1.0 | ⛔ 惰性 |
+| `dsim` | `trafficDynamics` | **`kinematicWaves`** | ⛔ **惰性诱饵** |
+| `controller` | `mobsim` | **`qsim`** | 决定谁生效 |
+
+★ **两个口径陷阱**：① 全配置里 `trafficDynamics` 出现 **两次**（`dsim` = `kinematicWaves`、`qsim` = `queue`）⇒ **`mobsim=qsim` 故只有后者生效**，前者是惰性诱饵 —— **只看 key 名会得出完全相反的结论**；② `hermes.*CapacityFactor` 同为 1.0 但**惰性** ⇒ **A-1 的唯一容量旋钮是 `qsim.*`**（保持 `hermes` 不动，与 S100c 同构）。四个值在 **权威 cfg / viz cfg / 两次 MATSim 运行期 dump** 四源逐位一致。
+
+**二、采样比例：一个必须排除的分母歧义（本步最重要发现）**
+
+| 口径 | 值 | 判定 |
+|---|---|---|
+| `s = N_sim / ΣEF` = 236,044 / 459,794 | **0.513369** | ⛔ **误用**（与需求锚混用） |
+| `s = N_sim / (SCALE·N_sim) = 1/SCALE` | **0.434977** | ✅ **capacity 一致性因子** |
+| 两者之比 | **1.180220** | 恒等于 `f_work` ⇒ 已定位为**分母选错** |
+
+**量纲证明（与 `ΣEF` 定义无关）**：`Sim/Obs = 1`（冻结 **0.9993347697**）断言 `F_real = SCALE × F_sim`；要保持 `v/c_sim = v/c_real` 即 `F_sim/C_sim = F_real/C_real` ⇒ **`C_sim = C_real / SCALE` ⇒ `f_cap = 1/SCALE = 0.434977`**。
+`ΣEF = 459,794` 是 **Census 2020 Table 104 `Car Only` 的需求锚**，而模型实际在路网上表示的是 `SCALE × N_sim = 542,658` 辆（= **1.180222 倍**需求锚，用于弥合 7.6A 的 `CALIBER_GAP`：观测含非小汽车、全目的）；拿需求锚当流量分母会把一致性因子算成 0.513369（**偏高 18%，等于容量少砍 18%**）。★ **稳健性**：`1/SCALE = N_base/ΣEF` **与工作点缩放无关** ⇒ A-1 的数值不依赖 `f_work`。
+
+**三、当前模型的物理含义（= 7.7E 结果的机制解释）**：236,044 辆车 = 真实 **43.4977%** 的样本，却跑在 **100% 的容量**上 ⇒ **`v/c_sim ≈ 0.43498 × v/c_real`** —— 这正是「流量可以对上（总量级），但容量竞争不足（状态）」的成因。
+
+**四、零仿真预注册预测（冻结流量一阶上界；高估饱和）**
+
+| 指标 | v1.0 实测 | A-1 预测（上界） | 倍数 |
+|---|---|---|---|
+| `n(v/c≥0.5)` | 2,813 | 16,049 | ×5.71 |
+| `n(v/c≥0.9)` | 220 | 5,413 | ×24.60 |
+| `n(v/c≥1.0)` | **82** | **4,187** | ×51.06 |
+| 饱和里程 | 1.151 km | **178.114 km** | ×154.69 |
+| 饱和里程占全网（15,126.5 km） | 0.008% | **1.177%** | — |
+| 全时段 `Σ流量/Σ容量` | 0.052792 | 0.121368 | ×2.30 |
+| 峰 `aggV/C`（7.7E E4，15 min） | 0.102447 | **0.235522** | ×2.30 |
+
+★ **空间尺度结论（预注册）**：即使按 sample-consistent 容量，饱和里程也**只占全网 1.18%**、峰 `aggV/C` 仅 **0.236** ⇒ **仍不预期出现全网级拥堵波**，改变集中在**局部瓶颈**。
+方向性预测：在途峰值 ↑（车辆滞留更久）、通过量 ↓、**`Sim/Obs` 预计下移** ⇒ ⛔ **`Sim/Obs = 0.9993` 是 v1.0 的流量校准成果，不得作为 A-1 的目标**；A-1 的流量门只是**崩解护栏**（`Sim/Obs >= 0.85`）。⇒ 若实测与投影一致，主因更可能落 **情形 C** ⇒ 第二刀转 **7.9B `trafficDynamics`**（A 容量 / B 动力学 / C 瓶颈结构 **三刀必须串行**）。
+
+**五、7.9A-1 计划（待批准；本步不执行）**：唯一结构变化 = `qsim.flowCapacityFactor` / `qsim.storageCapacityFactor` `1.0 → 0.434977`（**单点派生值，不做 0.35/0.40/0.45/0.50 扫描** —— 那是参数拟合）；新版本 **v1.1**、新目录、新 runId；⛔ 不动 OD / `f_work` / λ / `SCALE` / population 236,044 / R01 / 7.3.6A / network / W01 / `randomSeed=4711`。**四项预注册读法**：A 拥堵显著增强且流量保持 ⇒ 表示尺度统一（非调参）；B 拥堵增强但 stuck/崩溃 ⇒ 转 **7.9B 瓶颈与存储结构**（⛔ 不把容量调回）；C 增强很少 ⇒ 转 **`trafficDynamics`**；D 流量严重恶化 ⇒ 查 flow scale × capacity × departure 耦合。
+
+**★纪律**：⛔ 不为了让 VIA 变红而提高 demand；⛔ 不为制造拥堵降低容量/修改 λ/修改 route-choice；⛔ 不为视觉效果重定义 congestion index。**正确表述** = 「由于模型 population 按 **43.4977%** 样本表示完整交通需求，而 QSim 的流量与存储容量采用**未经 sample adjustment** 的 1.0 倍容量，因此首先检验 sample-consistent capacity representation；该因子由 population representation 独立推导，**不由交通观测误差反演**。」
+
+### 2.50 Step 7.9B-0 交通动力学机制审计（**零仿真只读结构审查 = 7.9 第二阶段；判 `TRAFFIC_DYNAMICS_MECHANISM_AUDIT_COMPLETE`，硬门 16/16**）
+
+**脚本**：`scripts/od/audit_traffic_dynamics_7_9b0.py`（读 v1.0 冻结网络 `matsim_final_7_6h/outputs/W01_rc_min/W01_rc_min.output_network.xml.gz` = 693,575 links / 421,406 nodes，加冻结 cfg；**源码证据 15 条逐条从 `tools/matsim-2026.0/matsim-2026.0-sources.jar` 现场重新核对，非凭记忆**）
+**产物**：`reports/traffic_dynamics_audit_7_9b0/`（7 件：`TRAFFIC_DYNAMICS_AUDIT_7_9B0.md`、`traffic_dynamics_audit_7_9b0.png`（4 面板）、`b0_audit_summary.json`、`b0_fdiag_by_class.csv`、`b0_merge_diverge_enrichment.csv`、`b0_source_evidence.csv`、`_run_b0.log`）
+
+**回答的五问（B1–B5）**
+
+- **B1 当前真正生效的交通动力学**：`qsim.trafficDynamics = queue`；`dsim.trafficDynamics = kinematicWaves` **惰性**（`controller.mobsim = qsim`）；`qsim.inflowCapacitySetting` **未在 cfg 中设置 ⇒ 取 MATSim 默认 `INFLOW_FROM_FDIAG`**。
+- **B2 `queue` 是否带 inflow 约束 —— 没有（源码级证明）**：`QueueWithBuffer.initializeQSim` 内 `switch (trafficDynamics) { case queue: case withHoles: break; ... }`（**L393–396**）⇒ 不改动 `maxInflowUsedInQsim`，其初值 = `flowCapacityPerTimeStep`（**L391** = 路网容量 × `flowCapFactor`）。**`queue` 的入口约束就是路网自带容量，没有额外的基本图入口限制。**
+- **B3 换成 `kinematicWaves` 会有多少道路被新增入口约束卡住**：`q_fdiag(link) = (permlanes / 7.5) / (1/(15/3.6) + 1/freespeed)`（**L414**；`HOLE_SPEED_KM_H = 15.0`，L175），判据 **`r_fdiag = q_fdiag / network_capacity < 1`**。**被卡 = 21,670 links（3.1244%）= 869.589 km（全网 5.7488%）**。分速度级：local<30 132 条 / 2.4 km；collector 30–50 1,005 / 23.8 km；**arterial 50–70 15,526 / 492.4 km（最大贡献）**；fast 70–90 2,386 / **138.1 km（该类 100%）**；expressway ≥90 2,621 / **212.9 km（97.98%）**。★被移除入口容量合计 **8,784,415 veh/h**。
+- **B4 ★★预登记假设被证伪**：问题「被卡 link 是否集中在 merge / diverge」——**三个独立口径一致给出负富集**：全样本 **0.268×**（merge 占比 71.61% → 19.20%）、同类别 0.18–0.65×、严格 junction（in-degree≥3）**0.090×**；被卡 link 的 from-node 平均入度 **1.207 vs 全样本 1.882**。**机制含义**：KW 的入口上限**不是节点级瓶颈机制**，而是对**高容量 / 高速度路段**的**整体性 ~10–11% 入口削流**（expressway 中位 r = 0.90、fast 0.89）。⚠️ **风险与红线同构：KW 可能让地图「变堵」却不提升结构性保真度**（均匀削流 ≠ 复现瓶颈）⇒ B-1 判据**必须同时**看 (i) 拥堵是否形成、(ii) 拥堵**位置**是否落在 7.7E 的 CTE / `service` 短段。
+- **B5 碎片化网络里瓶颈的有效空间尺度**：link 中位 **11.0 m**、p90 52.0 m；**24.34% 里程在 < 20 m 的 link**；节点间距均值 **35.9 m**（27.9 nodes/km）；度 ≥3 节点 **242,388（16.0 个/km，即每 ~62 m 一个）**；度-2 直通节点 42.5%。★**不存在长「度-2 链」可供聚合**（中位 corridor = 1 条 link）⇒ **7.9C 应做 junction cluster 聚合，而非 corridor 聚合**。KW 储存最低值使 **20,922 links（3.02%）** 储存被放大（`queue` 下为 0）。
+
+**★★A × B 非可加性（直接决定实验设计）**：`flowCapFactor` 缩放 `flowCapacityPerTimeStep`（L386）与 `storageCapacity`（L487），但 **`maxFlowFromFdiag` 刻意不缩放**（源码注释 **L407–412**「leave the inflow capacity (unscaled)」）。⇒ **`f_cap = 1/SCALE ≈ 0.435` 时 FD 入口约束在 0 条 link 上生效**（`f_cap = 1.0` 时 21,670 条）。而 **KW 的储存 / 空洞机制是 `f_cap` 不变**的（`minStorCapForHoles` 与几何储存同比缩放、判据为比值，L547）⇒ 0.435 下 KW 与 `queue` 的差别**只剩储存侧**。⇒ **从机制上支持「B1 用 `f_cap=1.0` 先测 `queue → kinematicWaves`；B2 才叠加 0.435」的串行设计**（⛔ 不要一次改两个机制）。
+
+**7.9B-1 预登记（待批准）**：`f_cap=1.0` / `storage_cap=1.0`，**仅** `qsim.trafficDynamics: queue → kinematicWaves`；其余继承 v1.0（含 route-choice 锁、`stuckTime=10`、`removeStuckVehicles=false`）。观测：`Sim/Obs` 仅作**崩解护栏**（≥0.85），⛔ 不再作目标；主看**拥堵状态**指标（`v/c` 分布、饱和里程、峰 `aggV/C`、真实超额 `TT/FF − ceil(FF)/FF`、回溢链长度）。**决断规则**：若无实质变化且 `Sim/Obs` 未崩 ⇒ 判 **`TIMEDYNAMICS_NOT_PRIMARY`** ⇒ 转 7.9C（瓶颈 / 回溢结构）。
+
+**纪律**：零仿真、未跑 MATSim、未改任何冻结件（`matsim_final_7_6h` + `matsim_viz_7_8` 跑前后 mtime+size 快照 **`changed=0`**、201 件）；`stuckTime=10` / `removeStuckVehicles=false` **保留观察、不作 7.9 第一变量**（W01 `never_arrived=0` 已健康）。
+
+
+### 2.51 Step 7.9C-0 结构性瓶颈审计 junction-cluster / short-chain（**零仿真只读结构审查 = 7.9 第三阶段；判 `STRUCTURAL_BOTTLENECK_PRIOR_ESTABLISHED`，硬门 25/25**）
+
+**目的（用户裁定）**：用**网络结构 + 既有观测映射**（⛔ **不用 W01 拥堵结果**）先把「哪里**应该**堵」定义出来，再把 W01 残差**投影**上去检验。**7.9C 不试图证明「KW 就是瓶颈机制」**；要验证的是两件独立的事：**(A)** 网络本身是否存在足够明显的结构性瓶颈与回溢通道；**(B)** 若存在，`queue` 与 `kinematicWaves` 是否对这些结构产生**不同的传播行为**。
+
+**脚本**：`scripts/od/audit_structural_junction_cluster_7_9c0.py`（门 C0.01–C0.25 共 **25** 门）+ 输入预处理 `scripts/od/_build_network_cache_7_9c0.py` ⇒ `_cache_network_7_9c0.npz`（693,575 link 属性 + 421,406 节点坐标 + 574 断面 crosswalk 索引）。
+**产物**：`reports/structural_junction_cluster_audit_7_9c0/`（10 件：报告 / 6 面板图 / summary JSON / 单元表 / L2 链表 / L3 走廊表 / C2 投影表 / C3 JSON / C4 冻结 JSON / 分层表 / run log）。
+
+**三层空间尺度**
+
+| 层 | 定义 | 规模 |
+|---|---|---|
+| **L1 junction-cluster**（主判据） | 同一自由流层级内、由短链（≤ p90 = **52 m**）连成的连通分量，且含 ≥1 结构种子节点；超 **200** link 的分量按「移除最长 link」**递归**拆解 | **22,722 单元 / 460,001 link（66.3%）/ 6,277 km**；单元规模中位 **10** link、p90 **51**、max **200** |
+| **L2 short-chain** | ramp（`motorway_link`/`trunk_link`）/ connector（`primary/secondary/tertiary_link`）/ service（`service`）按拓扑合并成链 | ramp **500** 链 / connector **2,428** 链 / service **11,638** 链 |
+| **L3 corridor**（**仅宏观诊断**） | 按 OSM `name` 分组的主干/快速路线 | 30 条（7.9B-0 已证 median corridor 退化为单 link ⇒ ⛔ **不作第一判据**） |
+
+**结构种子节点** = 度 ≥ 3 且满足任一结构跃变（≥2 个自由流层级 / 自由流落差 ≥20 km/h / 车道数变化 ≥1 / 容量比 ≥1.25）⇒ 实测 **50,617 个（12.01% 节点）**。
+
+**C1 结构瓶颈先验（⛔ 不含任何仿真流量；门 C0.22 源码自检）**：**节点分数 = `mean(merge_deficit, lane_narrowing, class_transition, ramp_mainline)`**；**单元先验 = 单元内节点分数的最大值**（严重度语义：「该单元是否含结构瓶颈、有多严重」）。分量均值：`merge_deficit` **0.0208** / `lane_narrowing` **0.1030** / `class_transition` **0.2348** / `ramp_mainline` **0.0124**。先验 均值 **0.349** / 中位 **0.375** / p80 **0.417** / max **0.938**。
+★`storage_shortage_proxy` 均值仅 **0.0058** ⇒ 在本路网上**近乎恒 0、判别力为零**，**剔除出分数**（仅作诊断列）。**尺寸偏差** `Spearman(prior, log 单元规模) = 0.0251`（可忽略；因已限制单元 ≤200 link）。
+
+**C2 既有残差的结构投影（检验，⛔ 不是定义）**：576 断面（`c0_section_table.csv`）经 **7.3.6A crosswalk** 落到 L1 单元 —— **映射覆盖 574/576 = 99.7%**（link 直连 **304** / 端点兜底 **108** / **空间最近邻 162**；兜底距离 中位 **56.8 m**、p90 **172.8 m**、max **376.4 m**，门 C0.23）。`rel_dev = ratio_8_9 / 池化比 − 1`（池化 `Sim/Obs = **0.999335**`）。
+⇒ **Spearman(单元先验, 单元 rel_dev) = 0.0355**；**置换零分布**（同区域打乱断面，n=400；mean −0.0079 / sd 0.0480）**p(rho ≤ 观测) = 0.8125** ⇒ **无显著同向**。**规模分层后**（十等分、层内重算）median ρ = **0.0359**、负相关层 **4/9**，同样无信号。
+四分位均值：Q1 **−0.0236** / Q2 **0.1619** / Q3 **0.2707** / Q4 **0.1546** ⇒ **无单调趋势**，甚至**最低先验层残差最负**。
+⇒ **结论**：网络**确实存在**可量化的结构性瓶颈（C1 成立），但 W01 的流量残差**并不向这些单元聚集** ⇒ 当前 `queue` 模型「缺失的拥堵」**位置与结构应有位置不一致**，正是 **7.9B-1 要检验的「堵得对不对」**。
+
+**C3「堵得对不对」判据（阈值预先冻结 + v1.0 基线）**
+```
+HitRate  = |模型高拥堵单元 ∩ 结构候选单元| / |模型高拥堵单元|
+Coverage = |结构候选单元 ∩ 模型高拥堵单元| / |结构候选单元|
+随机基线  = |结构候选单元| / |全部单元|    ⇒ lift = HitRate / 随机基线
+```
+阈值：候选 = 先验 ≥ **p80 = 0.4167**；模型高拥堵 = 单元长度加权 `v/c` ≥ **p80 = 0.0220**。
+⇒ v1.0 基线 **HitRate 0.4475 / Coverage 0.3705 / lift 1.852×**（规模分层 macro：0.4218 / 0.3829 / **1.895×**）。
+⚠️ **证伪性警告（两条，先证伪再断言）**：① **值域**：v1.0 几乎无拥堵（饱和 link **82** 个 = 全网 **0.0118%**、饱和里程 **1.151 km**），单元 `v/c` 的 p80 阈值仅 **0.0220** ⇒ 「模型高拥堵单元」在 v1.0 下**近似任意排名**；② **共同因子**：`ρ(prior, 单元单车道容量) = **0.2479**`、`ρ(单元 v/c, 单元单车道容量) = **0.4491**`，且 `fast`/`expressway` 单元 **81.7% / 94.9%** 天然落入候选 ⇒ `lift` 有一部分**不是位置信息**。⇒ **`lift = 1.852×` 不得读作「当前模型已把拥堵放对」**，它是**弱且被容量污染的**基线。
+
+**C4 B-1 最小观察集（提前冻结）**：稳定性（`A_10:19` / parity gap / `never_arrived` / `max_stuck_car` / stuck 命中）、总量（`Sim/Obs`，**仅崩解护栏 ≥0.85**）、链级（`excess delay_h = TT/FF − ceil(FF)/FF`、link/单元 `v/c`）、结构（junction-cluster 拥堵：长度加权 `v/c`、饱和占比）、空间（**HitRate / Coverage / lift**）、连续性（拥堵连通分量长度 km 与个数）、时段（07–09 in-network vehicles，15 min 分箱）、重点对象（**CTE / service 短链 / ramp 链 / connector 链**）⇒ `c0_C4_b1_observation_set.json`。**成功判据 = 能证明 `queue → kinematicWaves` 是否改变拥堵传播机制与空间连续性，而不是「地图变红」。**
+
+**v1.0 拥堵基线与自检**：`v/c ≥ 1` 的 link **82**（0.0118%）、饱和里程 **1.151 km（0.0076%）**、拥堵连通分量 **16** 个（中位 **37.9 m**、最长 **0.403 km** ≈ 7.7E 的 CTE 排队链）——**与 7.9A-0 冻结流量投影的 82 link / 1.151 km 逐位一致（门 C0.17）**。
+
+**纪律**：零仿真、未跑 MATSim、未改任何冻结件（`matsim_final_7_6h` + `matsim_viz_7_8` 跑前后 mtime+size 快照 **`changed=0`**、201 件）；**门 C0.22 源码自检**要求 C1 先验函数体内**不出现** `vc[` / `vol[` / `ratio_8_9` / `sat[`（保证候选集与 W01 流量无关）。
+
+**主线（用户冻结，2026-09-20 更新）**：`7.9A-0 ✓ → 7.9B-0 ✓ → 7.9C-0 ✓ → 7.9B-1 ✓（实验性，未采纳）→ **7.9C-1 ✓（因果解释已被 D-0 修正）** → **7.9D-0 ✓** → **7.9D-1 Ramp Interface Audit ✓** → **7.9D-2 Terminal Representation Audit ✓** → **7.9E-0 Arterial-Layer Delay Attribution ✓（判 `ARTERIAL_LAYER_AUDIT_BLOCKED`）**`；**7.9A-1（sample-consistent capacity）继续不动**；⛔ **7.9A-1 与 7.9B-1 绝不合并**；⛔ **暂不改 `service` 容量 400、暂不改端点吸附**——D-0/D-2 只发现“高度可疑的表示机制”，尚未证明它是主线观测残差的第一原因。**7.9E-0 补充：arterial 承载 off-mainline 车时 63.71%（时间主场），但延误仍以 `service` 居首（57.10%）；冻结靶场 77.8% 为 motorway/motorway_link，arterial 空间残差不可判定（E3 BLOCKED）。** **7.9E-1 补充（根因推进）：E0.09 的「arterial 不可观测」**根因不是匹配质量、也不是 arterial 样本少，而是**冻结靶场的定义域只覆盖 `CATA`(326)+`SLIP_ROAD`(250)——arterial 断面在 576 断面中恒为 0**。独立 diagnostic crosswalk 在全量 1,278 条有几何链路中可标出 **542** 条 arterial（A+B 覆盖 **97.48%**、中位匹配 **0.57 m**、p90 **2.92 m**）⇒ 判 `OBSERVABILITY_BLOCKED`；要检验 arterial 是否残差主场，**必须扩大断面域（新版本）而非放宽匹配**。 **7.9E-2 补充（本步）：** 用 E-1 独立 diagnostic crosswalk + 冻结 SCALE 口径把**诊断**断面域扩到全部 **1,278** 条链路 ⇒ **arterial 残差 n 12 → 542**，A+B 覆盖 **97.48%**、与正式 576 断面 bridge **Spearman 0.9662**；判 **`NO_ARTERIAL_COUPLING_SIGNAL`（12/12）**，但 **RoadCat 分层 `p = 0.05247` 临界**、且分层统计量 **69.3% 来自 CATA 单条误映射链路** ⇒ **arterial 是否残差主场仍不可判**；**★★真正结构 = 道路等级单调梯度**（`primary` +7.6% → `tertiary` −41.7%，flow-weighted），`arterial_core` 三类**符号相反 ⇒ 聚合均值是抵消伪影**。
+
+### 2.52 Step 7.9B-1 `qsim.trafficDynamics: queue → kinematicWaves` 单变量机制实验（**7.9 第四阶段；仿真侧 49/49 + 分析侧 14/14**；判 `KW_CHANGES_CONGESTION_MECHANISM__KW_POSITION_NOT_IMPROVED__STABILITY_OK`）
+
+**目的（用户裁定）**：v1.0 冻结后的**真·单变量机制实验**（⛔ **不是调参实验**）。只切换 **`qsim.trafficDynamics: queue → kinematicWaves`**，其余 v1.0 条件**全部继承**；结果落**独立目录**，⛔ 不碰冻结件。**成功标准不是「比 queue 更堵」，而是「在稳定性不过关的前提下，既产生动力学差异、该差异又具有可解释的空间结构」**。
+
+**脚本**：`scripts/od/run_kw_single_variable_7_9b1.py`（配置派生 + 49 门硬门 + 点火）+ `scripts/od/analyze_kw_7_9b1.py`（零仿真只读三层分析，14 门）+ 输入预处理 `scripts/od/_build_link_unit_map_7_9b1.py` ⇒ `_cache_link_unit_7_9b1.npz`（**溯源执行 7.9C-0 冻结源码切片**重建 link→unit 映射，自校 **22,722 单元逐位一致**）。
+**产物**：仿真 `matsim_kw_7_9b1/`（配置 + `audit/` + `outputs/W01_kw/`）；分析 `reports/kw_single_variable_7_9b1/`（**13 件**，含 `REPORT_7_9B1.md`）。
+
+**diff 裁决（★单变量的核心门）**：模型层 **恰好 1 项** = `qsim.trafficDynamics: queue→kinematicWaves`（门 B1.07）；输出层 **恰好 3 项** = `outputDirectory` / `runId` / `writeEventsInterval`（门 B1.08，**不进入动力学**）；越界改动 **0**（门 B1.09）。
+**惰性诱饵排除**：`dsim.trafficDynamics` 早已是 `kinematicWaves` 且本步**未触碰**（B1.04/B1.12）；生效分支 `controller.mobsim = qsim` 未变（B1.10）；`qsim.inflowCapacitySetting` **未显式覆盖** ⇒ 取 MATSim 默认 **`INFLOW_FROM_FDIAG`**（B1.13，即开启 FD 入口容量约束）。
+**继承性硬门**：`f_cap=1.0`（B1.14）、`stuckTime=10`/`removeStuckVehicles=false`（B1.15）、R01 route-choice（B1.21–B1.24）、`pop_W01`/`network_cleaned`（B1.19/B1.20）。
+**运行期实证机制生效**：控制台出现 `max flow from fdiag < flow cap in network file` / `The flow capacity will be reduced … 'maxInflowUsedInQsim'` / `storage capacity not sufficient for holes` 告警 ⇒ **KW 约束确在起作用，非空转**。
+**仿真侧**：耗时 **177.5 min**（exit=0）；`it.19` linkstats **23.1 MB / 693,575 link**；events **出发 = 到达 = 236,044**（**零滞留**）；14 件冻结输入跑前后 sha256+mtime **`changed=0`**；冻结 W01 配置**未被改写**。
+
+**三层解释（用户冻结框架）**
+
+| 层 | 问题 | 结果 |
+|---|---|---|
+| **L1 动力学** | 有没有产生动力学变化 | ✅ **有，且很大**：`Sim/Obs` **0.9993348 → 0.8506114（−14.9%，险过 0.85 崩解护栏）**；真实超额 >0.1 链路 **4,705 → 18,860（4.0×）**、里程 **58.19 → 200.87 km**；**总延误 4,778.8 → 12,482.1 h（+7,703 h / +161.2%）**；`A_10:19` **0.8899% → 3.5200%** |
+| **L2 连续性** | 有没有形成真正的连续拥堵 | ❌ **没有**：超额连通分量 **3,603 → 8,223（2.3× 更碎）**、最长分量 **0.857 → 0.954 km（仅 +11%）**；**命中 junction-cluster 单元 2,283 → 3,788**（集合大 4×，命中只大 1.7×）；**★超额链路落在候选结构单元内比例 32.54% → 29.45%，富集 1.718× → 1.555×（下降）** |
+| **L3 位置** | 堵的位置有没有改善 | ❌ **没有，略变差**：C3 预登记 **lift 1.852× → 1.835×（Δ −0.017×）**；`ABS_unit_vc_0.5` **3.548× → 3.204×**；C2 式 ρ **+0.0267（p 0.200）→ −0.0078（p 0.485）**；辅助（真实超额）口径 lift **1.679× → 1.601×**（同 v1.0 阈值下 **1.527×**） |
+
+**★关键判读（防误读）**：`v/c ≥ 1` 饱和链路 **82 → 10**、饱和里程 **1.151 → 0.271 km** **不是「拥堵减轻」**，而是 **KW 削流 15% 后贴容量链路整体跌破 1.0**；真正反映拥堵的**延误型指标反向暴涨** ⇒ 「**流量掉了、时间长了**」= KW 典型签名。
+**次级观察（附警示）**：08–09 小时均值恰落在 FD 入口天花板的链路数 **KW = 0 vs v1.0 = 32**。⚠️ 该指标是**巧合级**（`q_fdiag` 为「速率上限」，小时均值天然低于它），**不得**据此说 KW 无效（告警已证生效）；正确读法 = **KW 的入口约束表现为「排队等待」而非「把小时流量压在天花板上」**。
+
+**延误去向（分类别）**：**`service` 4,509.1 → 10,985.1 h（占 KW 总延误 88.0%、占 Δ 84.1%）**；other 74.9→744.8；motorway 119.6→492.8（`mean_v/c` 反降 0.256→0.231）；ramp 69.9→220.7；connector 5.3→38.7；**CTE 走廊 1.76 → 24.22 h（仅占总延误 0.19%）** ⇒ **KW 未复现唯一真实的快速路排队链**（7.7E 的 CTE ≈0.40 km），主体仍是 20 km/h 单车道接入短段。
+
+**红线遵循（★机制变化 vs 位置改善 严格分离）**：①「KW 改变了拥堵传播机制」= **成立**（**仿真结果即可验证**：Δ延误 +7,703 h、Δ超额里程 +142.7 km、Δ分量 +4,620）；②「KW 让位置更接近真实结构瓶颈」= **不成立**（**必须** C3/C4 空间证据，而 C3 lift 微降、C2 ρ 转负且 p 更高、超额落候选单元比例下降、辅助口径同向）。⇒ 满足前者、不满足后者 ⇒ `KW_POSITION_NOT_IMPROVED`。**「变堵了 ≠ 堵得对了」**。
+
+**对冻结状态的影响 = 无**：7.9B-1 是**实验、未被采纳** ⇒ **v1.0 仍为冻结模型，不产生 v1.1**；冻结输入 sha256+mtime `changed=0`（B1.31/B1.32、L9.01）。⚠️ `Sim/Obs` 的 15% 损失源于 **`SCALE` 未在 KW 下重标定**；按 **7.6F-1 纪律禁止用 `ΣEF/N_sim` 重算 `SCALE`**，故如实报告、不做补偿。
+**口径自校验（门 L0.01）**：用冻结模块复算 v1.0 `Sim/Obs` = **0.9993347697**，与冻结值**逐位一致** ⇒ 分析口径与 v1.0 同源。
+
+**★收口结论（用户裁定，2026-09-20）**
+
+> **7.9B 已排除「仅因 QSim `queue` 缺少基础图入口约束而导致城市拥堵缺失」这一单一机制解释。**
+
+三条证据闭环：**① 机制真生效**（唯一模型层改动 + `maxInflowUsedInQsim` 实弹告警）⇒ 不是「改了配置但没走到代码分支」；**② 拥堵形态确实改变**（超额链路 4,705→**18,860**、总延误 4,778.8→**12,482.1 h**、连通分量 3,603→**8,223**）⇒ **不能再把「没有拥堵」简单归因于 `queue` 缺 FD 入口约束**；**③ 决定性一条 = 位置未改善**（落候选比例 **32.54%→29.45%**、lift **1.718×→1.555×**；`CTE` 仅 **24.22 h / 0.19%**、`service` 吃 **88%**）⇒ **很难支持「KW 恢复了正确的快速路回溢机制」**。
+
+**★不得采纳为 v1.1（预登记护栏）**：`Sim/Obs = 0.8506114` **已逼近 0.85 崩解护栏** ⇒ B-1 **只能作为机制诊断实验**，⛔ 不得写入任何参数配置版本。
+
+**★用词更正（C-1 附带）**：B-1 的走廊掩码 `"CTE" in name.upper()` 实际**未命中**字面 "CTE"（v1.0 网络 `name` 中 0 条），其命中集 = `CHANGI ∪ TAMPINES EXP`；`Central Expressway` 正名 = **603 link / 34.55 km**。**7.9C-1 起改用正名**。
+
+### 2.53 Step 7.9C-1 结构性回溢验证 Structural Spillback Validation（**7.9 第五阶段；零仿真只读；硬门 11/11**；判 `SPILLBACK_CHANNEL_INTACT__DELAY_TRAPPED_OFF_MAINLINE`）
+
+**唯一问题（用户冻结）**：为什么真实拥堵结构应出现在 CTE / 主干快速路及其回溢链上，而当前 MATSim 却把大量延误吸收到 `service/connector` 等短段？——C-1 **不**再回答「KW 是否有效」（7.9B-1 已回答）。
+
+**冻结三条证据链**：**真实候选瓶颈 → 上游传播路径 → 下游储存/阻塞能力**；**统一拓扑框架**：`class(motorway/ramp/connector/service/other) × corridor(name) × junction-cluster(unit)`。
+
+**脚本/产物**：`scripts/od/audit_structural_spillback_7_9c1.py`（零仿真只读；11 门）⇒ `reports/structural_spillback_7_9c1/`（**`PREREG_7_9C1.md` 预注册 + `REPORT_7_9C1.md` + 7 件数据产物**）。运行 **23.7 s**。**预注册在读取任何结果前冻结**；主判据为**静态结构量**，仿真延误**仅作对账**（test, not definition）。
+
+**四条检查（预登记阈值 → 结果）**
+
+| ID | 检查 | 阈值 | 结果 |
+|---|---|---|---|
+| **K1** | 主线→merge/diverge→上游连续可传播路径 | `CHAIN_MIN_M=300 m` | ✅ **完整**：按里程覆盖 **91.52%**；中位链 **1,957 m**（p25 550 / p90 15,537） |
+| **K2** | downstream storage 是否足以反向回溢 | `FILL_BLOCK_S=10 s` | ⚠️ **51.02%** 候选 `fill_time<10 s`（中位 9.80 s）；`down_storage` 中位 13.47 辆 |
+| **K3** | service/connector 回压死端 | 断点 ≥90% | ✅ **成立 99.95%**（motorway 仅 0.17%） |
+| **K4** | 同一物理道路超短 link 碎化 | `SHORT_M=20 m`；重 = `>40 links/km` | ✗ **快速路不碎**（motorway 17.43 links/km、中位 37.8 m、**0** 条 `>40`）；✅ **服务网极碎**（connector **85.01**、service **50.81** links/km） |
+
+**决定性对账（以 `delay_h` 为权）**：v1.0 总延误 **4,778.8 h**，按 class：motorway **2.50%** / ramp 1.46% / connector 0.11% / **service 94.36%** / other 1.57%；KW 总延误 **12,482.1 h**，motorway **3.95%** / **service 88.01%**。
+**★延误坐落在 334 m 通道上**（V1 加权 `up_chain_m`；service 内仅 **107 m**、motorway 内 7,921 m）；**v1.0 有 97.34% 的延误落在「无法回压主线」的 link 上**（KW 95.97%）。
+
+**裁决与对假设的回应（诚实报告）**：用户预设的「**网络表达阻断快速路回溢通道**」**未被支持**——主线通道**完整**（K1）、快速路**未碎化**（K4）；被表达方式伤害的是**非主线的接入/服务子系统**（K3+K4 服务网）。⇒ 结论应从「queue / KW 参数不对」改写为 **「拥堵的生成与吸收都被结构性地困在离主线的、拓扑终端的接入子系统里」**。
+**★附带发现**：冻结结构先验（C-0）**本身不偏向快速路**——5,490 候选单元中**仅 7.05% 含主线 link**；与 7.9C-0 的 C2（残差不向结构单元富集）叠加 ⇒ **「结构先验」与「实际延误」都不落在快速路上**。
+
+**★对 7.9B-1 的更正（C-1 检出）**：B-1 的「CTE 走廊 1.76 → 24.22 h」**不是 CTE**（`name` 无字面 "CTE"，掩码命中 **Changi ∪ Tampines**）。**正名 CTE**：v1.0 **104.57 h（2.19%）**、KW **56.68 h（0.45%）** ⇒ B-1 三层 verdict 不变，但「KW 未复现唯一真实快速路排队链」的**数值须更正**为 **KW 削弱/转移**了它。已在 `REPORT_7_9B1.md` 追加更正附录。
+
+**对冻结状态影响 = 无**：未重跑仿真、未改参数、冻结件 `changed=0`；**v1.0 仍为唯一冻结模型，不产生 v1.1**。
+
+### 2.54 Step 7.9D-0 接入系统延误滞留审计 Access-System Delay-Trapping Audit（**7.9 第六阶段；零仿真只读；硬门 15/15 + 补充 2/2**；判 `DELAY_TRAP_OFF_MAINLINE_BY_CONSTRUCTION__BASE_RATE_DOMINATED`）
+
+**唯一问题（用户收窄后冻结）**：为什么这些回溢无能的 `service/connector` 短链能持续吸收大量延误，却不能把压力反馈到主线？三接口：`主线容量 ↔ 接入拓扑 ↔ 局部储存`。
+**纪律**：先写 `PREREG_7_9D-0.md`（sha256 **`564310dee…6ee85`**，运行期重算 **MATCH=True**）再读任何仿真输出；零仿真结构审计优先，**不改 network、不跑 MATSim**。
+
+**脚本/产物**：`scripts/od/audit_access_delay_trapping_7_9d0.py`（15 硬门 + 2 补充门）⇒ `reports/access_delay_trapping_7_9d0/`（`PREREG_7_9D-0.md` + `REPORT_7_9D0.md` + 8 件数据产物）。运行 **33.0 s**，冻结件 `changed=0`。
+
+**★★决定性发现：base-rate 控制让结论反转**
+
+| class | 全网 km% | 全网 delay% | **全网 ratio** | 邻域 km% | 邻域 delay% | **邻域 ratio** |
+|---|---|---|---|---|---|---|
+| motorway | 3.73% | 2.50% | 0.671 | 80.15% | **78.42%** | 0.978 |
+| ramp | 2.04% | 1.46% | 0.719 | 11.23% | **17.93%** | **1.597** |
+| connector | 1.07% | 0.11% | 0.104 | 0.02% | 0.00% | 0.000 |
+| **service** | **58.61%** | **94.36%** | **1.610** | 3.10% | **0.53%** | **0.171** |
+| other | 34.56% | 1.57% | 0.045 | 5.50% | 3.12% | 0.566 |
+
+`ratio = delay_share / km_share`；邻域 = `d_up ≤ 3`（向上游 ≤3 跳可触达主线）∪ `d_down ≤ 3`，**15,319 links（2.209%）/ 13,125 nodes**。
+⇒ **全网 `service` ratio 仅 1.610（<2.50，不构成富集）；限定主线邻域后掉到 0.171（欠表达 8.5×）** ⇒ 主线上**没有**可供下沉的压力；C-1 的 94.36% 是**网络构成假象**。邻域延误的 **96.35%** 落在 `motorway + ramp` 上。
+
+**三条接口审计（预注册 → 结果）**
+
+| ID | 接口 | 判据 | 结果 |
+|---|---|---|---|
+| **D1** | ① 拓扑单向阀（`mw_in ∧ acc_out ∧ ¬mw_out`） | `VALVE_THR=0.10` | ✗ **证伪**：全岛 sink-valve **仅 13 个**节点（邻域占比 **0.00099**）⇒ `VALVE_PRESENT=False`；旁证 mainline-in 节点 **8,567** vs out **8,566**（8,550 重合）= 主线**几乎完全可逆** |
+| **D2** | ② 局部储存深度（`fill_time = down_storage / inflow`） | `REQ_FILL_S=30 s`；`THIN_THR=0.60` | ✅ **成立**：邻域中位 **9.18 s**、**89.81% < 30 s**（全网中位 10.43 s、82.56%）；`service` 单 link 储存中位 **1.55 veh**。**但它是"查表赋值"**：`cap/lanes` 按 `(highway×lanes)` **单值确定**（**13/13** 类型，组内 `min=max`）⇒ `service`=**400**、`residential`=700、`tertiary`=900、`secondary`=1200、`primary`=1500、`motorway`=1900（veh/h/lane）；`cap_ratio_ref`：`service` **0.222**、`connector` 0.722、`ramp` 0.944 |
+| **D3** | ③ 排队耦合（延误加权 `d_up`/`d_down`） | `share_off ≥ 0.90` | ✅ **构造性缺失**：延误加权 `d_up` = **72.33 hops**；`share(d_up≤3)` = **0.0278**、`share(d_up>3)` = **0.9722** ⇒ `COUPLING_ABSENT=True`；敏感度稳定（D=1/3/5 → 0.0278/0.0278/**0.0280**） |
+| **D4** | 终端暴露（**描述性，无裁决权**；读**冻结输入人口**，⛔ 不用 `output_plans`/`linkstats`） | — | **236,044** 出行：起点在 `service` **0.7068**、终点 **0.6685**、**至少一端 0.9026**（对照 km 占比 0.5861）⇒ **出行的两端都挂在 400 veh/h、20 km/h、≈1.55 车储存的"车道"上** |
+
+**补充分析（非预注册，不改变判决）**：① **hop → 米翻译**（link 中位仅 ~11 m，跳数被碎片化放大）：延误加权**上游距主线 = 1,952 m**；`share(≤300 m)` **0.0315**、`share(>1000 m)` **0.7354** ⇒ **跳数确实夸大，但结论不变**；② 细分辨率容量确定性 **13/13 单值**（预注册的**类别级** `CAP_DETERMINISTIC=False` 因 `other` 合并 5 种 highway，**如实上报**，两者并列记录）。
+
+**判决与旗标**：`VERDICT_RULE = branch2: share_off=0.9722 ≥ 0.90`；
+`VALVE_PRESENT=False` / `THIN_STORAGE=True` / `CAP_DETERMINISTIC=False（类别级；细分辨率 True）` / `COUPLING_ABSENT=True` / `BASE_RATE_ARTIFACT=True`。
+
+**对 C-1 的更正（本步提供，已追加到 `REPORT_7_9C1.md` 更正附录）**：C-1 的 K3「回溢无能 99.95%」是**单跳口径的近重言式**（全网仅 **0.049%** 的 `service` link 有主线 feeder）⇒ 升维后 `share(d_up≤3)` 仅 **2.78%**；「延误被吸收到 service/connector」**因果解释被取代**（主线上本无压力可沉）；研究对象**收窄为 `ramp`**（唯一邻域富集类，ratio 1.597，邻域延误 17.93%，延误加权 25.3 跳）。C-1 **verdict 字符串字面不变**。
+
+**CTE 口径（D0.13 断言）**：`name == "Central Expressway"` → **603 links**、v1.0 **104.57 h（2.19%）**、KW **56.68 h（0.45%）**；`"CTE" in name.upper()` **命中 0**（门内断言 `banned_mask_hits==0`）。
+
+**对冻结状态影响 = 无**：零仿真、未改参数、未改 network、冻结件 `changed=0`；**v1.0 仍为唯一冻结模型，不产生 v1.1**。**本步只"证明"，不"修"。**
+
+### 2.55 Step 7.9D-1 Ramp Interface Audit 主线↔ramp↔地方路 接口审计（**7.9 第七阶段；零仿真只读；硬门 11/13 + 补充 3/3**；判 `RAMP_INTERFACE_CONTINUOUS__RAMP_NOT_A_DELAY_HOST`）
+
+**唯一问题（用户收窄后冻结）**：`mainline ↔ ramp ↔ local` 接口在**拓扑与容量上是否连续**，以及 **ramp 延误是否真能传到 motorway**？
+**纪律**：先写 `PREREG_7_9D-1.md`（sha256 **`5c8fd9c1…8983`**，运行期重算 **MATCH=True**）再读任何输出；**新增两条永久规则**：**R-DIST-1**（接口距离一律 **meter/km** 为主口径，hop 仅辅助）、**R-MULTI-1**（接口判据**必须多跳**）。零仿真、⛔ 不改 network/capacity、⛔ 不跑 MATSim。
+**脚本/产物**：`scripts/od/audit_ramp_interface_7_9d1.py` ⇒ `reports/ramp_interface_7_9d1/`（预注册 + 报告 + 8 件产物）。运行 **19.7 s**，冻结件 `changed=0`。
+
+**★ 单跳口径是近重言式（先排除）**：`motorway_link/trunk_link` **11,740 条（308.15 km）**，单跳邻接分类 **`neither` = 10,886（92.73%）**、`on_ramp` 428 / `off_ramp` 422 / `both` 4 ⇒ **`SINGLE_HOP_TAUTOLOGY=True`**（与 D-0 的 K3 同型，**必须升维多跳**）。
+
+**★ 多跳物理接口 = 连续**：`acc_m`（到主线最短免费流弧长）**有限率 100.00%**；ramp 中位 **478 m** / p90 **1,467 m**；`≤300 m` **30.49%**、`>1000 m` **20.92%**；`egr_m` 中位 **419 m**。⇒ **任意 ramp 片段 100% 可达主线**，无断裂。ramp 链长（到主线残余）中位 **500 m** / p90 1,491 m，单片段中位 **16.6 m**、**58.29% ≤20 m**（碎片化）。
+
+**★ 车道/容量连续**：`on_ramp`（合流侧）**432** 条，`Δlanes`（下游 motorway 车道 − ramp 车道）中位 **+2**、min **−2**、max **+6**；**车道下降仅 8 条（1.85%）**（阈值 0.20 未触发 ⇒ `LANE_DROP=False`）；`Δcap/lane` 中位 **+200 veh/h/车道** ⇒ 合流处是**扩容**而非收窄。ramp 的 `cap/lane` 在**每类 highway 内唯一** ⇒ `CAP_DETERMINISTIC=True`。
+
+**★★ ramp 不是一个延误宿主（本步结论）**：ramp **里程 2.04%**、**车流 9.22%**，但延误仅 **69.9 h（share 1.46%）**、`ratio = 1.46%/2.04% = 0.719`（**<1 ⇒ 欠表达**）、按车流归一 **0.158**（比全网低 **6.3×**）；KW 下 220.7 h（1.77%）。ramp 延误**在物理上确实靠近主线**（延误加权 `acc_m` **647 m**，`≤300 m` 26.75%、`>1000 m` 23.25%；有延误片段 **228** 条）⇒ **耦合方向通、但量太小**。下游节点 `fill_time` 中位 **4.96 s**。
+
+**判决**：`branch3: ramp_share=0.0146 < 0.05 且 delay_weighted_acc_m=647 m ≤ 1000 m`。
+**旗标**：`SINGLE_HOP_TAUTOLOGY=True` / `LANE_DROP=False` / `RAMP_IS_DELAY_HOST=False` / `RAMP_NEAR_MAINLINE=False` / `CAP_DETERMINISTIC=True`。
+
+**⚠️ 预注册缺陷（如实上报）**：`R1.05/R1.06` **FAIL**，**与数据无关**——冻结门文写「`finite≥0.999` **且 `min>0`**」，而距离场**种子 = 全部主线 link，按构造距离恒为 0** ⇒ `min>0` **逻辑不可能**（观测 `finite=100%`、`min=0.0`，场本身良构）。**不改预注册**，改列**补充门** `S1.01/S1.02`（良构形式：`finite=100%` ∧ 种子`==0` ∧ 非种子`>0`，**均 PASS**）与 `S1.03`（`cap/lane` 每类 highway 确定，**PASS**）；判决分支只用 `finite<0.99`（False），**verdict 不受影响**。
+
+**对冻结状态影响 = 无**：零仿真、冻结件 `changed=0`；**不产生 v1.1**。**只证明、不修改**。
+
+### 2.56 Step 7.9D-2 Terminal Representation Audit 端点表征审计（**7.9 第八阶段；零仿真只读 + 自由流时间；硬门 13/13**；判 `MIXED__TERMINAL_AND_MAINLINE_COMPARABLE`）
+
+**唯一问题（用户收窄后冻结）**：大量需求是否在**进入主干路网之前**就被 **terminal-access representation** 消耗掉大量**自由流时间**？
+**纪律**：先写 `PREREG_7_9D-2.md`（sha256 **`03f24243…3369`**，运行期重算 **MATCH=True**）；⛔ 不改 `service` 容量、⛔ 不改端点吸附、⛔ 不读 `output_plans`（`TT_terminal/TT_trip` 用**全网自由流分解**给出）。
+**脚本/产物**：`scripts/od/audit_terminal_representation_7_9d2.py` ⇒ `reports/terminal_representation_7_9d2/`。运行 **27.5 s**，冻结件 `changed=0`。
+
+**★ 端点分布**（236,044 出行，冻结输入人口）：O 落 `service` **0.7068**、D **0.6685**、至少一端 **0.9026**（`expansionFactor` 加权 O 0.7170 / D 0.6687）；按**道路组**：O `local` **0.9011** / `arterial` 0.0859 / `ramp` 0.0107 / `mainline` 0.0023，D `local` 0.8131 / `arterial` 0.1592。
+
+**★ 自由流接入时间**：`T_acc`（起点→主线）中位 **124.8 s**（p90 219.2，加权均值 137.6）；`T_egr` 中位 **103.6 s**；`T_terminal_lb` 中位 **234.3 s**（≈3.9 min）、p90 **417.8 s**。
+
+**★★ 全网自由流时间分解（主口径）**：总 **24,905.2 车·h**，off-mainline **14,146.7** ⇒ **`share_offmain = 0.5680`**（实际时间口径 **0.6364**；KW 交叉 **0.6049**）⇒ 落在 `[0.50,0.70)` ⇒ 判 `MIXED`。
+
+**★★ 最重要发现：非主线时间由干道主导，不是 `service`**：ff 时间份额 **mainline 0.4320 / arterial 0.3787 / local 0.0998 / ramp 0.0895**；其中 **`service` 仅 0.0515**。⇒ **端点暴露面（90% 在地方路）≠ 时间面（地方路仅 10%、`service` 仅 5.15%）**——`service` link 太短（中位 8.9 m），**把矛头指向 `service` 的 400 veh/h 会指错对象**。
+
+**★ `service` 表征精度修正**：`cap/lane` **严格唯一 = 400**（`SERVICE_CAP_FIXED=True`）；但自由流速度**不是严格恒定**——**10 个不同值 {5,10,15,20,25,30,40,50,60,70} km/h**，其中 **20 km/h 占 96.80%**（中位 20.00、均值 20.58）⇒ `SERVICE_SPEED_FIXED=False`。D-0「自由流被硬编码为 20 km/h（p10=p90）」**仅在 p10=p90 意义上成立**，本步以 `False` **如实上报**。
+
+**判决**：`branch4: share_offmain=0.5680 ∈ [0.50,0.70)`。
+**旗标**：`ENDPOINT_SERVICE_DOMINANT=True` / `TERMINAL_IS_SERVICE_90=True` / `OFFMAIN_MAJORITY=True` / `SERVICE_CAP_FIXED=True` / `SERVICE_SPEED_FIXED=False`。
+
+**对冻结状态影响 = 无**：零仿真、未改容量/吸附、冻结件 `changed=0`；**不产生 v1.1**。**只证明、不修改**。
+
+### 2.57 Step 7.9E-0 Arterial-Layer Delay Attribution Audit 干道层延误归因审计（**7.9 第九阶段；零仿真只读；硬门 11/12**；判 `ARTERIAL_LAYER_AUDIT_BLOCKED`）
+
+**唯一问题（用户冻结）**：`primary / secondary / tertiary` 干道是否才是当前模型 off-mainline 时间与空间残差的主要承载层？
+**纪律**：先写 `PREREG_7_9E0.md`（sha256 **`4fa98a96…12ea08f1`**，运行期重算 **MATCH=True**，哈希门置于一切之前）；零仿真、不改网络/容量；E4 用**一次多源反向 Dijkstra**（非每条 link 各搜一次）。
+**脚本/产物**：`scripts/od/audit_arterial_delay_7_9e0.py` ⇒ `reports/arterial_delay_attribution_7_9e0/`（含 `e0_checks/class_summary/residual_coupling/residual_permutation/topology_summary/input_manifest/summary` + `STEP7_9E0_REPORT.md`）。运行 **22.1 s**，冻结件 `changed=0`。
+
+**★ 固定分组**：`arterial_core = primary∪secondary∪tertiary`（68,882 links / 2,050.7 km）；`mainline = motorway∪motorway_link`（13,770 / 622.5 km）—— ⚠️ **本步 `mainline` 不含 `trunk`**，与 D-0/D-2 不同 ⇒ `off_mainline`（679,805 / 14,504.0 km）**不与 D-2 的 `share_offmain=0.5680` 直接可比**。
+
+**★★ E1 时间归属（两基数结论相反）**：`ff_time_share`（结构）`service` **0.7924** vs arterial 0.0676；`wff_share`（**车时加权**）**arterial_core 0.6371**、primary 0.4649、trunk 0.1586、service 0.0889 ⇒ **干道是 off-mainline 时间的绝对主场**。
+
+**★★ E2 延误归属（干道不是延误主场）**：`delay_share` `service` **0.5710** > arterial_core **0.2978**（primary 0.2149）；`delay_ratio`（vs 结构）primary **8.40** / trunk **12.48** / arterial **4.41** vs service 0.72（干道"富集"）；但 `delay_ratio_weighted`（vs 车时）service **6.43** vs arterial **0.47**（service"富集"）⇒ **单一 ratio 随基数翻转**，§5.1 要求三者同报。
+
+**★ E3 空间残差 → BLOCKED（硬门 E0.09 FAIL）**：576 断面 `dominant_highway` = motorway **449** + motorway_link **92** + service 16 + primary 9 + … ⇒ **arterial 断面仅 12（<30）**。欠功率参考（**不作判据**）：arterial mean residual **+0.0776** vs non +0.1434、置换 `p(region)=0.8534` / `p(pa)=0.8256`、`Spearman=−0.0213` ⇒ 无耦合信号。**★新事实：冻结靶场 77.8% 为 motorway/motorway_link ⇒ 靶场快速路中心化，天生不可分辨干道残差。**
+
+**★ E4 拓扑（一次多源反向 Dijkstra，物理距离为主）**：arterial_core 到 mainline 中位 **1,309.9 m**、p90 2,324.5 m、`≤300 m` 仅 **5.32%**、`hop_median 52`（辅）、回搜上限 3,000 m 内可达 **84.37%**；延误加权 **1,297.1 m**。对照 ramp **478 m**（D-1）⇒ **arterial 深居 off-mainline 内部，不是接口/膜层**。空间一致性：抽样 12,242，中位(拓扑/直线) **2.007**、违规 **2.12%**。
+
+**判决**：`ARTERIAL_LAYER_AUDIT_BLOCKED`（硬门 **11/12**，唯一 FAIL = E0.09）。**旗标**：`ARTERIAL_OVER_REPRESENTED_IN_DELAY=True` / `ARTERIAL_IS_MAX_DELAY_SHARE_OFFMAIN=False` / `ARTERIAL_RESIDUAL_COUPLED=False` / `DOMINANT_OFFMAIN_DELAY_BUCKET='service'`。
+**★ §5.3 纪律**：本步至多得「arterial 承载 63.71% off-mainline 时间」；**不得**推出「干道容量赋值错误」——需**独立容量审计**（同 D-0 对 `service=400` 的处理）。
+**对冻结状态影响 = 无**：零仿真、未改容量/吸附、`changed=0`；**不产生 v1.1**。**只证明、不修改**。
+
+### 2.58 Step 7.9E-1 Arterial Observability Expansion 干道可观测性扩展（**7.9 第十阶段；零仿真只读 + 独立 diagnostic crosswalk；硬门 10/12**；判 `OBSERVABILITY_BLOCKED`）
+
+**目的（用户裁定）**：7.9E-0 的 E0.09（arterial 断面 **12 < 30** ⇒ BLOCKED）只是「靶场对 arterial 欠功率」的**表象**。本步用**全部 1,278 条有几何的 LTA TrafficFlow 链路**（1,311 unique LinkID 中）建立一张**独立 diagnostic crosswalk**，回答：arterial 不可观测是**匹配质量问题**还是**靶场定义域问题**。⛔ 不替换、不回写 7.3.6A 正式 crosswalk；⛔ 不改冻结 target；⛔ 不跑 MATSim/Java。
+
+**脚本**：`scripts/od/audit_arterial_observability_7_9e1.py`（内嵌 PREREG sha256 门；E1.02 用 **AST 静态自审**）。**预注册**：`reports/arterial_observability_7_9e1/PREREG_7_9E1.md`（sha256 `4d5ee3e1…6751d`，运行期重算 **MATCH=True**）⇒ **12 件产物**。
+
+**方法**：SVY21 中沿 LTA 折线 **50 m** 采样（5–25 点）→ MATSim directed-link midpoint KD-tree（半径 **80 m**）→ 逐候选算几何距离 / 方向差 / 名称相似度 / `RoadCat↔highway` 语义兼容 ⇒ **A 严格（≤25 m ∧ ≤30° ∧ 语义兼容）/ B 方向几何（≤50 m ∧ ≤30°）/ C 仅几何（≤80 m）** 三档置信；主分析 **A+B**（优先 A），C 仅 sensitivity。
+
+**★可观测性——匹配质量不是瓶颈**：A+B 覆盖 **97.48%**（1,278/1,311，**已达上界**——33 条无任何几何的链路天生不可匹配）、匹配距离中位 **0.57 m** / p90 **2.92 m**、方向差中位 **1.38°**。**LTA 功能类 → OSM**：`CATA`→motorway **97.35%**；`CATB`→primary **65.93%** / trunk **21.29%** / secondary **11.04%**；`CATC`→secondary **41.30%** / primary **28.26%** / tertiary **28.26%**；`CATD`→tertiary **71.43%**；`CATE`→service；`SLIP_ROAD`→motorway_link **97.61%**。**全量 1,278 条可标出 542 条 `arterial_core`**（CATB 490 + CATC 45 + CATD 6 + CATA 1）。
+
+**★★根因：冻结靶场的定义域不含 arterial**。576 个残差断面的 `RoadCat` **只有 `CATA` 326 + `SLIP_ROAD` 250**；其 A+B 代表链路为 `motorway` **328** / `motorway_link` **247** / `primary_link` **1** ⇒ **arterial residual n = 0（A / A+B / A+B+C 三档全为 0）**。⇒ E0.09 的 12 个「arterial 断面」实为按 `dominant_highway` 标记的 **CATA/SLIP_ROAD** 断面，独立几何匹配后全部落在 ramp/主线。
+
+**判决**：`OBSERVABILITY_BLOCKED`（硬门 **10/12**，**24 s**）。唯二 FAIL = **E1.09**（`valid_residual=576; arterial=0`）/ **E1.10**（`AB_arterial_residual_n=0 < 30`）——**均为真实结构结论，非执行错误**。敏感度三档：`A_STRICT` 95.19% / `A+B_MAIN` 97.48% / `A+B+C_RELAXED` 97.48%（**C 档未增加任何匹配**）。
+
+**因果链修正**：E-1 把「arterial 不可判」的归因从「靶场欠功率（表象）」推进到「**靶场定义域 = 高速+匝道，arterial 断面数恒为 0（结构）**」。⇒ 想检验 arterial 是否残差主场，**必须把断面域从 `CATA+SLIP_ROAD` 扩到 `CATB/CATC/CATD/CATE`**（= 新版本 / 新诊断域），**不是**放宽匹配阈值。
+
+**新永久规则**：`R-OBS-1`~`R-OBS-5` —— ① 正式 calibration crosswalk 与 diagnostic observability crosswalk **永久分离**；② `RoadCat → highway` 语义映射**只作诊断**、不得事后制造动脉样本；③ 主分析用 **A+B**、C 仅敏感度；④ **任何「某类别是否残差主场」的判断必须先证明该类别具备足够观测性**；⑤ 匹配质量须**同时报 coverage / distance / direction**。
+
+**对冻结状态影响 = 无**：零仿真、未改网络/容量/需求/route-choice、未新建在线文档；**不产生 v1.1**。**只证明、不修改**。
+
+
+### 2.59 Step 7.9E-2 Expanded Diagnostic Residual Domain 扩展诊断残差域（**7.9 第十一阶段；零仿真只读 + 复用 E-1 独立 diagnostic crosswalk + 冻结 SCALE 口径**；**硬门 12/12**；判 `NO_ARTERIAL_COUPLING_SIGNAL`）
+
+**目的（用户裁定）**：E-1 已证「arterial 不可观测」的根因是**冻结靶场定义域只覆盖 `CATA` + `SLIP_ROAD`**。本步在**不替换 7.3.6A** 的前提下，把**诊断**断面域扩到全部可观测 TrafficFlow LinkID（1,311 unique），用与 7.7C-0 / 7.3.6B **完全相同的 `Sim/Obs/SCALE` 口径**（`sim_section = median(matched directed links HRS8-9avg) × SCALE`，`SCALE = 459794/200000 = 2.29897`；`obs = 工作日 HourOfDate=8 的 median Volume`）构造 `diagnostic_residual = Sim/Obs − 1`，首次让 arterial 空间残差**可检验**。⛔ 不重新匹配（直接复用 E-1 `e1_crosswalk_candidates.csv`）、⛔ 不改 7.3.6A / 网络 / 容量 / demand / route-choice、⛔ 不跑 MATSim/Java。
+
+**脚本**：`scripts/od/audit_expanded_residual_7_9e2.py`（内嵌 PREREG sha256 门 + **AST 零仿真自审门**）。**预注册**：`reports/arterial_expanded_residual_7_9e2/PREREG_7_9E2.md`（sha256 `c9e68272…e6cc`，运行期重算 **MATCH=True**）⇒ **12 件预注册产物 + 3 件事后补充产物**。
+
+**★可观测性问题已解决**：A+B 覆盖 **97.48%**（1,278/1,311 **上界**）、有效残差 **1,278**、**arterial 残差 n = 542**（E-0 仅 12），匹配中位 **0.57 m** / p90 **2.92 m**。三档敏感度 `A_ONLY` 1,248（art 538）/ `A+B_MAIN` 1,278（art 542）/ `A+B+C_RELAXED` 1,278（art 542）⇒ **C 档仍不增加任何匹配**，结论不依赖 crosswalk 严格程度。
+
+**★formal bridge（方法一致性，`R-RES-1`）**：与冻结 7.7C-0 的 576 断面 overlap **576/576**、Spearman **0.9662** / Pearson **0.9398**、mean bias **+0.0229**、MAE **0.0722**、RMSE **0.4655** ⇒ 诊断残差与正式残差**高度一致**（RMSE≫MAE ⇒ 重尾，少数断面差异大）。
+
+**判决**：`NO_ARTERIAL_COUPLING_SIGNAL`（**硬门 12/12**，**60–73 s**）。pooled：arterial 均值 **+0.0027** vs 非 arterial **+0.0904**；Spearman **−0.0216**、η² **0.0013**；非分层置换 `p = 0.1969`（不显著）；**RoadCat 分层置换 `p = 0.05247`（≥0.05 ⇒ 按冻结规则判「无信号」，但仅高于阈值 5%）**。
+
+**⚠️ 必须同时报告的事后稳健性（明确标注、不改变冻结判决）**：分层统计量被**退化层**主导——CATA 层内唯一「arterial」是 LinkID **26827**（AYER RAJAH EXPRESSWAY，被诊断映射成 `primary`、`sim=0.0` ⇒ 残差 **−1.000**），**单独贡献分层统计量的 69.3%**。⇒ ① 限定有效混合层（`n≥30 ∧ 双臂≥5` ⇒ 仅 **CATB**：490 art vs 144 non）`p = 0.0080`；② 去掉 CATA 后 `p = 0.0400`；③ 去掉 CATB（唯一有效层）则 `p = 0.1679`。⇒ **分层 p 的显著性完全取决于如何处理退化层**。
+
+**★★ 真正的结构发现：残差不是「arterial vs 非 arterial」，而是按道路等级的单调梯度**（A+B，flow-weighted）：`motorway` **+2.0%** / `primary` **+7.6%**（高估）；`motorway_link` **−6.3%** / `trunk` **−20.2%** / `secondary` **−34.6%** / `tertiary` **−41.7%**（**低估且随等级下降单调加深**）。⇒ **`arterial_core = primary ∪ secondary ∪ tertiary` 三类残差符号相反（primary 正、sec/ter 负）⇒ 该聚合量存在符号抵消，聚合均值（+0.0027 ≈ 0）是抵消伪影，不可用作「arterial 是否残差主场」的依据。** 同理 CATB 层内「arterial 好、非 arterial 差」实为 **arterial vs `trunk`** 的对比（CATB 的 144 条非 arterial 中 `trunk` 占 135）。
+
+**新永久规则**：`R-RES-1`~`R-RES-6` —— ① 正式 calibration residual 与 expanded diagnostic residual **永久分离**；② expanded residual **只作结构归因、⛔ 不得进入 v1.0 target**；③ section 级模拟流量**必须用 matched directed links 的 median 再乘冻结 SCALE**（⛔ 不可先求和再比单条 LTA 断面）；④ arterial coupling **必须同时控制 / 报告 LTA RoadCat 组成**；⑤ **LTA 功能类（CATA–E / SLIP_ROAD）与 OSM 结构类（motorway/primary/…）永久分开表述**，⛔ 不得声称 `CATB/CATC/CATD/CATE == primary/secondary/tertiary`；⑥ **只有通过 observability gate 的道路层才允许进入 mechanism attribution**。
+
+**决策树（用户冻结）**：`7.9E-2 ✓ → ├─ arterial residual coupling 明显且稳定 → 7.9E-3 arterial mechanism audit；├─ 无耦合 / 仍不稳定 → service / endpoint mechanism；└─ 仍 BLOCKED → 外部 LTA 数据申请`。本步落 **「无耦合 / 仍不稳定」** 分支（`p = 0.0525` 临界 + 梯度结构未决）⇒ **下一候选须重新裁定**。
+
+**对冻结状态影响 = 无**：零仿真、未改网络/容量/需求/route-choice、冻结件 `changed=0`；**v1.0 仍为唯一冻结模型、不产生 v1.1**。
+
+### 2.60 Step 7.9G-0 `service` 延误机制 R0 结构审计（**7.9 第十二阶段；零仿真只读；硬门 25/25；EXIT=0；`CLOSURE=OK`；`converged=True; it=4`**；判 Q1 `CAPACITY_CONSTRAINT_NOT_DOMINANT` / Q2 `CALIBER_FRAGILE` / Q3 `SERVICE_PARAMS_DERIVED`）
+
+**定位（用户裁定 2026-09-28）**：`Q4-R1-R1` READY 后关闭 `Q4-R1` 线，进入 **`service` 延误机制**（与已收口的几何匹配线属**不同层面**的残差解释）。**边界 = 只审计、不改模型**：⛔ 不碰 v1.0 与 Q4-R1-R1 产物、⛔ 不改 `service` 400 / 端点吸附 / 网络 / 容量 / demand / route-choice。
+
+**预注册**：`reports/service_delay_mechanism_7_9g0/PREREG_7_9G0.md`（14,221 B，sha256 `2db351c8…f49b51`），运行期重算 **MATCH=True**；锁定对象定义、三核心问题、指标、排除规则、**硬门 25**、判决闭集、**负例 N1–N11**、必需输出 14 件、BLOCKED 条件。**脚本**：`scripts/od/audit_service_delay_mechanism_7_9g0.py`（48,460 B，sha256 `61cfe26a…569dfd`）。
+
+**冻结输入（5 件，跑前后 sha256+mtime 逐位未变）**：`W01_rc_min/ITERS/it.19` linkstats（22,629,291 B）/ `W01_events` linkstats（与之逐字节相同）/ `W01_events.output_links.csv.gz` / `network_links_source_copy.csv` / `config_W01_rc_min.xml`。**只读对照（3 件）**：7.7E 审计 summary / roadtype_quant / sat_links。
+
+**口径（继承 7.7E，不可改）**：`ff_s = LENGTH/FREESPEED`；`ff_ceil_s = ceil(ff_s − 1e-9)`；**`delay_corr_h = Σ_{v>0} v·max(0, TT8-9avg − ff_ceil)/3600`**（canonical）；`delay_raw_h` 用 `ff_s`（未扣量化）。饱和定义 `v ≥ CAPACITY×0.9999`。
+
+**★Q1 = `CAPACITY_CONSTRAINT_NOT_DOMINANT`（容量不是主因）**：已载流 `service` link **62,407** 条，`v/c` 中位 **0.0225** / p90 **0.1325**；饱和仅 **74 条 = 0.1186%**，**这 74 条只承担 `service` 延误的 13.95%**（判据 `sat_delay_share ≥ 0.50` ⇒ 未达）⇒ **延误主要由大量未饱和短段的时间量级产生**，而非容量约束。集中度 **top-10 = 62.17% / top-100 = 96.01%**（少数 link 吃掉大部分延误，但与被饱和无关）。长度分桶：`>60 m` 占 **29.02%**（per-veh 58.8 s）、`≤5 m` 占 24.68%。
+
+**★Q2 = `CALIBER_FRAGILE`（口径脆弱，须四面并报）**：`raw` **45.903769%** vs `corr` **94.356579%**（≈ 7.7E 的 94.4%）；**暴露面四面** time **94.36%** / count **27.81%** / distance **18.56%** / volume **4.31%** ⇒ **同一数据相差 20 倍以上**。跨时段 corr：07-08 **92.79%** / 08-09 **94.36%** / 09-10 **98.52%** / 10-11 **99.999%** ⇒ 极差 **0.0573 > 0.05** ⇒ **判 `FRAGILE`（不判 STABLE）**。⛔ 门 16 为**「已计算 + 判决自洽」执行门**，`FRAGILE` 是**合法结论、不使节点 BLOCKED**（此即首跑 E1 修正）。
+
+**★Q3 = `SERVICE_PARAMS_DERIVED`（参数是派生的实现量，不是机制旋钮）**：`cap = 400 × permlanes` 对 `service` **100.000%（450,486 条，对角 crosstab）**；全网络 `cap = unit_cap[highway] × lanes` **99.689%**；`qsim` 两因子 = 1.0、`linkDynamics=FIFO` ⇒ **qsim 无覆盖 ⇒ 容量是派生量**。真正输入只有 `permlanes`（1–6；1 车道占 296,513 = 65.8%）、`unit_cap[service]=400`、`freespeed`（10 个取值）⇒ **`service` 参数不能直接当旋钮；后续敏感性须在「网络表征 / 端点吸收」层设计**。
+
+**★工程验证（全第一手）**：基线 **25/25、EXIT=0、`converged=True; it=4`、`CLOSURE=OK`**；**负例 11/11 全部按预期门触发**（N1→05、N2→06+07、N3→08+10、N4→10、N5→12、N6→16、N7→17+19、N8→22、N9→21、N10→25、N11→15）；**BLOCKED 3/3 完整节点**（25 行 checks + 6 文件 + EXIT=1）；**独立复核** `scripts/od/_verify_g0.py`（不复用被测脚本、独立重算）⇒ **`VERIFY_OK=True`**（share Δ=2.84e-14、sat_share / Q3 / 三方一致、manifest 字节一致、8 件冻结件未变）。**★本轮自查 5 处**：E1 门 16 把合法 `FRAGILE` 判成 BLOCKED（改「已计算+自洽」）、E2 门 24 与写入状态自引用振荡、E3 `manifest↔closure` 互引用 2-循环、E4 `summary` 头条数字漏赋值写成 0.0、E5 复核脚本自身少乘 `service` 掩码（82 vs 74）。
+
+**新永久规则 `R-G0-1…5`**：① **「发现门」≠「执行门」**——门禁不得编码期望科学结论，否则合法负结果会把节点误判 BLOCKED；② **manifest 不得自哈希且不得含 closure**（防 2-循环）；③ **写入终局状态的判据必须排除决定该状态的门自身**；④ **汇总件数字必须与分解件同源**（漏赋值 ⇒ 0.0 静默失真）且有门禁约束；⑤ **占比必须并报暴露面**（time/count/distance/volume 可差 20 倍）。
+
+**对冻结状态影响 = 无**：零仿真、未跑 MATSim、未改网络 / 容量 / demand / route-choice、冻结件 `changed=0`；**v1.0 仍为唯一冻结模型、不产生 v1.1**。产物 `reports/service_delay_mechanism_7_9g0/`（15 件）。
+
+### 2.61 Step 7.9G-1 端点/接入子系统「就地吸收」机制审计（**7.9 第十三阶段；零仿真只读；硬门 25/25；EXIT=0；`CLOSURE=OK`；`converged=True; it=3`**；判 A1 `PROPORTIONAL_TO_MILEAGE` / A2 `ENDPOINT_LOCALIZED` / A3 `NOT_MAINLINE_QUEUE` / A4 `NEITHER_BOUND` / A5 `NEGLIGIBLE` / A6 `ENDPOINT_ABSORPTION_DOMINANT`）
+
+**唯一可证伪机制命题（用户裁定原文）**：`service` 延误是否主要表现为**端点接入 / 局部循环 / 短链时间表达**形成的**「就地吸收」**，而非道路容量约束产生的**排队**延误。
+**审计链（冻结）**：`service link → population/OD endpoint → connector/access → mainline interface → short-link accumulation → terminal/local circulation`。
+**边界（继承 G-0，作为前置约束）**：⛔ 不得把 `94.36%` 当单一证据；⛔ 不得把 `cap=400` 当敏感性旋钮；⛔ 不改 `Singapore_OD_MATSim_Final_v1.0`；先 `prereg` 再零仿真。
+
+**脚本 / 产物**：`scripts/od/audit_endpoint_access_absorption_7_9g1.py` + 冻结 `reports/endpoint_access_absorption_7_9g1/PREREG_7_9G1.md`（**17,536 B**，sha256 `4e7ffa3c…`）⇒ **16 件产物**（含 `g1_checks.csv` / `g1_summary.json` / `g1_closure_check.csv` / `g1_input_manifest.json` / `STEP7_9G1_REPORT.md`）。**运行 340.8 s**（events 14.75 GB / 331.8 s）。冻结输入 **7 件**（pop / plans / events / ls_final / ls_viz_ref / net_links_runtime / src_copy）+ 只读对照 **4 件**（G-0 产物）。
+
+**六个答案（第一手复算）**
+
+| 问 | 判决 | 证据 |
+|---|---|---|
+| A1 端点是否被"吸附"到 `service` | `PROPORTIONAL_TO_MILEAGE` | `p_end_svc` **0.692865** vs 里程基线 **0.586090**、计数基线 0.649513 ⇒ enrich **1.1822× < 1.5** ⇒ 仅**轻度富集**，**不是**"吸附伪影" |
+| A2 就地吸收：端点 vs 遍历位置 | `ENDPOINT_LOCALIZED` | `f_pos`（service 遍历首/末位占比）**0.088818**；`w_ep`（端点链延误份额／`service`）**0.756366**；`v_ep`（端点链流量份额／`service`）**0.097730** ⇒ **75.6% 的 `service` 延误落在只占 9.8% 流量的端点链上** |
+| A3 干道接口排除 | `NOT_MAINLINE_QUEUE` | 邻接干道的 `service` 仅担**全网 1.8736%** vs 内部 `service` **92.4830%** ⇒ **不是主线回溢** |
+| A4 绑定约束：流量容量 vs 储存微胞 | `NEITHER_BOUND` | `D` 集 422 条（端点 `service` 且有延误）：`sat_share_D`（`v/c_flow≥0.9999`）**0.1394**、`cell_share_D`（`storage_veh<2`）**0.4961** ⇒ 两者均 **< 0.50** |
+| A5 局部循环 | `NEGLIGIBLE` | `f_local`（全 local 路由占比）**0.001296**（306/236,044）⇒ **可忽略** |
+| A6 机制汇总 | `ENDPOINT_ABSORPTION_DOMINANT` | `s_end` **71.3681%** / `s_mid` **22.9884%** / `s_main` **1.8736%** ⇒ **端点就地吸收主导** |
+
+**★核心量（端点 service 切分）**：`endpoint_service` **10,156** 条（296.4 km）担延误 **3,410.52 h = 全网 71.37% ／ `service` 内 75.64%**，却只占 `service` 流量 **9.77%** ⇒ **逐车延误 72.81 s/veh vs 非端点 2.54 s/veh（28.7×）**。集中度：端点 `service` 的 **top-10 = 全网延误 58.66%**、top-100 = **71.27%**（端点 service 内 `top10_ep` = **82.20%**）。
+**★暴露四面（与 G-0 完全一致，重申 `CALIBER_FRAGILE`）**：time **94.36%** / count **27.81%** / distance **18.56%** / volume **4.31%**。
+**★路由位置剖面（决定性对照）**：`service` 遍历 first 166,835 / last 157,791 / mid 3,330,324 ⇒ 首末位仅 **8.88%**；**全 local 路由 0.13%** ⇒ **"位置效应"与"局部循环"两条支路被证伪**，但**端点链归属**（A2）成立。
+**★events 逐车轨迹（A7 仪器，命中 24,293 事件）**：12 条 target 链 `n_enter ≥ 1` 全齐；**`dwell_p50` 高达 280–6,423 s**，而链长仅 **1.9–140.8 m**、自由流 `ff_s` **0.62–25.3 s** ⇒ 车辆"停"在几米到百米级的 `service` 链上**数十分钟** ⇒ 与**「就地吸收／储存微胞耗尽」一致**，与**「道路容量排队」不一致**。
+
+**核心结论**：G-0 把"容量瓶颈"排到次要位置后，G-1 给出替代机制 —— `service` 延误**不是**道路容量排队、**不是**主线回溢、**不是**全局部循环；它**几乎全部落在直接承载人口/OD 端点的 10,156 条微短链上**（`service` 总延误的 75.6%；按逐车计 28.7×）。⇒ **站点/接入子系统的「就地吸收」** 是残差的机制归属。
+
+**验证**：负例 **11/11** 全触发、BLOCKED **3/3** 完整节点、独立复核 `VERIFY_OK=True`（7 件冻结件未变 / prereg 恒等 / 独立 canonical 重算 / 独立端点抽样 40k / 独立契约抽样 40k / 25 门有序 / manifest 字节一致且不自含 / closure OK / 6 判决 ∈ 闭集）。
+**本轮自查 4 处（E1–E4，均在交付前修复）**：**E1** `CONTRACT` 键错——被赋成 `link→权重`（`home_w`）而 `scan_plans` 按 **person id** 查 ⇒ 契约恒 `0/0/236044`，**门 10 自抓**；修：`load_population` 增 `home_p/work_p`（person→link）。**E2（同源）** `data.split(b"<person ")` **吃掉前缀** ⇒ `re.compile(rb'<person id="…"')` 永不命中 ⇒ `pid` 恒空；修：改 `rb'\A\s*id="([^"]+)"'`（抽样 5000/5000 = 1.000000 验证）。**E3** `events_trace` 性能（`gzip` 模块仅 **33 MB/s**，14.75 GB 需 447 s+）⇒ 改 **`zlib.decompressobj(31)`**（**348 MB/s**，纯解压 42.4 s）＋正则由「全事件 1.63e8 迭代」改「仅命中目标链」⇒ 事件段 **666 s → 331.8 s**。**E4（负例设计缺陷）** N9 首跑把 `a4` 写死为 **`NEITHER_BOUND`**——而**真值恰为 `NEITHER_BOUND`** ⇒ **空负例（no-op）**，不产生任何可观测变化、门 17 自然不触发 ⇒ 被负例套件自抓（`fired=False`）。修：改为**与规则相矛盾**的 `FLOW_CAPACITY_BOUND`（重跑 ⇒ `A4=FLOW_CAPACITY_BOUND`、门 17 FAIL、24/25、BLOCKED、`fired=True`）。
+**★R-G1-1…8（新增纪律）**：①**大 `.gz` 一律 `zlib.decompressobj(31)`**；②**`bytes.split(b"<tag ")` 吃掉前缀 ⇒ 后续 regex 不得再含该前缀**；③**缓存仅用于不绕过被测函数的负例**（打 `scan_plans`/`events` 的负例必须关 `--cache`）；④**A 类判决须同报四面暴露**（time/count/km/vol）；⑤**机制判决须"位置面 vs 延误面"分列**（`f_pos` vs `w_ep`），不可只报一个；⑥**"就地吸收"须逐车口径复核**（`s/veh`），不能只看份额；⑦**机制闭集必须含否定分支**（`NEITHER_BOUND`/`NEGLIGIBLE`），不得只用单一 `share` 阈值；⑧**负例必须"改变可观测结果"**——把变量写死为**真值**是 no-op 空负例，只证明"没抓到"而非"能抓到"；**必须取与规则相矛盾的取值**，并在套件里对 `fired=False` 视为失败（不得静默通过）。
+**对冻结状态影响 = 无**：零仿真、冻结件 `changed=0`；**v1.0 仍为唯一冻结模型，不产生 v1.1**。
+
+### 2.62 Step 7.9G-2 「时间 / 数量 / 距离 / 体积」四面口径统一（**7.9 第十四阶段；✅ `CALIBER_HARMONIZATION_R0_READY`；零仿真只读；硬门 25/25、EXIT=0、`CLOSURE=OK`、`converged=True; it=3`、47.8 s；prereg `6df55c42…`、22,238 B**）
+
+**用户裁定（2026-09-28）**：`7.9G-2 = OPEN`。**本轮只解决「怎么统计、怎么表达」，不重新争论 G-1 的机制结论** —— ⛔ 不重判 `A1–A6`、⛔ 不提新机制假说、⛔ 不以 G-2 结果确认或削弱 `A6`。
+
+**为什么必须做这一步**：G-0 已证 `94.36%` 对口径极其敏感（raw `45.90%` vs corr `94.36%`），故不得再以单一 `delay share` 作系统性归因。G-2 的目标**不是**再得到一个"更大的百分比"，而是建立一套**四面一致的 reporting rule**，并物化一句可长期复用的表述。
+
+**锁定的 5 件事**：
+1. **分母统一** —— 三档嵌套分母栈 `D0 = ALL ⊃ D1 = SVC ⊃ D2 = EP_SVC`；任何份额必须写成 `share[face, scope | Dk]`，三要素缺一不可。
+2. **宇宙必须声明** —— 默认 `U_loaded`（`vol = HRS8-9avg > 0`）；在 `U_any` 上计算的量**必须带 `_any` 后缀**；⛔ 分子/分母不得跨宇宙。
+3. **暴露 ≠ 影响** —— `IMPACT = {time}`（`delay_corr_h`）、`EXPOSURE = {count, distance, volume}`；三档强度面 `s/link`、`s/km`、`s/veh` **必须与份额面并列**。
+4. **不合成总分** —— ⛔ 禁止跨面加权/归一总分、禁止跨面求和；四面回答的是不同问题。
+5. **集中度判据预先锁定** —— 仪器 = **覆盖率分数** `f_t = k_t / n_scope`（`t ∈ {50, 90, 99}`）；判据 = 与 `D0` 的倍率 `R_t`，阈值 `RATIO_CONC_MIN = 3.0`；⛔ **Gini 禁用**、⛔ **常数 `k`（`top-10` 类）禁用**。
+
+**零仿真侦察（第一手，已用于锚定 prereg 判据）**：
+- **★(a) 宇宙撕裂可产生 >100% 的份额** —— `SVC_any` 的 km = `ALL_loaded` km 的 **170.96%**（分子含零流边、分母只含 loaded）⇒ 硬失效，须由门 10 捕获。
+- **★(b) 同一对象 / 两种宇宙 / 两个 distance share** —— `g1_endpoint_service_split.csv` 的 `length_km = 296.402`（`U_any`，10,156 链）vs `U_loaded` 下 EP_SVC 重算 **203.385 km**（7,083 链）⇒ share **5.716%** vs **3.922%**，差 **1.79 pp** > `UNIVERSE_SPREAD_TOL_PP = 0.5`。
+- **★(c) Gini 在本分布下失效** —— `ΔGini(EP_SVC − ALL) = −0.0014`（`ALL` 0.999541 / `EP_SVC` 0.998174），**无区分度且符号反直觉**（会推出"端点链更不集中"）⇒ 不得作判据。
+- **★(d) 覆盖率分数有区分度且尺度无关** —— `f50`：ALL **0.000036** → SVC **0.000112** → EP_SVC **0.000706**（倍率 **19.6×**）；`f90` 倍率 **6.65×** ⇒ 在子集内部延误**相对更分散**，恰好回应「不能因为 top-10 link 占 62% 就直接宣布高度集中」。
+- **★(e) 强度面** —— `s/veh`：ALL **0.4300** / SVC **9.4073** / EP_SVC **72.8065**（EP_SVC/ALL = **169.3×**），与 `vol 0.42%` vs `time 71.37%` 的份额反差同向。
+
+**四面侦察实测（EP_SVC ｜ D0，`U_loaded`）**：time **71.3681%** / count **3.1560%** / distance **3.9220%** / volume **0.4215%** ⇒ 极差 **70.95 pp**。
+
+**25 门**：01 冻结嵌入 / 02 AST / 03 零仿真 / 04 manifest 5 件 / 05 154 列 / 06–07 join / **08 宇宙逐行声明** / **09 比较内宇宙唯一** / **10 无不可能份额（含"分子宇宙 == 分母宇宙"显式断言）** / 11 嵌套分母单调 / **12 分母逐行声明** / 13 面角色声明 / 14 四面矩阵完整 / **15 SVC 四面逐位复现 G-0** / **16 EP_SVC 复现 G-1 且差异须显式标注宇宙** / **17 影响只出自 `time` 面** / **18 强度三档全非空** / **19 无合成总分** / **20 集中度仪器声明（禁常数 `k`）** / **21 基线配对** / 22 判决闭集唯一 / **23 Gini 禁作判据** / 24 终局三方一致 / 25 非 7.9G 产物未变。
+
+**判决闭集**：`Q1 {DENOMINATOR_UNIFIED, DENOMINATOR_SPLIT}`；`Q2 {EXPOSURE_IMPACT_DECOUPLED, EXPOSURE_IMPACT_COUPLED}`；`Q3 {CONCENTRATION_AMPLIFIED, CONCENTRATION_ATTENUATED, CONCENTRATION_COMPARABLE}`；`Q4 {FOUR_FACE_PARALLEL_REPORTING, SINGLE_HEADLINE_ADMISSIBLE}`。**阈值 `UNIVERSE_SPREAD_TOL_PP = 0.5` / `AGREEMENT_BAND_PP = 5.0` / `RATIO_CONC_MIN = 3.0` 均为预先约定，不得在看到实测值后回调。**
+
+**负例**：**11 真负例**（N1 改分母 / N2 time 当 volume / N3 link 数当 delay / N4 混用内部与全网占比 / N5 固定 `k` / N6 合成总分 / N7 分母声明缺失 / N8 宇宙混用 / N9 Gini 判据 / N10 单面 headline / N11 冻结件被动）+ **1 个 no-op 空负例自检 `S1`**（把字段写死为**真值**，套件**必须**判 `fired=False`，否则套件失效）+ **3 BLOCKED**（空 ref 目录 / 篡改 `pop` sha / 列数 153）。
+
+**必需输出 16 件**：`g2_face_matrix.csv` / `g2_share_matrix.csv` / `g2_intensity_matrix.csv` / `g2_universe_contrast.csv` / `g2_denominator_audit.csv` / `g2_concentration_curve.csv` / `g2_concentration_verdict.csv` / `g2_exposure_impact_gap.csv` / **`g2_reporting_template.md`（物化模板句）** / `g2_caliber_crosswalk.csv` / `g2_verdicts.csv` / `g2_checks.csv` / `g2_closure_check.csv` / `g2_input_manifest.json` / `g2_summary.json` / `STEP7_9G2_REPORT.md`。
+
+**冻结输入 5 件**（`pop` / `ls_final` / `ls_viz_ref` / `net_links_runtime` / `src_copy`，SHA 见 prereg §2）；**只读对照物 8 件**（G-0 4 件 + G-1 4 件）。**★本节点不含 `plans`/`events`**：`EP_SVC` 定义逐位继承 G-1，其与"选中计划路由首/末 link"的一致性已由 **G-1 门 10** 以 `contract = 1.000000` 过门 ⇒ 不再重验，本节点运行成本压到"net + linkstats"。
+
+**实现与验收（2026-09-29 完成）**：
+- **脚本** `scripts/od/audit_caliber_harmonization_7_9g2.py`（**73,426 B**，1,396 行，零仿真 / 只读）；**产物 16+1 件**落 `reports/caliber_harmonization_7_9g2/`。**跑批** `25/25`、EXIT=0、`CLOSURE=OK`、`converged=True; it=3`、**47.8 s**。
+- **★四面实测（EP_SVC ｜ D0，`U_loaded`）**：time **71.368133%** / count **3.155967%** / distance **3.922029%** / volume **0.421506%**；极差 **RANGE_ep = 70.946627 pp**。
+- **★判决**：`Q1 = DENOMINATOR_SPLIT`（`max_legal_share_pct = 71.368133`、`universe_spread_pp = 1.962541 > 0.5`）；`Q2 = EXPOSURE_IMPACT_DECOUPLED`（RANGE **70.95 pp** ≫ 5.0）；`Q3 = CONCENTRATION_ATTENUATED`（`R_50 = 19.803755` / `R_90 = 6.643841` / `R_99 = 1.032118`）；`Q4 = FOUR_FACE_PARALLEL_REPORTING`。`noop_selfcheck_passed = true`。
+- **★宇宙撕裂（门 10 捕获并标注）**：`illegal_mixed_universe_ratio = SVC_any km / ALL_loaded km = 1.709605`（**170.9605%**）。`U_any` 面：`EP_SVC_any` n **10,156** / km **296.402279** / delay **3,410.521558 h**；`SVC_any` n **450,486** / km **8,865.505964**。
+- **★三档强度（s/veh）**：ALL **0.430002** → SVC **9.407303** → EP_SVC **72.806547**（EP_SVC/ALL = **169.32×**）。
+- **★★口径级技术发现（本轮 7 项，均已固化进脚本）**：
+  1. **时间面逐位一致必须用 `math.fsum`** —— pandas / numpy 的**顺序求和**与 G-0/G-1 存储值差 **1 ulp**（D0 `9.095e-13`、D2 `4.547e-13`）；`fsum` 是正确舍入的精确求和，D0/D1/D2 三档全部 `atol=0` 命中 ⇒ **门 15/16 的「逐位」要求真实可达**，但**只有 `fsum` 路径**可达。
+  2. **pandas 默认快速浮点解析会丢 1 ulp** —— `296.40227899999996` 被读成 `296.402279`；**产物回读同样中招**（`962.7150059999999` → `962.715006`）⇒ 一切对照物 / 产物回读**必须 `float_precision="round_trip"`**，否则门 15/16 出现**假失败**。
+  3. **`D2 = (home ∪ work) ∩ service`，不是 home∪work 全集** —— 全集 22,359 条会得到 km **775.33** / vol **1,148,087**（错）；`∩ service` 才得 n_any **10,156** / n_loaded **7,083** / km_any **296.402279** / vol **168,637**，与 G-1 逐位一致。
+  4. **G-0 与 G-1 的面名不同** —— `g0_exposure_faces.csv` 用裸名 `time/count/distance/volume`，`g1_exposure_faces.csv` 用 `time_delay_corr_h/...` ⇒ `FACE_G0_KEY` 必须**双向映射**，否则门 15 直接 `IndexError`。
+  5. **空串经 `to_csv`/`read_csv` 往返变成 NaN** ⇒ 门 12 的「**非空**」必须显式 `isna()` 判定（只做 `dropna()` 后的集合差会**漏检** `denom_scope` 置空）。
+  6. **pandas 3.0 `df.loc[len(df)] = {...}` 静默丢弃新列** ⇒ 负例 N10 首跑**空转**（`face_role` 列从未生成）。**列注入必须走 `g_rows.append(dict)` 或直接列赋值**。
+  7. **门 09 / 12 需覆盖「全部 share 行载体」**（含 `denominator_audit`）才与 §6 原文「**每个** share 行」一致；覆盖后 N4 的「跨宇宙同键」才被门 09 捕获。
+- **★独立复核** `scripts/od/_verify_g2.py`（**不导入被测脚本**，从 5 件原始输入重算全部头条量）：**90/90 PASS**、判 `INDEPENDENT_REPRODUCTION_OK`；含 12 组四面逐位、24 组份额逐位、15 组集中度 `f_t`/`R_t` 逐位、9 组强度、13 组 G-0/G-1 锚点、closure/manifest 逐件 sha。
+- **★负例套件** `scripts/od/_g2_negatives.py`（严格按 §8）：**11 真负例 11/11 全 `fired=True`**、**空负例 `S1` 正确 `fired=False`**（`q3_for` 写死真值 = no-op）、**3 BLOCKED 3/3 `complete=True`**（各 25 行 checks + 6 件终态产物 + EXIT=1 + 状态 `…_BLOCKED`）。沙盒根 `reports/_g2_neg_root2/`。
+- **★§8「期望触发门」预测偏差（实测 vs 预测，逐条留痕）**：**N1** 期望 12/09 → 实测 **10**（`share_loaded(ALL_LOADED, time) = 1.059809514` = **105.98% > 100%**，被门 10 以**更强**的失效信号捕获）；**N4** 期望 12/10 → 实测 **09**（`denominator_audit:2` 组合同键跨宇宙）；**N3** 期望 15/17 → 实测 **15**（+16）；**N2** 期望 15 → 实测 15（+16，附带 `vol` 失配）；**N9** 期望 23 → 实测 23（+22，附带判决串自洽性）。**逐条命中 7 例**（N5→20 / N6→19 / N7→12 / N8→10 / N10→17 / N11→25）。**★留痕结论**：§8 的「期望门」列是**设计期预测**，与冻结**判据**无关；其中 **门 17 的判据是「`face_role` 归属 + 影响类字段名」，结构上无法检测「把 `count` 值塞进 `time` 面」这类**值替换**攻击**——该类攻击由**门 15** 正确捕获。此偏差**已留痕、未改任何判据**（改判据须立 R2）。
+- **★冻结影响 = 无**：零仿真、未改网络/容量/需求/route-choice；G-0/G-1 两目录 `changed=0`（门 25 逐文件 sha）；**不回写** G-0/G-1 任何产物；**v1.0 仍为唯一冻结模型、不产生 v1.1**。**下一步** = **LTA 分车型 / HTS 出发时刻**。
+
+### 2.63 Step 7.9A-1 采样一致性容量单因子动态实验（**Dynamic Realism Audit ①；1 次 20 迭代仿真 226.99 min；零仿真评价 104 s；硬门 0 失败 / 记录项 6**；判 `SAMPLING_CAPACITY_NETWORK_BREAKDOWN` × §7 情形 **D**）
+
+**起因（领导者反馈）**：MATSim 动态交通状态“不像真实城市交通”、VIA 画面无拥堵。用户提出两条嫌疑（①抽样率与容量不一致 ②所有人 08:00 整点出发）并要求 2×2 实验。
+
+**★第一手核实（推翻了用户的第二嫌疑）**：冻结 population（`populations/pop_W01/population_lambda_0p075.xml.gz`，236,044 persons）的 `home end_time` **早已分散** —— 范围 07:00:00–08:59:59、07 时 114,970（**48.71%**）/ 08 时 121,074（**51.29%**）、**7,200 个秒级不同取值**、中位 **08:01:27**、恰为 `08:00:00` 者仅 **44** 个 ⇒ **`6.3.3A` 早已固化**，用户描述的“08:00 单脉冲”是 **6.2B 时代**状态 ⇒ **2×2 退化为单因子（C≡A、D≡B）**。用户据此裁定：**只跑 `7.9A-1` 单因子**（另裁定判据 = 四指标 + 空间位置，锚 7.3.6A 靶场）。
+
+**唯一结构变化**：`qsim.flowCapacityFactor` / `qsim.storageCapacityFactor` `1.0 → 0.434977`（= `1/SCALE`，由 `N_base/ΣEF = 200,000/459,794` **独立推导**，⛔ 不由交通观测反演）；其余全部继承 v1.0（`queue` / FIFO / `timeStepSize 1 s` / λ=0.075 / route-choice 冻结 / `randomSeed 4711` / 236,044 agents）。config 全展开 diff **恒 5 项**且全白名单。
+
+**运行**：`matsim_sampling_capacity_7_9a1/`。20 迭代 **226.99 min**、heap 24 g、`A1_RUN_COMPLETE` **41/42**（1 项 `WARN` 非失败、`failed == []`）、`dep = arr = 236,044`、`stuckAndAbort = 0`、it.19 events **1.93 GB**；冻结 3 目录（`matsim_final_7_6h` / `matsim_viz_7_8` / `reports/final_model_7_8`）**0 漂移**。
+
+**★四指标实测（A-1 vs v1.0，同口径）**：
+
+| 指标 | v1.0 | A-1 | 倍率 |
+|---|---:|---:|---:|
+| ① `N_cong`（`excess_s>0`，**主判据** = 登记基线） | 7,985 | **15,083** | **×1.889** |
+| ① `N_cong`（cut 50 / 100 / 200 m） | 721 / 144 / 9 | 1,805 / 435 / 58 | ×2.503 / ×3.021 / ×6.444 |
+| ① `N_slow`（cut 0，**含量化伪影**，见下） | 117,168 | 124,736 | ×1.065 |
+| ② `n(v/c ≥ 1)` | 82 | **501** | **×6.110** |
+| ② `sat_km` | 1.1514 | **7.3379** | **×6.373** |
+| ② `max v/c` | 1.000000 | **1.001695** | **首次越过 1.0** |
+| ② 饱和链流量占比 | 0.2260% | 0.3892% | ×1.722 |
+| ② 峰 `aggV/C`(15 min) | 0.102603 @08:30 | 0.216183 **@08:45** | ×2.107 |
+| ③ 峰在途（events / legHistogram） | 36,176 / 36,799 | **63,706 / 69,357** | ×1.761 / **×1.885** |
+| ③ 峰排队（`enters traffic` 未进链） | 57 | 73 | ×1.281 |
+| ③ 峰 `n_slow_links` / 峰时刻 | 30,706 @08:25 | 37,917 **@08:55** | ×1.235（**峰后移 30 min**） |
+| ③ `stuck` / 全天未到达 | 0 / 0 | **0 / 0** | 满分（**非网络崩解**） |
+| ③ 06:00–12:00 窗内未到达 | 104 | **5,241** | ×50.4（**拥堵外溢到午后**） |
+| ④ `overlap_len_share` | 0.03547 | 0.04140 | ×1.17 |
+| ④ `concentration_ratio`（全网上限分母 / 载流链分母） | 3.377 / 1.158 | **3.942 / 1.412** | 拥堵**向靶场聚集** |
+
+**★★§5 ① 流量质量（本轮首次真正产出，门 `A09b`）**：Pearson r **0.3452 → 0.4278**、WMAPE **0.7176 → 0.4774**、GEH 中位 **26.088 → 15.887**、GEH<5 **49 → 88**（占比 8.51% → 15.28%）⇒ **四项分布面全部改善**。
+
+**★崩解护栏（门 `A09`）**：`Sim/Obs` `0.9993348 → 0.7664761`（**< 0.85 ⇒ 触发**）；`POSITIVE_ONLY 1.0873 → 0.8161`、`BEST_DIRECTION 1.0383 → 0.7997`（**三口径全跌破** ⇒ 非零流伪影所致）。`it.19` 单点 `0.7725`。
+
+**★判决**：**`SAMPLING_CAPACITY_NETWORK_BREAKDOWN`**（预注册 §10），§7 情形自动分类 = **D**（`sat_km ×6.37 ≥ 2.0` 且 `Sim/Obs ×0.767 < 0.95`）。
+
+**★★机制分解（`scripts/od/decompose_simobs_7_9a1.py`，519 s，逐断面 576/576 全内连接）**：
+- `Σsim` 1,513,214.6 → **1,160,614.9（−23.30%）**；`Σobs` 冻结不变（1,514,221.9）。
+- **★不是均匀缩放**：**`L1/L0 = Σ|Δ| / |ΣΔ| = 1.4226`**（345 断面降 / 186 升 / 45 持平；按 obs 加权：降的担 62.44%、升的担 31.45%）⇒ **正负抵消的空间重分配**，非整体变稀。
+- **★`|Δ|` top-20 全为高速**（CTE / PIE / SLE），且这些断面 **v1.0 严重高估 2.0–4.9×**：CTE `44900` obs 5,131.5 / v1.0 11,911.5（**×2.32**）/ A-1 4,094.6（×0.80）；SLE `47376` obs 3,432.0 / v1.0 6,843.8（×1.99）/ A-1 2,845.4（×0.83）；PIE `46623` obs 2,797.2 / v1.0 13,800.4（**×4.93**）/ A-1 8,917.2（×3.19）。
+- **★A-1 把逐断面 `sim/obs` 分布向 1 压缩**：P25 0.287→0.341、P50 0.959→**0.816**、P75 1.539→**1.185**、P95 2.991→**2.245** ⇒ 这正是 r/WMAPE/GEH **四项改善**的来源。
+- **⇒ 对 §7 情形 D 的直接证实**：v1.0 的 `Sim/Obs = 0.9993` 是**大额正负抵消**的产物（高速高估 ≈ 其余低估）；A-1 削掉的正是高速上**物理上不可能**的那部分高估（`0.434977 × C_real` 下链路根本载不动 12,000 veh/h）⇒ 总量因此不再平衡。§7 情形 D 原文「既有断面流量校准可能依赖了错误的容量尺度补偿」**由实测直接坐实**。
+- 产 `reports/sampling_capacity_7_9a1/_decompose_simobs_a1.json`（含 `L1/L0`、分位、按 `RoadCat`、top-20）。
+
+**★口径与实现留痕（本轮 4 项，⛔ 均未改预注册 sha `de15361a…`、⛔ 未改任何阈值）**：
+1. **`A03` 假门禁（第 7 次同类复现）**：判据写死 `vd.startswith("PREPARED")`，而 runner 跑完后**合法地**把 verdict 由 `PREPARED_AWAITING_RUN` 改写为 `A1_RUN_COMPLETE`（该 json 内**没有** `ok` 键）⇒ `A03` 必判 FAIL ⇒ 因 `hard_fail` 非空把总判决压成 `FAILED`，**整轮结论被误毁**。已修为「跑前 `PREPARED*` **或** 跑后完成态且 `failed == []`（允许 `WARN`）」。全脚本仅 `A03` 引用 `PREPARED` ⇒ 单点修复。
+2. **★`A09` 的判决分支是死代码**：原 `hard_fail = [c for c in CHECKS if c["pass"] is False]` 收录**全部** False 门（含 `A09`）⇒ 只要 `Sim/Obs < 0.85` 就必然走首分支 `FAILED`，预注册 §10 的 `SAMPLING_CAPACITY_NETWORK_BREAKDOWN` **永远不可达**。已按 §10 分离 `BREAKDOWN_GATES = ("A09", "A10b")`。
+3. **报告 §8 渲染硬编码**：原文本恒定写「`Sim/Obs(A-1) = …` **≥ 0.85**」，实测 0.7665 时照写“≥”，会把读者带到错误结论 ⇒ 已按**实测比较结果**动态渲染符号与 PASS/FAIL 判定，并在触发时附加子义说明。
+4. **`onset` 判据（§4.3）口径警告**：`t_onset` = A-1 `n_slow_links(t)` 首次 ≥ **v1.0 同一 bin 值的 3 倍**；v1.0 的该曲线在 07:00–08:55 **平台化**（≈2.9–3.07 万，短链量化伪影所致）⇒ A-1（峰 3.79 万）在 07:00–09:00 内**根本达不到** 3 倍 ⇒ 实测 `t_onset = 09:20` **不代表拥堵自 09:20 才出现**，只是「v1.0 09:00 后回落、A-1 仍高」的**交叉时刻**；⛔ `duration = 155 min` **不得**读作「拥堵总时长」。同时报 1.5× 次级判据（`t_onset_1p5x = 09:10` / 165 min）。
+
+**★§11 `CAPACITY` 语义（运行前 1.5 h 提前解出，运行后由门 `A04` 证实）**：`MODE = BASE_CAPACITY`（`identical = 693575/693575` 逐位相同、`ratio_match = 0`）⇒ linkstats 的 `CAPACITY` 列**不随 `flowCapacityFactor` 缩放**，评价器「自己 ×0.434977」的口径**正确**；`max v/c = 1.0017` 证明**容量天花板在 A-1 下首次成为实际约束**（v1.0 恒 `1.000000`）。交叉验证 `n_over = 501/235,612`（`WARN_RULE_SUSPECT`，§11 第 2 条要求两版数字同时报出）。
+
+**★第三份口径备忘**：`CALIBER_RESOLUTION_BREAKDOWN.md`（**§10 判决子义消歧** —— 本次触发的是**流量层崩解**（`Sim/Obs < 0.85`），**不是** `stuck` / `never_arrived` 的**网络崩解**（实测 `max stuck_car = 0`、全天未到达 `0.0000%`、`dep = arr = 236,044`）⇒ 判决取 `NETWORK_BREAKDOWN` 但**读法按 §7 情形 D**；⛔ 两种子义都**不**允许“把容量调回去”），并加门 `A09d` 断言其存在。
+
+**★产物**：运行侧 8 件（`configs/config_A1_capf0p435.xml`、`audit/*`、`logs/*`、`ITERS/it.0…19`、`output_events/output_plans`）；评价侧 **21 件**（`PREREG_7_9A1.md`（`sha de15361a…`，15,631 B）、`a1_face_metrics.csv`、`a1_time_series.csv`、`a1_spatial_top500.csv`、`a1_target_overlap.csv`、`a1_guardrails.csv`、`via_link_attributes_HRS8-9_A1.tsv`（87.96 MB）、`congestion_map_A1_HRS8-9.png`、`STEP7_9A1_REPORT.md`、`a1_summary.json`、3 份 `CALIBER_RESOLUTION_*.md`、`_decompose_simobs_a1.json` 等）。
+
+**★独立复核与预热**：`scripts/od/xcheck_flow_quality_7_9a1.py`（§5 ① 三项独立重导 **12/12**）；`scripts/od/prewarm_events_7_9a1.py`（events 缓存往返无损 **`PREWARM_OK`**，15 项基线逐位 + 7 项结构不变量）；`scripts/od/audit_signal_mechanism_7_9d0.py`（信号机制零仿真审计，判 **`SIGNAL_MECHANISM_ABSENT`**）。
+
+**★冻结影响 = 无**：零仿真评价、未改网络 / 容量 / 需求 / route-choice / 出发时刻；**v1.0 仍是唯一冻结模型、不产生 v1.1**；⛔ **`0.434977` 不得被宣布为最终 / 最优容量**（它只是「目前唯一有数学来源、最该先验证」的参数）。
+
+**★判决含义（一句话）**：**按抽样比例收紧容量是“方向正确、但单独使用会过冲”的一刀** —— 它同时（a）造出了 v1.0 从未有过的**真实拥堵波**（峰在途 ×1.885、饱和里程 ×6.37、拥堵外溢到午后、峰后移 30 min），(b) 把断面流量校准从 0.9993 打到 0.7665，而 **0.7665 的成因已查明是「削掉了高速上物理不可能的高估」**（见机制分解）⇒ **`Sim/Obs` 的“崩解”不是模型坏了，而是 v1.0 的“水平对上”本来就是靠大额抵消买来的**。
+
+### 2.64 Step 7.9H 动态真实性诊断（**Dynamic Realism Audit ②；零仿真 / 只读 / 47 s + 81 s；⛔ 不改 v1.0、不重跑 MATSim**；判 `SIGNAL_MECHANISM_ABSENT` + 缺口成因锁定为「评价靶场尺度错配」而非需求/容量）
+
+**★起因与一处关键更正**：用户提议的「单因素容量一致性实验」（`flowCapacityFactor`/`storageCapacityFactor` `1.0 → 0.434977`，其余冻结）**已由 §2.63 `7.9A-1` 跑完并出判决**。**基线须更正**：`Sim/Obs` v1.0 = **0.9993347697**（不是 0.766）；**0.7664760994 就是 A-1 的结果**。即：容量按抽样率折减后 `Sim/Obs` **不是回升，而是从 0.9993 掉到 0.7665**。
+
+**★用户 4 条验收标准逐条实测**：
+
+| # | 标准 | 实测 | 结论 |
+|---|---|---|---|
+| ① | `Sim/Obs` 明显回升 | 0.9993348 → **0.7664761**（↓0.2329） | **✗ 反向** |
+| ② | 形成连续拥堵走廊 | 严格档 `vc≥0.85 且 sr<0.70`：0 条 → **2 条 / 1.141 km** | △ 极弱 |
+| ③ | 空间残差方向改善 | 高估桶 154 → **65 节**（担 obs 25.16% → **5.69%**）；低估桶 210 → 179（38.58% → **35.17%**） | △ 半改善 |
+| ④ | 无全网锁死 | `stuck = 0`、dep = arr = 236,044、真实拥堵只担全网 **0.423%** 流量 | **✓** |
+
+**★H1 缺口去向（it.19 `HRS8-9avg`）**：全网 40,008,184 → 38,130,232（**−4.69%**）；**被 crosswalk 映射的 3,037 条边 2,655,572 → 2,016,818（−24.05%）**；未映射 690,538 条边 37,352,612 → 36,113,414（**−3.32%**）⇒ **缺口主要是「车改道离开被观测边」**（匹配边相对跌幅是其余网络 **7.2 倍**）。走廊间重分配实证：**ECP +83.2%**、**KPE 隧道 +17.7%** 而 **PIE −34.5%**、**CTE −37.0%**、**SLE −26.7%**。
+
+**★H1 断面分桶（576 节，cycle 均值）**：低 `sim/obs<0.5` **210 节担 38.58% obs** → A-1 **179 节担 35.17%**；≈ `0.5–1.5` 212 → **332**；高 `>1.5` **154 节担 25.16%** → **65 节担 5.69%** ⇒ **v1.0 的 `0.9993` 是「154 节高估 ↔ 210 节低估」大额正负抵消**；A-1 压掉了高估侧，**低估侧几乎未动**。
+
+**★「sim 低 obs 高」几乎全是快速路**：**KPE 隧道 19 节 `Σobs 230,268` / `Σsim×S 22,239`（0.097）**、ECP 41 节 0.227、PIE 38 节 0.124、**AYE 26 节 0.092**、TPE 17 节 0.201、KJE 15 节 0.298、BKE 8 节 0.118。`RoadCat` = `CATA 106 / SLIP_ROAD 104`。**成因二分**：**M1 真·低载 133 节**（连 `sum` 口径也 < obs，中位 `sum/obs = 0.538`）／**M2 median 塌陷 77 节**（`sum ≥ obs` 但 median = 0）。`sim_median ≡ 0` 共 **53 节** ⇒ 其中 **`sum` 亦精确为 0 者 37 节**（MATSim 完全不用这些边）、`sum>0 且 sum/obs≥1` **9 节**（纯 M2）、其余 **7 节**（叠加）。**★容量不是约束**：210 节中仅 **4 节** `cap_eff_sum < obs`，中位 `cap_eff_sum = 15,200 veh/h` ⇒ 物理上装得下，MATSim 不放车。极端例：AYE `48525` `obs 4,535`、`n_edges 1`、`cap_eff_sum 7,600`、`sum×S = 0`。
+
+**★H2「快速路被 crosswalk 低估」假设的实测（三部分）**：
+1. **「1:1 最近边」被证否**：576 断面 → **3,037 条唯一匹配边**（primary 行 3,015），每断面 min 1 / **max 31** / 中位 **4** / 均值 **5.54**；**严格 1:1 仅 60 节（10.42%）**。
+2. **聚合口径敏感性**（只换 `<agg>`）：`median` **0.9993 / 0.7665**、`mean` 1.0074 / 0.7725、**`sum` 4.1616 / 3.1384**、`max` 1.1113 / 0.8589 ⇒ **"聚合函数选错"不成立**（median 恰在 1.0 附近）；但要 `median` 口径在 A-1 达到 1.0 需 **`SCALE × 1.3047`**，在 v1.0 只需 ×1.0007。
+3. **覆盖率成立且严重**：匹配边 **159.7 km**（全网 15,126.5 km）却只担 **全网高峰流量 6.64%（v1.0）/ 5.29%（A-1）** ⇒ **靶场只覆盖 6.6% 流量** ⇒ `Sim/Obs` **不可**读作"全网只有观测的 76.6%"。
+4. **但快速路整体在 MATSim 里并不低载（关键反证）**：PIE 689 边 / 33.4 km 担 **991,784 veh/h**、SLE 276 边 357,471、TPE 412 边 331,340、CTE 191 边 229,368、BKE 165 边 177,116、**AYE 176 边 136,381**、KJE 150 边 123,249 ⇒ ⇒ **真问题是"LTA 断面观测值 vs 4 条匹配边的中位数"跨尺度比较 + MATSim 在走廊内跨边重分配**，而非"少走快速路"。
+
+**★H3 真正拥堵在哪**：严格口径（`len≥50 m` 且 `vol>0` 且 `vc≥0.85` 且 `sr<0.70`）v1.0 **13 条 / 0.96 km / 担全网 0.124% 流量** → A-1 **91 条 / 8.74 km / 0.423%**，中位 `speed_ratio` 0.630 → **0.253**。走廊（连续相邻按最小转角合并、≥0.30 km）：严格档 0 → **2 条 / 1.141 km**（PIE 0.796 km `14,442 veh/h, vc 0.923, sr 0.150, 3 h`）；宽松档 0 → **10 条 / 4.236 km**。
+
+**★H4 可视化重建（5 张图，v1.0 / A-1 双版）**：旧 `speed_ratio` 污染实测与正式口径**逐位吻合** —— v1.0 载流 224,432 中 `speed_ratio<0.80` **117,168（52.21%）**、其中 **99% 是 `LENGTH<50 m`**；过滤 `len≥50 且 vol>0` 后仅 **1,174（4.70%）**（≡ `n_slow_cut0` / `n_slow_cut50`）。新图：`fig_why_speedratio_fails_v10_A1.png`（2×2 对照，直接证明"全红"是仪器问题）、`congestion_map_vc_5bin_v10_A1.png`（方案 A，`0.85–1.00` 档 79 → **530**、`>1.00` 5 → **33**）、`congestion_map_delay_v10_A1.png`（主图 `delay = TT − FF`，过滤后只画 `delay≥1 s`：**249 条 / 20.8 km / 1,497 veh·h → 998 条 / 88.4 km / 6,073 veh·h**）、`congestion_map_ttratio_major_v10_A1.png`（辅助图，仅干道）、`congestion_corridors_v10_A1.png`（方案 C 双层走廊）。
+
+**★判决与下一步**：`0.434977` **不是**最终答案，**v1.0 仍唯一冻结、不产生 v1.1**。容量一致性修正**确有效果**（高估侧伪影 25.2% → 5.7%）但**未修好 `Sim/Obs`**（判据①反向），暴露更根本的结构障碍 = **评价靶场尺度错配**（覆盖 6.6% 流量 + median 取代表 + 53 节塌陷）。**正交未决两事**：① **`SIGNAL_MECHANISM_ABSENT`**（config 0 命中 / 网络 0 令牌 / `org.matsim.contrib.signals` **不在 classpath** / 恒绿桩 / `NodeTransition` 无 `@StringSetter` 故 XML 改不动）；② M1 真·低载（容量充足却不放车 ⇒ 指向路由分配 / 路网连通性 / OD 空间分布）。**下一刀候选**：(a) 靶场重标定（走廊级 Σ / 容量加权，**零仿真**）；(b) M1 连通性归因（**零仿真**）；(c) `matsim-signals` 或绿信比折减容量；(d) `7.9B trafficDynamics` 复评。
+
+**★脚本**：`scripts/od/diagnose_gap_7_9h.py`（H1/H2/H3，47 s）、`scripts/od/build_congestion_maps_7_9h.py`（5 图，81 s）、`scripts/od/audit_signal_mechanism_7_9d0.py`（信号零仿真审计，20.5 s）。
+**★产物**：`reports/dynamic_realism_audit_7_9/` —— `STEP7_9H_REPORT.md`、`_gap_diagnostic_7_9h.json`、`_congestion_maps_7_9h.json`、`_signal_mechanism_audit.{json,md}`、`h2_mapping_cardinality.csv`、`gap_low_ratio_sections_{v10,A1}.csv`、`h3_congested_links_{v10,A1}.csv`、`congestion_corridors_{v10,A1}.csv` + 5 张 PNG。
+
+**★新纪律**：**可视化指标必须报"被谁污染"** —— 本步实测旧图 52% "慢"链路中 99% 来自 `LENGTH<50 m` 的 1 s 量化 ⇒ **凡按比率着色的图，必须先报过滤前后的条数与里程**；**「覆盖率」必须先算**（靶场只担 6.6% 流量 ⇒ 任何断面级比率的对外表述都必须带覆盖率限定）；**比值指标必须同报聚合函数**（median/mean/sum/max 可得 0.77 / 0.77 / 3.14 / 0.86）。
+
+---
+
+### 2.65 Step 7.9I 观测域尺度与局部可达性诊断（**Dynamic Realism Audit ③④；零仿真 / 只读 / 38.4 s + 46.3 s；⛔ 不改 v1.0、不重跑 MATSim**；判 `CORRIDOR_SCALE_AUDIT_READY` + `M1_ACCESSIBILITY_AUDIT_READY`）
+
+> 用户裁定：**暂停 G-3/G-4 与 C（信号）/D（动力学）**，只做 (a) 靶场比较口径修正 + (b) M1 可达性归因，**两者均零仿真**。判据运行前冻结于 `reports/corridor_scale_audit_7_9i/PREREG_7_9I.md`。
+> 脚本：`scripts/od/audit_corridor_scale_7_9ia.py`（38.4 s）、`scripts/od/audit_m1_accessibility_7_9ib.py`（46.3 s）、`scripts/od/build_figs_7_9i.py`。
+
+#### 7.9I-A 走廊级容量加权比较（73 条非空 `RoadName` 走廊）
+
+**三口径并报**（1:many 会造成口径不对称，必须同报）：`sim_flow^sec`（断面级累加，主）/ `sim_flow^edge`（边级去重）/ `sim_flow^med`（代表值 = canonical median）；分母 `cap_c = Σ CAPACITY×cap_mul`（边级去重）。
+
+**★★核心发现 = 1:K 计数机制**。1 个 LTA 断面典型对应 **K = 5.5434** 条 MATSim 有向边（走廊级 `K_c` ∈ 3.0–14.4）。实测池化 `ratio_simobs` = **5.2818** ⇒ **`5.2818 / 5.5434 = 0.953`**，量级自洽 ⇒ **"sim 比 obs 大 5 倍"主要是计数基数错配，不是交通现象**。
+
+**容量加权残差（⚠ 口径局限必须同报）**：
+
+| 版本 | `Sim/Cap`(Σ) | `Obs/Cap`(Σ) | 残差 | 代表值口径残差 |
+|---|---:|---:|---:|---:|
+| v1.0 | 0.5194 | 0.1248 | **+39.46 pp** | −0.0083 pp |
+| A-1 | 0.9004 | 0.2869 | **+61.35 pp** | −6.6998 pp |
+
+⚠ Σ 口径的 `+39.46 pp` **主要是 1:K 计数所致**（sim 计 K 次 / obs 计 1 次 / 容量分母也 K 折 ⇒ `Obs/Cap` 被结构性压低 ≈K 倍）；⚠ 代表值口径与 canonical `median` 比 **代数同源**（`=(0.9993348−1)×100×Σobs/Σcap`）**不构成独立证据**。⇒ **容量加权本身给不出独立答案**。
+
+**★★真正的独立证据 = 去尺度残差** `ratio_simobs_norm = ratio_simobs / K_c`（≈1 ⇒ 可被 1:K 完全解释；≪1 ⇒ 真实缺载）：
+
+| 走廊 | 断面 | `K_c` | `ratio_simobs` | **norm** | `obs_flow` |
+|---|---:|---:|---:|---:|---:|
+| KALLANG PAYA LEBAR EXPRESSWAY **TUNNEL** | 19 | 3.53 | 0.413 | **0.117** | **230,268** |
+| **EAST COAST PARKWAY** | 47 | 6.15 | 0.810 | **0.132** | **93,818** |
+| KALLANG PAYA LEBAR EXPRESSWAY | 3 | 5.33 | 0.635 | **0.119** | 15,362 |
+| （其余 16 条，`norm<0.5`） | — | — | — | <0.5 | 9,816 |
+
+`norm<0.5` 共 **19 条走廊 / 担 `Σobs` 23.08%**，其中**前 3 条担 22.42%**、其余 16 条仅 0.65%。**PIE / SLE / CTE / BKE 的 norm = 1.129 / 1.104 / 1.132 / 0.953** ⇒ **完全可由 1:K 解释，不是真低流量**。分组：EXPRESSWAY norm **0.8232**（obs 89.5%）/ OTHER **0.5504**（obs 10.5%）（⚠ 该池化 K 为 obs 加权混合，仅作量级对照）。
+
+**⇒ 回答「快速路是否被低估」= 分裂成两半**：**大部分快速路 = 计数基数错配**；**只有 KPE 隧道 / ECP / KPE 存在真实缺载（缺 7.6–8.5 倍）**。
+
+#### 7.9I-B 133 个 M1 断面的可达性归因
+
+M1 = `median 口径 sim/obs<0.50` 且 `sim_sum×SCALE < obs` ⇒ **133 节**（M2 = 77 节，复现无损）。图：421,406 节点 / 693,575 边；`hot` 边（`HRS8-9avg≥500`）20,258 条；端点距离用 `dijkstra(unweighted=True, min_only=True)` 一次多源 BFS。
+
+**⚠ 冻结判据缺陷披露（本步最重要的方法论事件）**：冻结分类实测 `M1-C 60 节（obs 69.2%）` / `M1-E 73 节（30.8%）` / `M1-A = M1-B = M1-D = 0`。**`M1-E` 无区分度** —— 133 个 M1 **全部**落在 `motorway`(89)/`motorway_link`(44)，`is_major_highway` 恒 True，把 A/B 挤成**结构性不可达**。**另三项退化诊断**：`all_endpoints_in_giant` 恒 True（**全网单一弱连通分量 421,406/421,406**）、`n_dangling_endpoints` 恒 0、`dir_diff_median` 最大 23.8°（阈值 30° ⇒ `M1-D` 恒 0，**不是"方向正确"**）。以上均已写入 `degraded_diagnostics`。
+
+**后验修订分类（标签 `EXPLORATORY_POST_HOC`，仅假设生成）**：只把"特殊设施"从"任何快速路"收窄为**结构性设施**（`SLIP_ROAD` / 全 `*_link` / 名称含 `TUNNEL·VIADUCT·FLYOVER·BRIDGE·UNDERPASS`），**阈值一律未改**。
+
+| 后验类 | 节数 | `Σobs` 占比 |
+|---|---:|---:|
+| `X1_CHAIN_DEFECT`（链断裂/多分量） | **60** | **69.2%** |
+| `X2_RAMP_OR_STRUCTURE` | 40 | 11.4% |
+| `X3_PARALLEL_BYPASS`（旁路 ≥0.5×obs） | 22 | 12.4% |
+| `X4_ISOLATED_FROM_MAIN_FLOW`（≥5 跳） | 9 | 6.2% |
+| `X0_UNEXPLAINED` | **2** | **0.9%** |
+
+**非互斥标志位**：`f_chain_defect` **60** ／ `f_bypass_ge_half_obs` **105（78.9%）** ／ `f_hop_ge5` 59 ／ `f_slip_roadcat` = `f_all_link_edges` 44 ／ `f_name_structure` 18 ／ **`f_no_flow_in_matched` 38**（匹配边流量**精确为 0**，`Σobs` 62,051 = **13.2%**）／ `f_zero_matched_edges` **0**（映射本身没断）。
+
+**走廊集中度**：KPE 隧道 18 节 `Σobs` 220,473（**17 节多分量、0 节零流量** ⇒ **车在跑但映射对象错**）；ECP 27 节 74,583（13 节 ≥5 跳）；PIE 28 节 63,523；**AYE 21 节 47,734（16 节零流量）**。
+
+#### 交叉印证与判决
+
+| 证据 | 7.9I-A（走廊级） | 7.9I-B（断面级） |
+|---|---|---|
+| KPE 隧道 | `norm = 0.117` 真实缺载 | 17/18 多分量、**0 零流量** ⇒ 映射对象错 |
+| ECP | `norm = 0.132` | 13/27 ≥5 跳、12 链缺陷 |
+| PIE/SLE/CTE/BKE | `norm` 0.95–1.13 ⇒ 无真实缺载 | 仍有 28/1/0/6 个 M1 节 ⇒ **走廊内部被高估断面抵消**（均值抵消） |
+| 「车改道」 | 匹配边 −24.05% vs 其余 −3.32% | **105/133 节** 300 m 内存在高流量平行边 |
+
+**门/负例**：I-A `6/6` 负例 fired（permute-corridor / constant-capacity / zero-corridor / swap-capmul / zero-all-sim / swap-obs-window）；I-B `4/4` fired（no-hot-edges / A-1-section-set / random-rewire / broken-ids）。**两脚本 `n_fail = 0`**。
+
+**★新纪律（本步新增）**：
+1. **多边映射必报计数基数 K** —— 任何「Σ sim 边 vs 单次 obs」的比值必须同报 `K_c`，并给 `ratio/K`；否则会把 **1:K 计数错配**误读为物理缺口。
+2. **「口径修正」不得充当独立证据** —— 若修正量与 canonical 指标**代数同源**，必须显式声明（如本文 `residual_pp_rep`）。
+3. **退化诊断必须披露** —— 网络是单一弱连通分量时，`in_giant` / `dangling` 类字段**恒真/恒 0**，必须写入 `degraded_diagnostics`，⛔ 不得当作"通过"。
+4. **冻结判据无区分度 = 判据缺陷** —— 某类命中率 100% ⇒ 该判据失效，须**后验修订并加 `EXPLORATORY_POST_HOC` 标签**，⛔ 不得静默改阈值。
+5. **负例必须是"非同构扰动"** —— 索引整体位移、整体反向都是**同构**，不会改变拓扑量 ⇒ 必然 `fired=False`；负例必须真正改变可观测结果（本步两次踩坑已修）。
+
+**★产物**：`reports/corridor_scale_audit_7_9i/` —— `PREREG_7_9I.md`、`STEP7_9I_REPORT.md`、`corridor_scale_{v10,A1}.csv`（26 列）、`section_scale_{v10,A1}.csv`、`m1_cards_7_9ib.csv`（133 卡）、`m1_class_summary.json`、`corridor_scale_summary.json`、`_corridor_audit_7_9ia.json`、`_m1_audit_7_9ib.json`、`fig_7_9i_corridor_scale_and_m1.png`、`_run_7_9i{a,b}.log`。
+
+**★下一刀候选（均零仿真）**：**(a1)** 对 60 个链缺陷 M1 断面把 crosswalk 从"最近若干条边"改为**沿走廊拓扑取连续有向链**（`from→to` 相邻闭包）；**(a2)** KPE 隧道 / ECP 的"结构设施"实体核验；**(b)** 38 个零流量断面的"平行边承接"一对一记账。**(a1)(a2) 完成后**才重谈 **7.9J / signals**。
+
+---
+
+### 2.66 Step 7.9I-A2 / A1 / B(b) 三刀闭环（**零仿真 / 只读 / 41.6 s + 20.3 s + 19.7 s + 25.5 s；⛔ 不改 v1.0、不重跑 MATSim**；判 `KPE_ECP_OBJECT_AUDIT_READY` + `CHAIN_REAGGREGATION_READY` + `ZERO_FLOW_PARALLEL_LEDGER_READY` + `BB_DIRECTION_PROBE_READY`）
+
+> 用户裁定：**把「模型不堵」与「评价不对」拆开**，并按 **(1) KPE/ECP 实体核验 → (2) 60 节链重聚合 → (3) 38 节零流量平行边记账** 三刀顺序在**零仿真域**收干净证据链；**★底线：在 A1/A2/B 没有把「观测对象 ↔ MATSim 对象」的尺度关系理清之前，不再调整 v1.0 的交通动力学参数**（否则又会"跑四小时 → Sim/Obs 变了 → 却不知道为何变"）。
+> 预注册（运行前冻结）：`PREREG_7_9I_A2.md` / `PREREG_7_9I_A1.md` / `PREREG_7_9I_Bb.md`。
+> 脚本：`audit_kpe_ecp_object_7_9ia2.py` / `audit_chain_reaggregation_7_9ia1.py` / `audit_zero_flow_ledger_7_9ibb.py` / `audit_bb_direction_probe_7_9ibbp.py`。**全部 `n_fail = 0`**。
+
+#### 7.9I-A2 KPE / ECP 实体定义核验（69 张实体卡；18/18 门；4/4 负例）
+
+**★`norm` 的隐含前提被证伪**：`norm = ratio_simobs / K_c` 成立**隐含**「一个断面对应的 K 条边承载**同一股车流**（连续有向链）」。若实为**平行对象**，「除以 K」会**人为制造并不存在的缺载**。
+
+**核心判据 `vc_max = obs_8_9 / max_e cap_eff(e)`**（观测单元 vs 仿真单元）：
+
+| 走廊 | 断面 | Σobs | **`norm`** | `vc_mean` 中位 | `vc_max` 最大 | 匹配链落 `*_link` 占比 | 主导分类（按 Σobs） |
+|---|---:|---:|---:|---:|---:|---:|---|
+| KPE 隧道 | 19 | 230,267.5 | 0.117223 | 1.718 | **3.569** | — | **`U_UNIT_MISMATCH` 92.64%** |
+| ECP | 47 | 93,818.0 | 0.131760 | — | 0.724 | **78%** | `C_CHAIN` 49.88% / `P_PARALLEL` 38.37% / `S_SLIP_GEOM` 11.74%（**无** `U_UNIT_MISMATCH`） |
+| KPE | 3 | 15,362.0 | 0.119084 | — | — | — | **`U_UNIT_MISMATCH` 58.91%** |
+
+**★决定性**：KPE 隧道 **16/19 断面 `vc_max > 1`**（`obs_8_9` 中位 **12,119** > 最大单边容量 **9,500**；最高 `20,342 / 5,700 = 3.569×`）⇒ **拿容量最大的匹配边也装不下 obs** ⇒ **观测单元 ≠ 仿真单元**。
+
+**半径设施重建**（`F_R = SCALE × Σ` 半径内 MAJOR 边 `HRS8-9avg`）：KPE 隧道 matched-only **0.417** → 50 m **0.657** → 100 m **1.439** → 150 m **2.897**（相对 Σobs）⇒ **crosswalk 只选中了低流量子集**。
+
+**★对 7.9I-A 的修正（必须同步）**：`norm` 与设施级口径差 **253% / 500% / 434%**（远超 `PREREG §4-2` 的 15% 门槛）⇒ **7.9I-A 的缺载倍数须修正**：KPE 隧道 / ECP / KPE 从 8.5× / 7.6× / 8.4× 收敛到 **`r_mixed` 2.6× / 2.6× / 2.2×**。
+
+> **★口径记法披露（首跑单门 FAIL 的真因）**：`matched_edges` 有**两个都正确**的计数 —— `n_edge_sec`（逐断面求和，ECP **289**）与 `n_edge_dedup`（去重，ECP **283**，15 行为 `shared_section_count=2`）。`PREREG §1` 给的是 dedup 值。**修法 = 门同时断言两者并携带实测值**（阈值未改），非"改阈值放行"。
+
+#### 7.9I-A1 60 个链缺陷断面连续有向链重聚合（60 张链卡；8/8 门；4/4 负例）
+
+**口径**：候选边集 `E` 的每个**弱连通分量** `C`，有向**路径**（每节点 in/out 度 ≤1 且 边数 = 节点数−1）⇒ `rep(C) = median_e flow_e`、容量 `min_e cap_e`；**非路径** ⇒ `rep(C) = Σ_e flow_e`、容量 `Σ_e cap_e`。`sim_chain = SCALE × Σ_C rep(C)` ⇒ **链内不重复计数、跨链可加**。两级候选池：**P0** = 冻结匹配集；**P1** = `E_s ∪ {100 m 内同向 MAJOR 边}`（重建池）。
+
+| 口径 | pooled `sim/obs` | 缺载倍数 | 说明 |
+|---|---:|---:|---|
+| `r_med`（canonical） | **0.1187** | 8.4× | 零流边多时塌为 0 |
+| `r_sum`（断面级累加） | **0.2871** | 3.5× | 1:K 重复计数 |
+| **`r_chain(P0)`** | **0.1881** | 5.3× | 正确口径，但**受限于匹配集** |
+| **`r_chain(P1)`** | **0.5556** | **1.8×** | 尺度修复后的真实量级 |
+
+分类（按 Σobs）：P0 **`C_LOW` 100%**；P1 **`C_OK` 17.82% + `C_HIGH` 10.00% + `C_LOW` 72.18%**。
+**★结论：链重聚合本身价值有限（0.119→0.188）——真正的杠杆是「候选对象选取」，不是统计量**（P1 推到 0.556 即缺载 1.8×），但仍剩 **72.18% 的 Σobs 判 `C_LOW`**。
+走廊：KPE 隧道 17 节 / 200,410（61.8%）；**AYE 10 节 `r_chain` 中位 = 0.000（匹配集全零流）**；**TPE 3 节 `r_chain_p1` 中位 = 5.305 ⇒ P1 是上界、非无偏估计**。
+
+> **★判据退化披露**：原 `G-A1-7`（`r_chain(P0)` vs `r_med`）实测 median rel diff = **0.0056** —— 冻结匹配集内**路径分量的代表值 ≡ canonical `median`（构造性恒等）**，该对比**无信息量**。按 `PREREG_7_9I §4` 纪律：**不静默改阈值**，记入 `degenerate_criteria`，有效对比改为 **`G-A1-7'`（P1 口径，实测 1.070，标签 `EXPLORATORY_POST_HOC`）**。与 7.9I-B 的 `M1-E`（命中 133/133）同类。
+
+#### 7.9I-B(b) 38 个零流量断面平行边记账（38 张记账卡 + 38 张方向卡；6/6 + 6/6 门；4/4 负例）
+
+目标集：`M1` 判为「匹配边流量精确为 0」的 **38 节**（Σobs **62,050.5**；`RoadCat` = **`CATA` 22 / `SLIP_ROAD` 16**；`n_matched` min 1 / 中位 3 / max 16）⇒ **全部匹配成功，但匹配到的边在 v1.0 中一条都没有流量**。
+
+| 分类 | 节数 | Σobs 占比 | 「流量去了哪」 |
+|---|---:|---:|---|
+| **`B2_OPPOSITE_ONLY`** | **22** | **61.72%** | **同向没有承接对象**（同向有流边 100 m 内 **19/22 节 = 0**、200 m 内 **17/22 节 = 0**）⇒ 流量在**反向车行道**上 |
+| `B1_SAME_DIR_PARALLEL` | 10 | 20.73% | **同向平行对象确实接住了**（`r_par_sum_same` 中位 **1.628**，6/10 落在 [0.5, 2]）⇒ 真「平行对象抢流量」 |
+| `B3_NO_PARALLEL_FLOW` | 6 | 17.55% | 邻近**既无同向也无反向**承载对象 ⇒ 回到**连通性 / 需求** |
+
+同向平行合计 `Σ×S` = **47,745.0 @100 m**（`r = 0.7695`）／**87,535.6 @200 m**（`r = 1.4107`）。
+
+**★★后验探针 `-P`（标签 `EXPLORATORY_POST_HOC`；预注册与主引擎判据/阈值未改）** 分开了两种互斥解释：
+
+| 分类 | 匹配边 | 其中同向 | 其中**反向** | `d_match_max` 中位 | 同向有流边 | 反向有流边 | 有**对向孪生**的节 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `B1` | 31 | **31** | **0** | 1.8° | 41 | 53 | 6/10 |
+| **`B2`** | 91 | **91** | **0** | 5.1° | **7** | **83** | **1/22** |
+| `B3` | 30 | **30** | **0** | 2.9° | 0 | 3 | 0/6 |
+| **合计** | **152** | **152（100%）** | **0** | — | 48 | 139 | 7/38 |
+
+⇒ **「映射选错方向」的假设被否定**（152/152 匹配边方位一致，0 条反向）⇒ **`B2` 的「同向无对象」是真结论**。`B2` 反向有流边**仅 1/22 节存在同节点对反向孪生** ⇒ 该设施在 MATSim 中建模为**单向 way**（对向车行道以**独立节点串**另建）⇒ **流量确实在「对向车行道」上，但那是网络的另一个对象、另一条节点串** ⇒ **观测对象与仿真对象在「方向」维度上不一致**，不是需求不足、也不是平行边抢流量。
+
+**走廊集中度**：**AYE 16 节 / 37,520.0 + PIE 7 节 / 15,014.5 = 23 节 / 52,534.5（84.7% 的 Σobs）**，两走廊 `r_par_same` 中位均为 **0.000** ⇒ 与 `B2` 完全吻合。
+
+> **★口径陷阱（新纪律）**：`lta_section_geometry()` 的 `mx/my` 是**局部等距平面米**（`lon×111320·cos(lat0)`，原点 (0,0) ⇒ ≈1.15e7），**与全网图 SVY21 不同源**；⛔ **绝不能**与 `Graph.ex/ey` 或 `SEC_GEO_7_6C.mid_x/mid_y` 做半径/距离运算（首版探针混用 ⇒ 距离恒 ≈1.15e7 m ⇒ `n_same = n_opp = 0` **全零伪影**）。其 `bear` / `len_m` 与 CRS 无关，可照用。A2 / A1 / Bb 三引擎**均正确使用 `SEC_GEO_7_6C`**，不受影响；已加防御性文档字符串 + 新增 `G-P0` 坐标同源门。
+
+#### 阶段判决（本轮冻结）
+
+> **当前主要问题不能继续归因于采样容量折减（7.9A-1 已否定为主因），也不能直接归因于 MATSim 全网需求不足（7.9H：缺口是「改道」非「少跑」，`Σflow` 全网 −4.69% vs 匹配边 −24.05%，差 7.2×）。现有证据表明，评价域存在显著的 1:K 映射尺度错配；在消除该尺度效应后，仍存在少数高影响快速路断面的真实低载问题，其主要表现为映射链断裂、平行替代路径及特殊道路设施对象不一致。**
+
+**★产物**：`reports/corridor_scale_audit_7_9i/` —— `PREREG_7_9I_{A2,A1,Bb}.md`、`STEP7_9I_{A2,A1,Bb}_REPORT.md`、`kpe_ecp_entity_cards_7_9ia2.csv`（69 卡）、`a1_chain_cards_7_9ia1.csv`（60 卡）、`bb_zero_flow_ledger_7_9ibb.csv`（38 卡）、`bbp_direction_probe_7_9ibbp.csv`（38 卡）、4 份 `*_summary*.json`、4 份 `_*_audit_*.json`、4 份 `_run_*.log`。
+
+**★下一步（待裁定）**：三刀已闭环 ⇒ 候选 = `B2` 需要「**车行道对（carriageway pair）**」层（区分「同节点对双向 way」与「独立节点串单向 way」），**仍属零仿真域**；其后才重谈 **7.9J / signals / trafficDynamics**。
+
+#### ★阶段冻结收口（判决 `7.9I_FROZEN_CLOSED`，2026-09-29）
+
+用户裁定「**暂停推进，先冻结收口**」⇒ 阶段档案 **`CLOSURE_7_9I.md`**（6 节：冻结声明 / 交付清单 / 冻结结论 C1–C9 / 口径修正与陷阱 R1–R5 / 未解项移交 O1–O5 / 复现与恢复入口）。
+
+- **全链完整性审计**：7 脚本（含出图）× 6 判决 × **70/70 门 / `n_fail = 0`**（`CORRIDOR_SCALE` 20 + `M1_ACCESSIBILITY` 12 + `KPE_ECP_OBJECT` 18 + `CHAIN_REAGGREGATION` 8 + `ZERO_FLOW_PARALLEL_LEDGER` 6 + `BB_DIRECTION_PROBE` 6）。
+- **补齐缺失 run log**：`_run_7_9ibbp.log`（原 **5/6** ⇒ 现 **6/6**，全链日志完整）。
+- **★复现性校验**：重跑 `audit_bb_direction_probe_7_9ibbp.py` ⇒ ① summary JSON 除 `elapsed_s`（25.5 s→11.0 s，热缓存）外**逐位相同 = True**；② CSV **逐位相同 OK**。
+- **良性重复登记（不修改）**：A2 / A1 / Bb 的 `*_summary_*.json` 与 `_*_audit_*.json` **md5 全等**（`6f357f49…` / `6b65888e…` / `86e21605…`）⇒ 同一 dict 按两种命名约定落盘，为判决记录的权威副本；⛔ 收口阶段**不重命名、不去重**。
+- **★恢复入口**：尺度关系**已理清**（C1–C9）⇒ 唯一合法入口为 **O1–O5**，优先序 **① O1（`B2` 车行道对层，零仿真，唯一不需突破底线者）→ ② O3（LTA 分车型 / HTS 口径，零仿真）→ ③ O2 / 动力学参数（必须用户显式裁定解除底线）**。
+
+### 2.67 Step 7.9I-O1 —— B2 车行道对层（**零仿真 / 只读 / 20.7 s + 14.1 s + 13.2 s；⛔ 不改 v1.0**；判 `CARRIAGEWAY_PAIR_AUDIT_READY` + `PAIR_CANDIDATE_PROBE_READY` + `OPPOSITE_LABEL_CONTROL_READY`）
+
+**状态链**：`7.9I_FROZEN_CLOSED → READY(O1) → O1 ✓`（用户 2026-09-30 裁定「暂停推进，先冻结收口」后给出 O1 恢复入口，并列出 **7 条锚点 A1–A7**，已录入 `CLOSURE_7_9I.md §7`）。
+
+**要回答的问题**：**LTA 所观测的「一个方向断面」，与 MATSim 中由独立节点串表达的另一方向车行道，到底是什么对应关系？**
+
+**预注册** `PREREG_7_9I_O1.md`（运行前冻结）。**★`G-O1-5` 运行前修订**：原表述「链内每步方位一致」因 `E_opp` 已按方位筛过而**恒真** ⇒ **命中 100% 的退化判据**，改为**拓扑有向路径**判据（`is_directed_path`：`|E|=|V|−1` 且 `max(out/intdeg)≤1` 且恰 1 起点 1 终点）⇒ 实测 `directed_path` **46** / `sum` **11**，非退化。
+
+**方法**：`E_opp(s)` = 半径 100 m 内、`MAJOR`、方位差 `~(bear_s+180°) < 30°`、排除匹配边 —— **与 B(b) 的唯一差别是去掉 `flow > 0`**（刻意口径扩展：要区分「无对向对象」与「有对向对象但无流」）。链分量按 `7.9I-A1` 同规则取代表值（有向路径 `median` / 否则 `sum`），`sim_pair = SCALE × Σ_C rep(C)`。
+
+**★主引擎结果**：`Q0_TWIN_PAIR` **10 节 / Σobs 18,531.5**、**`Q1_SEPARATE_CARRIAGEWAY` **26 节 / 43,303.5****、`Q2_NO_OPPOSITE_OBJECT` 2 节 / 215.5；**`B2` 22 节 → Q1 **19** / Q0 3 / Q2 0 ⇒ 86.4% 对向对象是「独立节点串」**（`B(b)-P` 的机制判断被**拓扑证实**）；靶场 576 普查 `PAIR_CONSISTENT` 32.03%。
+**硬门 9/9**（`G-O1-2` 与冻结引擎逐位全等 **Σ139=139**；`G-O1-7` `Σ|E_opp|=159` = 有流 **139** + 无流 **20**；负例 **4/4** fired：取消方向约束 / R→3000 m / 非同源坐标 / 代表值退化）。
+
+**★后验 ①（候选对象选取，`EXPLORATORY_POST_HOC`）**：按「候选对象选取 > 统计量」与「多边映射必报 K」把 `Σ_C` 拆三规则 —— `r_pair` 中位 **R-sum 2.1512 / R-max **1.8677（落在 [0.5,2] 带内）** / R-med 1.2183**；带内 Σobs 占比 0.3353 / **0.3963** / 0.3494；**`Σ K_pair = 57`**（`{1:23, 2:8, 3:4, 0:2, 6:1}`）；`Σflow_same **47,745.0**` vs `Σflow_opp **254,771.9**`（**5.34×**）；**`corr(log obs, log r_pair) = 0.0535`** ⇒ 高 `r` 尾部**不是**低 obs 分母伪影。⇒ **按「单一最强对向链」读，`B2` 的零流量不再是缺载，而是 ≈1.9× obs 的同量级**。
+
+**★★后验 ②（对向标签对照，决定性）**：对每个 `B2` 断面 `s`，在 LTA 侧找**方位相反、几何邻近**的断面 `s'`（同一物理段另一方向，`R ∈ {100,200,300} m` 由近到远取首个），读其**冻结 canonical** `ratio_median` ——
+**`L1_OPP_LOADED_OK`（`s'` 正常而 `s` 全零）18 节 / Σobs 32,181 / **51.86%****（严格 `R≤100` 仅 **10 节 / 30.77%**，宽 `R>100` 8 节 / 21.09%）；`L2_OPP_ALSO_LOW` 15 节 / 24,979 / 40.26%；`L3_NO_LTA_OPP` 5 节 / 4,890.5 / 7.88%（`L3a` 4 + `L3b` 1）；`L5_OPP_HIGH` **0 节**。
+**★`B2` 内部（Σobs 38,299.5）：`L1` **15 节 / 28,918.5 / **75.51%****、`L2` 6 节 / 9,297.0 / 24.27%、`L3` 1 节 / 84.0 / 0.22%**。典型：**46894（PIE，obs 2,914）→ 对向断面 46009 距 **26.4 m**、obs 4,533、`sim_median_xS` **5,969.3**、`ratio_median` **1.3168**，而本侧 `sim_median_xS` **精确为 0**** ⇒ **同一物理段、几十米之隔：一侧标定正常、一侧全零**。
+**硬门 8/8**（`G-O1Q-4` 对向断面匹配边落在 `s` 的 `E_opp` 池内 **25/33** 命中；`G-O1Q-5` LTA 双向观测对称 `obs_{s'}/obs_s` 中位 **1.371**；`G-O1Q-7` `{n_E_opp=0} ≡ Q2` **对称差 ∅**）。
+
+**★裁定**：**`B2` 的问题 75.51%（Σobs）属「路网建模对象层面」（一侧被加载、另一侧对象全零），24.27% 才回到需求 / 路径域**；方向映射错误已被 `152/152 同向` 排除。**与 `7.9F` 系逐层排除、`7.9H`「改道非少跑」、`B(b)-P`「方向排除」完全一致，不构成新矛盾。**
+
+**★暴露面（不得省略）**：`L1` 的 **51.86% 依赖 300 m 搜索半径**，**保守读法 30.77%**（`R≤100`）；`E_opp` 是「几何+拓扑」构造而非**真值对应表**，⛔ 不得读作「LTA 断面 = MATSim 某链」。
+
+**★缺陷登记**：`D1` `G-O1-5` 运行前修订（退化判据）；**`D2` `G-O1Q-4` v1 实现与判据文字不符（实测 `0/19`）⇒ 属实现缺陷非科学结论，v2 修正后 `25/33`**；`D3` `G-O1Q-7` 首版量词过强 ⇒ 换为与主引擎的构造性恒等核验；`D4` 半径暴露面；`D5` `r_pair` 与 `r_par_sum_opp` 口径不同源，⛔ 不得直接相减。
+
+**★产物**：`o1_pair_cards_7_9io1.csv`（38 卡）、`o1_pair_census_7_9io1.csv`（576 普查）、`o1p_pair_candidate_cards_7_9io1p.csv`、`o1q_opposite_label_cards_7_9io1q.csv`、3 份 summary JSON、3 份 `_run_*.log`。
+
+**★下一步（建议，待裁定）**：**`O1-续`** —— 对 `L1` 的 15 节做「车行道对账卡」（该物理段**是否只建了一条单向 way** / OSM `oneway` 标签 / 与 `7.9I-A2` `U_UNIT_MISMATCH` 求交），**仍零仿真**。O2 / 动力学参数**须用户显式裁定解除底线**。
+
 ---
 
 ## 3. 运行状态
@@ -3159,6 +4199,31 @@ python scripts/od/audit_external_data_7_7a.py   # 零仿真审计（6/6 PASS）�
 | **7.7A** 入场审计（LTA 分车型交通量可得性 + 构成归因先验） | ✅ **完成，判 `VEHICLE_TYPE_VOLUME_UNAVAILABLE` / `COMPOSITION_EXPLAINS_GLOBAL_LEVEL_NOT_SPATIAL_PATTERN`（零仿真只读；6/6 校验）** | 本地**无分车型交通量**（`TrafficFlow_Data.json` 字段全集 **10 个**、`Volume`=全部机动车合计；DataMall 无分类计数端点；`data.gov.sg` 仅全国年度车队构成）。构成归因：region r=**−0.3600**（符号相反）/ PA r=**+0.2533**（R²=**0.0641**）；残差极差 **65.6 / 206.4 pp** vs 构成极差 **17.1 / 36.5 pp**（**3.83× / 5.66×**）。**全域 `car_share_pmv = 0.682452` ↔ 7.6A D01 `Sim/Obs = 0.6830`（差 0.07%）** ⇒ 车型构成只解释**总体量级**、不解释**空间分布**。唯一本地车型线索 = 90 台摄像机 × 8,552 帧。**严格版 `BLOCKED_ON_EXTERNAL_DATA`** |
 | **7.7C-0** 空间残差归因基线审计（6 维：OD 供需 / 方向性 / 道路等级 / 几何拓扑 / 长度 / PA 梯度） | ✅ **完成，判 `RESIDUAL_LOCALIZED_TO_PA_LOCATION`（零仿真只读；14/14 校验；173.8 s）** | 机制层 = `pa_location`/`network_topology_twin`/`distance_impedance`/`region_location`/`directionality`；**排除** `road_class`/`section_crosswalk`/`observation_semantics`/`network_representation`。★`radial_in\|recip=False` 子组 ratio **0.9915≈1**；`has_reciprocal_pair` 2 组 η²_excess **0.1423**。MUST_MATCH 逐位复现 7.6H（8.674e-17）。产物 `reports/spatial_residual_7_7c0/` |
 | **7.7C-1** 时段实现敏感性（零仿真解析上界，断面级 temporal shape） | ✅ **完成，判 `TEMPORAL_SPATIAL_SENSITIVITY_FAIL_DEFER_HTS`（零仿真；7/7 校验；**ratio = 0.1104**）** | ★**方法学修正**：全局标量乘子 ⇒ `rel_dev` 恒等不变（退化）⇒ 改**断面级** `share_8_9(s)`（6.3.3A 底表，CV **0.0909**）。**效应分离**：水平（Sim/Obs **0.9993→0.4972**）vs 结构（`rel_dev_g`）。**★命名组 envelope**：EAST [−0.3549,−0.2992] / NE [+0.3285,+0.3417] / `radial_in` [−0.3283,−0.2983] ⇒ max\|Δ\| **0.0374** vs 残差 **0.3388** = **11.0%**。**region/radial 排序 7/7 profile 保持**。P0 MUST_MATCH 7.6H 逐位。⛔ HTS 暂不接入 |
+| **7.7D** 空间残差归因收口（零仿真收口审计，10 门） | ✅ **完成，判 `SPATIAL_RESIDUAL_ATTRIBUTION_CLOSED_WITH_UNRESOLVED_STRUCTURAL_LAYER`（硬门 7/7 + 软门 2/2；零仿真）** | 归因三类闭环：已解释（f / λ / 构成·总量级）/ 已排除（road_class·section aggregation·observation semantics·temporal realization·scalar demand·λ）/ 未解释（PA/OD allocation、twin、directionality）。★适配器：预置版**占位路径**致 6/8 门**假 BLOCKED**，修正为真实产物路径（**判定阈值未改**） |
+| **7.8** Final Model Freeze & Validation Package（最终模型冻结） | ✅ **完成，判 `FINAL_MODEL_FROZEN_AND_REPRODUCIBLE`（零仿真定版；硬门 **23/23**）** | **从「研究」切到「定版」**。**7.8A 参数冻结**：`f_work=1.180222` / `λ_ref=0.075`（⛔ **非最优 λ**）/ `SCALE=2.29897` / `f_cap=1.00` / `R01_rc_min` / `N_sim=236,044` / 7.3.6A / target **0.8589732**；三层带**不合并**。**7.8B 输入与算法版本锁**（Input/OD/Sampling/Network/RouteChoice/Crosswalk）⇒ 后续任何修改 = **新版本 v1.1**。**7.8C 验证包**：`Sim/Obs FROZEN` **0.9993347697** / implied `f*` **1.180866** / `f_realized` **1.1801564**；`A_10:19`(M/C/S) **0.8899/0.9038/0.8568%**、`parity gap` **0.0964%**、`Q19/Q̄` **1.001972**、`never_arrived=0`/`max_stuck=0`、dep=arr=**236,044**；X1 Δ≤**4.9e-8** / X2 **Δ=0.00e+00**。**7.8D 空间残差边界（保留不藏）**：EAST **−31.75%** / `radial_in` **−30.67%** / NE **+33.88%** / ORCHARD **+142.00%** / BUKIT TIMAH **+138.61%** / TUAS **−86.99%** / HOUGANG **−86.98%** ⇒ **Final Model — Known Spatial Residual Boundary**（55 行），状态 `UNRESOLVED_STRUCTURAL_LAYER`。**7.8E Manifest**：`Singapore_OD_MATSim_Final_v1.0` + 14 件冻结输入 sha256。**#168 门 23/23**（含 G22 跑前后冻结件 mtime+sha256 逐位未变 = read-only 硬证据）。**★停止规则**：7.8 完成 STOP；后续 = **7.9 Structural Repair / v1.1**（新研究问题），⛔ 非「把 0.9993 调到 1.00」。产物 `reports/final_model_7_8/`（9 件，含 6 件正式产品）。**★本步自查 2 处脚本缺陷**（G6 四舍五入常量配逐位比较 / G21 manifest 自身写入前扫描）已修 |
+| **7.8-VIZ-RUN** VIA events 重跑（输出层重执行，**非新版本**） | ✅ **完成，判 `VIA_EVENTS_REPRODUCTION_CONFIRMED_BITEXACT`（过程门 **40/40**；117.67 min）** | 7.8 定版 W01 **无 events**（`writeEventsInterval=0`）⇒ VIA 车辆层无法工作。新目录 `matsim_viz_7_8/`，白名单差异**仅 3 项**（outputDirectory / runId / writeEventsInterval `0`→`19`），**214 参数全展开逐位比对、非白名单差异 = 0**。**重放 `BITEXACT`**：it.19 linkstats **693,575/693,575 max\|Δ\|=0.0**；events **163,305,988** 条 / 1.69 GB；`dep=arr=**236,044**`（零滞留）/ `entered_link=left_link=80,708,818`；**14 件冻结输入跑前后 sha256+mtime 逐位未变**；冻结 W01 仍 0 events（未污染）；7.8 复跑 **G22 `changed=[]`** ⇒ **v1.0 身份不变**。★两 events 文件**字节相同**（1.69 GB 冗余）。⛔ 本产物**不得**作新标定证据。**★自查 4 处**（漏 `<parameterset>` 致假安全 diff / 键名靠猜 / 重放判定写死逐位 / Edit 静默丢改动 ×3） |
+| **7.8-VIA-DIAG** VIA 早高峰「不拥堵」诊断（零仿真只读派生，**非新版本**） | ✅ **完成，判 `VIA_UNCONGESTED_IS_THREE_LAYER_ARTEFACT`（只读；<2 min）** | 三层：① **VIA Network 层无交通属性** ⇒ 须另加 `Dynamic Link Attributes` 层（手册 §3.2.5）、窗口设 08–09、按 `speed` 着色；② 路网 **693,575 碎段 / 中位 11 m**（>1 km 仅 **23** 条）+ 行程时间取整秒 ⇒ 短段倍率失真；③ **v/c 恒 ≤1**（max 1.000000）、拥堵指数 **1.4143**（剔 ≤50 m 后 **1.2091**）。★「按条数 57% 超 1.2，按长度仅 34%」= 地图偏绿成因。产物 `reports/via_congestion_diagnosis_7_8/`。⛔ 不作标定证据 |
+| **7.7E** 拥堵状态合理性审计（E1 容量来源 / E2 走廊聚合 / E3 空间连续性 / E4 峰值演化） | ✅ **完成，判 `CONGESTION_STATE_PLAUSIBILITY_AUDIT_COMPLETE`（零仿真只读；硬门 **20/20**）** | **★两条口径更正**：① `v/c ≤ 1` 是**结构性质**（流出被容量截断 ⇒ 超额走上游排队），`v/c = 1.000000` = **饱和 + 排队**、**不是**容量富余（更正 7.8-VIA-DIAG）；② **★★`qsim.timeStepSize = 1 s` ⇒ `TT = ceil(FF)`**，链路 FF 中位 **1.37 s** ⇒ 既有「拥堵倍率」口径被**量化污染**（空网 12–13 时仍报 **1.552 ≈ 基准 1.596**）。**E1**：`capacity = lanes × capacityPerLane(road_type)`；快速路 **1900/1800/1700 在参考带内**，超上沿的是干道/地方道路 ⇒ **H1 不成立**；已载流利用率 **12.8%**、快速路走廊 **28.5%**。**E2b**：10 条快速路原始 `TT/FF` **1.20–1.44** → **扣量化后 9/10 ≈ 0**（**仅 CTE +0.085 / 105 车时**）。**★按道路类型分解 4,779 车时真实延误**：**`service` 占 94.4%（4,509 h）**、`motorway` 仅 **105 h（全在 CTE）** ⇒ 真实延误主体是 **20 km/h 单车道接入短段（400 辆/h）局部瓶颈**、**不是快速路排队**。**饱和链路 82 条 / 1.15 km**（74 条 `service` 6 m 段 + **8 条 CTE motorway 组成 ≈0.40 km 排队链**）。**E3**：200 次置换 —— 原始口径最长连续链 **0.601 / 0.420 km** 均**短于**随机（z 负 ⇒ 比随机更分散 = 伪影特征）；**扣量化后 0.499 km、p = 0.165、z = +0.46（不显著）** ⇒ **无连续拥堵走廊**。**E4**：峰值在途 **36,799 @ 08:55**（agents 的 **15.6%**）、`Σ流量/Σ容量` 峰值 **0.102**、真实超额 **+0.083~+0.221** ⇒ **无拥堵波**；events↔linkstats Δ **0.0000%**。**判决**：H1 不成立 / H2 主因 / H3 成立（放大错觉）/ **H4 度量伪影（决定性）**。★**「流量校准成功 ≠ 拥堵状态校准成功」**（0.9993348 vs 利用率 12.8%）。⛔ **不得为让动画变堵而放大 demand**；正解 = **7.9 Structural Repair / v1.1**（含调小 `timeStepSize` 或改用逐车行程时间评价）。产物 `reports/congestion_plausibility_audit_7_7e/`（22 件） |
+| **7.9A-0** 采样—容量一致性审计（四值核实 + 采样比例对账 + 零仿真投影） | ✅ **完成，判 `SAMPLING_CAPACITY_CONSISTENCY_AUDIT_COMPLETE` / `SAMPLING_CAPACITY_INCONSISTENCY_CONFIRMED`（v1.0 冻结后只读；硬门 **22/22**；~10 s）** | **7.9 第一阶段（结构审查），⛔ 非 7.8 前置步骤、结果不回灌 v1.0**。**四值**：`qsim.flowCapacityFactor=1.0` / `storageCapacityFactor=1.0` / `trafficDynamics=queue` / `timeStepSize=00:00:01`（四源逐位一致）。**★惰性诱饵（新坑）**：`dsim.trafficDynamics=kinematicWaves` 与 `hermes.*CapacityFactor=1.0` 均因 `mobsim=qsim` **不生效** ⇒ A-1 唯一旋钮 = `qsim.*`。**★★分母歧义（最重要）**：`N_sim/ΣEF` = **0.513369**（⛔ 误用）vs `1/SCALE` = **0.434977**（✅ capacity 一致性因子），比值恒 = `f_work` **1.180220**。**量纲证明**：`Sim/Obs=1` ⇒ `F_real = SCALE·F_sim`，要 `v/c_sim = v/c_real` ⇒ `C_sim = C_real/SCALE`；`ΣEF` 是需求锚、不参与流量扩样分母。**物理含义**：236,044 辆 = 真实 **43.4977%** 样本跑在 **100% 容量** ⇒ **`v/c_sim ≈ 0.43498 × v/c_real`**。**★零仿真投影（冻结流量上界）**：`n(v/c≥1)` **82 → 4,187**、饱和里程 **1.151 → 178.114 km**（占全网 15,126.5 km 的 **0.008% → 1.177%**）、峰 `aggV/C` **0.102447 → 0.235522** ⇒ **仍不预期全网级拥堵波**（→ 情形 C 优先）；方向 = 在途峰 ↑ / 通过量 ↓ / **`Sim/Obs` 下移**（⛔ 0.9993 **不得**作 A-1 目标，仅崩解护栏 ≥0.85）。**A-1 计划**：`qsim` 两因子 `1.0 → 0.434977`（单点派生、**不扫描**）、v1.1 新版本。★自查 3 处：① `E4.entries` 是**累计链路进入数**、非在途量（首版 A0.21 误读，改用 legHistogram `enr_car` 后复现 **36,799 @08:55**）；② `SCALE×N_sim` 是**车辆数**非流量率；③ md 表格含 `|` 会拆列 ⇒ 统一转义。⛔ 未跑 MATSim、冻结件跑前后 mtime 快照 **`changed=0`**、**7.8 门 23/23 不受影响**。产物 `reports/sampling_capacity_audit_7_9a0/`（8 件） |
+| **7.9B-0** 交通动力学机制审计（B1 生效动力学 / B2 `queue` 有无 inflow 约束 / B3 `r_fdiag` 被卡集合 / B4 merge–diverge 富集 / B5 碎片化有效尺度） | ✅ **完成，判 `TRAFFIC_DYNAMICS_MECHANISM_AUDIT_COMPLETE`（v1.0 冻结后只读；硬门 **16/16**；~8 s）** | **7.9 第二阶段（结构审查），⛔ 非 7.8 前置、不回灌 v1.0**。**B2（源码级）**：`QueueWithBuffer` 中 `case queue: case withHoles: break`（L393–396）⇒ `maxInflowUsedInQsim` 恒 = `flowCapacityPerTimeStep`（L391）⇒ **`queue` 无额外入口约束**；`inflowCapacitySetting` 未设 ⇒ MATSim 默认 **`INFLOW_FROM_FDIAG`**。**B3**：`r_fdiag < 1` 的 link = **21,670（3.1244%）/ 869.589 km（5.7488%）** ⇒ **KW 的作用集合比 A-1 的 1.18% 饱和里程大约 5×**；贡献最大 = arterial 50–70（492.4 km），其次 expressway ≥90（212.9 km, 97.98%）、fast 70–90（138.1 km, 100%）；★被移除入口容量 **8,784,415 veh/h**；★`MAX_CAP_FOR_ONE_LANE` 与 `INFLOW_FROM_FDIAG` 的 r<1 集合**代数恒等**。**★B4 预登记假设被证伪**：「被卡 link 集中 merge/diverge」**不成立** —— 全样本 **0.268×**、同类别 0.18–0.65×、严格 in-degree≥3 **0.090×**，from-node 平均入度 **1.207 vs 1.882** ⇒ KW 入口上限是**对高速/高容量路段的整体 ~10–11% 削流**，**非**节点级瓶颈机制 ⇒ ⚠️ **可能让地图变堵却不提升结构保真度**（与红线同构）⇒ B-1 必判「拥堵**位置**」是否落在 7.7E 的 CTE/`service` 短段。**B5**：link 中位 **11.0 m**、24.34% 里程 < 20 m；节点间距 **35.9 m**、度 ≥3 节点 **16.0 个/km**（每 ~62 m 一个）⇒ **无长「度-2 链」**（中位 corridor = 1 条 link）⇒ **7.9C 用 junction cluster 聚合**；KW 储存放大 **20,922 links（3.02%）**、`queue` 下 0。**★★A×B 非可加**：`maxFlowFromFdiag` **不被 `flowCapFactor` 缩放**（源码 L407–412）⇒ `f_cap=0.435` 时 FD 入口约束在 **0** 条 link 生效、KW 与 `queue` 只差**储存侧** ⇒ 支持 **B1(`f_cap=1.0`) → B2(叠加 0.435)** 串行。**B-1 预登记**：仅 `queue→kinematicWaves`、`Sim/Obs` 仅护栏 ≥0.85、无实质变化即判 `TIMEDYNAMICS_NOT_PRIMARY`。⛔ 未跑 MATSim、冻结件 `changed=0`（201 件）。产物 `reports/traffic_dynamics_audit_7_9b0/`（7 件） |
+| **7.9C-0** 结构性瓶颈审计 junction-cluster / short-chain（L1/L2/L3 三层 + C1 结构先验 / C2 残差投影 / C3 HitRate-Coverage / C4 B-1 观察集） | ✅ **完成，判 `STRUCTURAL_BOTTLENECK_PRIOR_ESTABLISHED`（v1.0 冻结后只读；硬门 **25/25**；~35 s）** | **7.9 第三阶段（空间结构层）**。★**网络侧**：结构种子 **50,617** 节点（12.01%）⇒ L1 **22,722 单元 / 460,001 link（66.3%）**（中位 10 link、max 200）；L2 ramp **500** / connector **2,428** / service **11,638** 链；L3 30 corridor（仅宏观、⛔ 非第一判据）。★**C1 先验（零流量；C0.22 源码自检）**：`mean(merge_deficit, lane_narrowing, class_transition, ramp_mainline)` 取单元内**最大值**；均值 0.349 / p80 0.417 / max 0.938；`storage_shortage_proxy` 均值 **0.0058 ⇒ 判别力为零、剔除**。★**C2（检验）**：映射覆盖 **99.7%**（空间兜底 p90 173 m）⇒ **ρ = 0.0355、置换 p = 0.8125 ⇒ 残差未向结构瓶颈聚集**（规模分层后同结论）。★**C3**：v1.0 基线 `HitRate 0.4475 / Coverage 0.3705 / lift 1.852×`，但附**证伪性警告**：饱和 link 仅 **82**（p80 阈值 0.022）+ `ρ(prior,单车道容量)=0.248`、`ρ(v/c,单车道容量)=0.449` ⇒ **lift 被容量污染、非位置证据**。★**C4 B-1 观察集已冻结**（8 层，`c0_C4_b1_observation_set.json`）。★**自检**：v1.0 拥堵基线 **82 link / 1.151 km 与 7.9A-0 逐位一致（C0.17）**；`changed=0` |
+| **7.9B-1** `qsim.trafficDynamics: queue → kinematicWaves` 单变量机制实验（L1 动力学 / L2 连续性 / L3 位置） | ✅ **完成，判 `KW_CHANGES_CONGESTION_MECHANISM__KW_POSITION_NOT_IMPROVED__STABILITY_OK`（仿真侧 **49/49** + 分析侧 **14/14**；仿真 177.5 min）** | **7.9 第四阶段（机制实验）。★单变量门**：模型层 diff **恰好 1 项**（`qsim.trafficDynamics`）、输出层 **恰好 3 项**、`VIOLATION=0`；`dsim` 同名诱饵**未触碰**、`inflowCapacitySetting` 未覆盖 ⇒ 默认 `INFLOW_FROM_FDIAG`。**★L1 机制变化 = 有**：`Sim/Obs` **0.9993348 → 0.8506114（−14.9%，险过 0.85 护栏）**、超额链路 **4,705 → 18,860**、延误 **4,778.8 → 12,482.1 h（+161%）**、`A_10:19` **0.8899% → 3.5200%**。**★L2 = 没有长链**：分量 **3,603 → 8,223（更碎）**、最长 **0.857 → 0.954 km**、**超额落候选结构单元比例 32.54% → 29.45%（富集 1.718× → 1.555×）**。**★L3 = 位置未改善**：C3 预登记 lift **1.852× → 1.835×**、`ABS 0.5` **3.548× → 3.204×**、C2 ρ **+0.0267（p .200）→ −0.0078（p .485）**、辅助（真实超额、非预登记）**1.679× → 1.601×**。**★延误去向**：`service` **88.0%**（+6,476 h）、**CTE 仅 24.2 h（0.19%）⇒ 未复现真实快速路排队链**。**★红线**：机制变化成立（仿真可判）／位置改善**不成立**（须空间证据）⇒ **更堵 ≠ 更对**。**★冻结影响 = 无**（实验未采纳 ⇒ v1.0 不变、不产生 v1.1；冻结输入 `changed=0`） |
+| **7.9C-1** 结构性回溢验证 Structural Spillback Validation（K1 主线可传播通道 / K2 下游储存 / K3 回压死端 / K4 超短 link 碎化） | ✅ **完成，判 `SPILLBACK_CHANNEL_INTACT__DELAY_TRAPPED_OFF_MAINLINE`（零仿真只读；硬门 **11/11**；**23.7 s**）** | **7.9 第五阶段（拓扑通道层）**。**预注册** `PREREG_7_9C1.md` 于读结果前冻结；主判据为**静态结构量**、仿真延误**仅对账**（test, not definition）。**★K1**：主线 `up_main_m` 中位 **1,957 m**、`≥300 m` 覆盖 **91.52%** 里程 ⇒ **通道完整**（✗ 不支持「被切断」）。**★K3**：`service∪connector` 回压死端 **99.95%**（motorway 0.17%）⇒ **断点成立**。**★K4**：motorway **17.43 links/km**（中位 37.8 m、**0** 条 `>40`）⇒ **快速路不碎**；connector **85.01** / service **50.81 links/km**（中位 8.9–9.3 m、72–89% ≤20 m）⇒ **服务网极碎**。**★K2**：候选 **5,490** 中**仅 7.05% 含主线 link**；**51.02%** 候选 `fill_time<10 s`。**★决定性对账**：v1.0 延误 **4,778.8 h** → motorway **2.50%** / **service 94.36%**；**延误加权通道仅 334 m**（service 内 107 m vs motorway 内 7,921 m）；**97.34% 延误落在回压死端 link 上**（KW 95.97%）⇒ **就地生成、就地吸收**。**★裁决**：用户预设「表达阻断快速路回溢」**未被支持**，改写为**「拥堵被结构性困在离主线的、拓扑终端的接入子系统里」**。**★更正 B-1**：CTE 正名 **104.57 h（2.19%）→ 56.68 h（0.45%）**（旧掩码 1.76→24.22 h 实为 Changi∪Tampines）。**★冻结影响 = 无**（未跑仿真、`changed=0`、不产生 v1.1） |
+| **7.9D-0** 接入系统延误滞留审计 Access-System Delay-Trapping Audit（D0 base-rate 控制 / D1 单向阀 / D2 浅储存 / D3 排队耦合 / D4 终端暴露） | ✅ **完成，判 `DELAY_TRAP_OFF_MAINLINE_BY_CONSTRUCTION__BASE_RATE_DOMINATED`（零仿真只读；硬门 **15/15** + 补充 **2/2**；**33.0 s**）** | **7.9 第六阶段（接入结构层）**。**预注册** `PREREG_7_9D-0.md`（sha256 `564310dee…6ee85`，运行期重算 **MATCH=True**）于读任何仿真输出前冻结。**★★base-rate 反转**：全网 `service` delay/km ratio 仅 **1.610**，**限定主线邻域（`d_up≤3`，15,319 links / 2.209%）后 ratio = 0.171（欠表达 8.5×）** ⇒ 主线上**本无压力可沉**；邻域延误 **96.35%** 落在 `motorway+ramp`。**①单向阀证伪**：全岛 sink-valve **仅 13** 节点（`VALVE_PRESENT=False`），mainline-in **8,567** vs out **8,566** ⇒ 主线几乎完全可逆。**②薄储存成立但是查表**：邻域 `fill_time` 中位 **9.18 s**、**89.81%<30 s**；`cap/lanes` 按 `(highway×lanes)` **单值确定（13/13）**，`service`=**400 veh/h/lane**（参考值 **22.2%**）、20 km/h。**③耦合构造性缺失**：延误加权 `d_up`=**72.33 hops**、`share(d_up>3)`=**0.9722**（D=1/3/5 → 0.0278/0.0278/0.0280 稳定）⇒ `COUPLING_ABSENT=True`。**④终端暴露**：236,044 出行中 **90.26%** 至少一端落 `service`（起点 70.68% / 终点 66.85%，对照 km 0.5861）。**补充**：物理上游距主线 **1,952 m**、`≤300 m` 仅 **3.15%**（跳数被碎片化夸大，结论不变）。**★更正 C-1**：K3「99.95%」是**单跳近重言式**（仅 0.049% service 有主线 feeder）；研究对象**收窄为 `ramp`**（唯一邻域富集 ratio 1.597）。**CTE 门断言**：正名 **603 links / 104.57 h(2.19%) → 56.68 h(0.45%)**、旧掩码命中 **0**。**★冻结影响 = 无**（零仿真、未改 network、`changed=0`、不产生 v1.1；**只证明不修改**） |
+| **7.9D-1** Ramp Interface Audit 主线↔ramp↔地方路 接口审计（R1 单跳 vs 多跳接口 / R2 车道·容量不连续 / R3 ramp 链长 / R4 局部储存 / R5 延误传播） | ✅ **完成，判 `RAMP_INTERFACE_CONTINUOUS__RAMP_NOT_A_DELAY_HOST`（零仿真只读；硬门 **11/13** + 补充 **3/3**；**19.7 s**）** | **7.9 第七阶段（主线接口层）**。**预注册** `PREREG_7_9D-1.md`（sha256 `5c8fd9c1…8983`，运行期重算 **MATCH=True**）于读任何输出前冻结；**新增永久规则 R-DIST-1**（接口距离一律 **meter/km**，hop 仅辅助）+ **R-MULTI-1**（接口判据必须多跳）。**★单跳近重言式**：`ramp` **11,740 条/308.15 km**，单跳 `neither` **10,886（92.73%）** ⇒ `SINGLE_HOP_TAUTOLOGY=True`。**★多跳接口连续**：`acc_m` 有限率 **100.00%**，ramp 中位 **478 m**/p90 1,467 m，`≤300 m` 30.49%；`egr_m` 中位 419 m；ramp 链长中位 **500 m**、单片段中位 **16.6 m**（58.29% ≤20 m）。**★车道/容量连续**：`on_ramp` 432 条，`Δlanes` 中位 **+2**、车道下降仅 **8 条（1.85%）** ⇒ `LANE_DROP=False`；`Δcap/lane` 中位 **+200**。**★★ramp 非延误宿主**：里程 2.04% / 车流 **9.22%** ⇒ 延误仅 **69.9 h（1.46%）**、`ratio=0.719`、按车流归一 **0.158**（低于全网 6.3×）；延误加权 `acc_m` **647 m** ⇒ **方向通、量太小**。**⚠️ 预注册缺陷**：`R1.05/R1.06` FAIL 系「`min>0`」**逻辑不可能**（主线种子距离恒 0），非数据问题；改列补充门 `S1.01–S1.03` **3/3 PASS**，verdict 不受影响。**★冻结影响 = 无**（零仿真、`changed=0`、不产生 v1.1；**只证明不修改**） |
+| **7.9D-2** Terminal Representation Audit 端点表征审计（T2 端点分布 / 自由流接入时间 / 全网 Σvol×ff 分解 / KW 交叉） | ✅ **完成，判 `MIXED__TERMINAL_AND_MAINLINE_COMPARABLE`（零仿真只读 + 自由流时间；硬门 **13/13**；**27.5 s**）** | **7.9 第八阶段（端点表示层）**。**预注册** `PREREG_7_9D-2.md`（sha256 `03f24243…3369`，运行期重算 **MATCH=True**）；⛔ 不改 `service` 400、⛔ 不改端点吸附、⛔ 不读 `output_plans`。**★端点**：O `service` **0.7068** / D **0.6685** / 至少一端 **0.9026**；按组 O `local` **0.9011**。**★自由流接入时间**：`T_acc` 中位 **124.8 s**、`T_egr` **103.6 s**、`T_terminal_lb` 中位 **234.3 s**。**★★全网自由流分解**：总 **24,905.2 车·h**、off-mainline 14,146.7 ⇒ **`share_offmain = 0.5680`**（实际 0.6364；KW 0.6049）⇒ `MIXED`。**★★最重要发现**：off-mainline 由**干道主导（arterial 0.3787）**，`local` 仅 0.0998、**`service` 仅 0.0515** ⇒ **端点暴露面（90%）≠ 时间面（5%）**；`service` link 中位 8.9 m 太短。**★精度修正**：`service` `cap/lane` **严格 = 400**（`SERVICE_CAP_FIXED=True`），但自由流速度**非严格恒定**（10 个值 5–70 km/h，**20 km/h 占 96.80%**）⇒ `SERVICE_SPEED_FIXED=False`；D-0「恒 20 km/h」**仅 p10=p90 意义成立**。**★冻结影响 = 无**（零仿真、`changed=0`、不产生 v1.1；**只证明不修改**） |
+| **7.9E-0** Arterial-Layer Delay Attribution Audit 干道层延误归因审计（E1 时间归属 / E2 延误归属+delay_ratio / E3 空间残差耦合+分层置换 / E4 多跳物理距离拓扑） | ✅ **完成，判 `ARTERIAL_LAYER_AUDIT_BLOCKED`（零仿真只读；硬门 **11/12**；**22.1 s**）** | **7.9 第九阶段（干道层）**。**预注册** `PREREG_7_9E0.md`（sha256 `4fa98a96…12ea08f1`，运行期 **MATCH=True**）。**★E1**：`arterial_core` 车时份额 **0.6371**（时间主场），结构份额 0.0676（`service` 0.7924）。**★E2**：`delay_share` `service` **0.5710** > arterial **0.2978**；`delay_ratio` 结构基数 **4.41** vs 车时基数 **0.47**（`service` 0.72 vs **6.43**）⇒ 随基数翻转。**★E3 = BLOCKED**：576 断面中 **77.8% 为 motorway/motorway_link**、arterial 仅 **12**（<30）；欠功率参考 mean +0.0776、置换 p≈0.83、Spearman −0.0213。**★E4**：arterial→mainline 中位 **1,309.9 m**、p90 2,324.5、`≤300 m` 5.32%、hop 52（辅）。**★冻结影响 = 无**（零仿真、`changed=0`、不产生 v1.1；**只证明不修改**） |
+| **7.9E-1** Arterial Observability Expansion 干道可观测性扩展（独立 diagnostic crosswalk / A·B·C 三档置信 / RoadCat×highway 矩阵 / 残差耦合） | ✅ **完成，判 `OBSERVABILITY_BLOCKED`（零仿真只读；硬门 **10/12**；**24 s**）** | **7.9 第十阶段（可观测性层）**。**预注册** `PREREG_7_9E1.md`（sha256 `4d5ee3e1…6751d`，运行期 **MATCH=True**）。**★匹配质量**：A+B 覆盖 **97.48%**（1,278/1,311，**上界**）、中位 **0.57 m**、p90 **2.92 m**、方向差中位 **1.38°** ⇒ 非瓶颈。**★全量可标出 542 条 `arterial_core`**。**★★根因**：576 残差断面 `RoadCat` 仅 `CATA` 326 + `SLIP_ROAD` 250，A+B 代表链路 `motorway` 328 / `motorway_link` 247 / `primary_link` 1 ⇒ **arterial residual n = 0**（三档全 0）⇒ **冻结靶场定义域不含 arterial**，非匹配质量、非 arterial 样本少。**★判决** FAIL = E1.09/E1.10（真实结构结论）。**★R-OBS-1~5**：正式与诊断 crosswalk 永久分离、先证可观测再判归因。**★冻结影响 = 无**（⛔ 不回灌 v1.0、不产生 v1.1） |
+| **7.9E-2** Expanded Diagnostic Residual Domain 扩展诊断残差域（复用 E-1 独立 diagnostic crosswalk / 冻结 SCALE 口径 / RoadCat 分层置换 / formal bridge / 事后稳健性） | ✅ **完成，判 `NO_ARTERIAL_COUPLING_SIGNAL`（零仿真只读；硬门 **12/12**；**60–73 s**）** | **7.9 第十一阶段（扩展诊断残差域）**。**预注册** `PREREG_7_9E2.md`（sha256 `c9e68272…e6cc`，运行期 **MATCH=True**）。**★可观测性解决**：A+B 覆盖 **97.48%**、有效残差 **1,278**、**arterial n 12 → 542**。**★formal bridge**：overlap **576/576**、Spearman **0.9662** / Pearson **0.9398**、MAE **0.0722**、RMSE **0.4655**。**★耦合**：arterial 均值 **+0.0027** vs 非 arterial **+0.0904**，Spearman **−0.0216**、η² **0.0013**、非分层 **p=0.1969**、**RoadCat 分层 `p=0.05247`（临界，≥0.05 ⇒ 无信号）**。**★事后稳健性（不改判决）**：分层统计量 **69.3% 来自 CATA 单条误映射 `primary`（残差 −1.000）**；仅 CATB（490 vs 144）`p=0.0080`、去 CATA `p=0.0400`、去 CATB `p=0.1679`。**★★真实结构**：残差按等级**单调梯度**（motorway +2.0% / primary +7.6% vs trunk −20.2% / secondary −34.6% / tertiary −41.7%，flow-weighted）⇒ **`arterial_core` 三类符号相反、聚合均值是抵消伪影**。**★R-RES-1~6**。**★冻结影响 = 无**（⛔ 不回灌 v1.0、不产生 v1.1） |
+| **7.9F-0 v2** Highway Grade × Capacity/Speed 结构审计（零仿真只读） | ✅ 完成，判 `GRADE_CAPACITY_AUDIT_READY`（正式硬门 **12/12** + 补充 **3/3**） | 目标域 = E2 secondary/tertiary residual（有效 join **1,278**）；runtime XML links **706,554**；E2 A/B main rows **1,311**。**★容量 = 纯查表**（`cap = lanes × cap_per_lane[highway]`，组内 min=max）⇒ 无 link 级信息 ⇒ **分层相关恒 NaN、容量非绑定**；`service` = **400 veh/h/lane**（参考值 22.2%）。prereg `31d61dc8…`。产物 `reports/highway_grade_capacity_7_9f0_v2/` |
+| **7.9F-1 v2** Section Aggregation Sensitivity Audit（零仿真只读 diagnostic-only） | ✅ 完成，判 `AGGREGATION_AUDIT_READY`（正式门 **12/12**；check rows 18 / 通过 15） | 轨迹 **1,311**；**CANONICAL_MEDIAN 零断面 83 = 68 真零 + 15 median 塌陷**（zero obs-flow share **6.36%**）；**obs 加权残差 −0.0139 → +0.0110**、sim 加权 0.8127 → 0.8239（对照 POSITIVE_MEDIAN）。candidate rows **15,783** / selected **6,773**；W01 links **693,575**、corridor **124**；E2 canonical max abs delta **0.0**。⛔ **不替换 canonical**、替代聚合仅 diagnostic。prereg `75bab7e2…` |
+| **7.9F-2 v2** secondary/tertiary 单链路捕获机制审计（零仿真只读） | ✅ 完成，判 `MECHANISM_AUDIT_READY`（硬门 **16/16**） | target **109**（secondary 89 / tertiary 20）、selected anchors **593**；E1 raw **67,471** → kept **15,783**（丢 tier C 51,688、缺 distance 0）；network **706,554** / W01 **693,575**；radii **20/50/100 m**、parallel ≤30°、twin ≥150°；obs crosswalk max abs delta **4.5e-13**、mismatch **0**。**⛔ D4/Q2 结构性不可答**（`STRUCTURALLY_UNANSWERABLE__DESCRIPTIVE_ONLY`）、**⛔ D5 不可比** ⇒ 只作描述。prereg `018d1562…` |
+| **F-2 v2.1-R2** 局部捕获诊断执行契约闭环（零仿真只读） | ✅ 完成，判 `LOCAL_CAPTURE_DIAGNOSTIC_READY`（硬门 **18/18**、EXIT=0、`contract_pass=true`） | target **109**、E1 candidates **67,471**、selected anchors **593**、network **706,554** / W01 **693,575**；`preflight_passed=true`、obs rebuild max abs delta **0.0**。**★AST 双向契约自检 = 18 号门（loader 前求值）**；**preflight = 05/06 唯一权威**；**manifest 最后生成且不自哈希 + `closure_check.csv` 物化**。**★Q2 由 probe 升为正式 negative diagnostic**（`…_R2_asprovided_diag/Q2_FORMAL_DIAGNOSTIC.md`，2026-09-27）：候选方向结构（forward/reverse share、方向差中位、相关性）**不能解释** secondary/tertiary residual；方向差中位 **≈90°**、neutral 中位 **0.54**、abs ρ **≤0.116**；⛔ **negative diagnostic，非「方向机制不存在」的物理证明**。prereg `0a0c6133…` |
+| **★Q4-R1-R1** nearest-single-link 局部捕获（4 类邻域 × 3 半径；零仿真只读） | ✅ **正式 READY 节点（用户裁定 2026-09-28）**，判 `Q4_LOCAL_CAPTURE_READY`（硬门 **25/25**、EXIT=0、`CLOSURE=OK`、`converged=True; it=4`） | prereg `82a03eb8…`（16,772 B）/ 脚本 `1cbeb201…`（98,312 B）。**★4 类 × 109 × 3 半径 = 1,308 格**（各 327）：`parallel` / `twin` / `same_name_parallel` / `same_name_twin`。**★选择规则（不可改）**：`min distance → min direction diff → min link_id`；W01 flow/residual/ratio **禁参与选链**。**门 20 真独立重导**（从 `candidate_pool` 重算 → **1308/1308**、`max abs Δ = 0`）；**门 22 独立重导 `SELF(sid)`**（self/anchor/pool/radius/type violations **全 0**）；**门 23 = AST 语句区间**（`banned_hits=[]; flow_after_selection=True`）；**门 16 = WRITEBACK**（三方一致、`byte_mismatch=[]`、`n_byte_compared=12`）；**门 25 = 非 Q4 产物 vs R2**（`identical=8/8` + 本地重算 `2/2`）。**负例 10/10**（N1→19、N2→19、N3→20+21、N4→20+21+23、N5→20+21、N6/N7→22、N8→24、N9→15、N10→25）；**BLOCKED 路径 3/3 完整节点**。**★同层对照（R2 max-flow → R1-R1 nearest）median ratio 20→100 m**：sec/parallel **+0.365 → +0.020**、ter/parallel **+0.499 → +0.007**、sec/twin +0.0915 → −0.0033、ter/twin +0.0042 → −0.0879 ⇒ **nearest 规则去掉 max-over-N 单调膨胀**。**★R-Q4R1R1-1…7**。产物 `reports/secondary_tertiary_residual_7_9f2_Q4_R1_R1/`（15 件 + `inherited_r2/` 8 件） |
+| **7.9G-0** `service` 延误机制 R0 结构审计（三问：容量是否为延误主因 / 94.36% 口径是否稳定 / `service` 参数是解释量还是机制旋钮） | ✅ **完成**，Q1 `CAPACITY_CONSTRAINT_NOT_DOMINANT` / Q2 `CALIBER_FRAGILE` / Q3 `SERVICE_PARAMS_DERIVED`（零仿真只读；硬门 **25/25**、EXIT=0、`CLOSURE=OK`、`converged=True; it=4`） | 口径继承 7.7E：`delay_corr_h = Σ_{v>0} v·max(0, TT8-9avg − ceil(ff_s−1e-9))/3600`。**★Q1**：`service` 已载流 **62,407** 条、`v/c` 中位 **0.0225**；饱和仅 **74（0.1186%）**、只担 **13.95%** `service` 延误；集中度 top-10 **62.17%** / top-100 **96.01%**；长度桶 `>60 m` 29.02% / `≤5 m` 24.68%。**★Q2**：`raw` **45.904%** vs `corr` **94.357%**；暴露面 time **94.36** / count 27.81 / distance 18.56 / volume **4.31**（%）；跨时段 92.79/94.36/98.52/99.999 ⇒ 极差 **0.0573 > 0.05** ⇒ **FRAGILE**。**★Q3**：`service` `cap = 400×permlanes` **100.000%**、全网 `unit_cap×lanes` **99.689%**、`qsim` 两因子 1.0 **无覆盖**；输入仅 `permlanes` / `unit_cap[service]=400` / `freespeed`。**★验证**：负例 **11/11**、BLOCKED **3/3**、独立复核 `VERIFY_OK=True`。prereg `2db351c8…` / 脚本 `61cfe26a…`。**★R-G0-1…5**。产物 `reports/service_delay_mechanism_7_9g0/`（15 件） |
+| **7.9G-1** 端点/接入子系统「就地吸收」机制审计（可证伪命题：`service` 延误是否主要表现为端点接入/局部循环/短链时间表达的「就地吸收」，而非道路容量约束产生的排队延误） | ✅ **完成**，A1 `PROPORTIONAL_TO_MILEAGE` / A2 `ENDPOINT_LOCALIZED` / A3 `NOT_MAINLINE_QUEUE` / A4 `NEITHER_BOUND` / A5 `NEGLIGIBLE` / A6 `ENDPOINT_ABSORPTION_DOMINANT`（零仿真只读；硬门 **25/25**、EXIT=0、`CLOSURE=OK`、`converged=True; it=3`；契约 **236,044³**） | **★A2 决定性**：端点 `service` **10,156** 条（296.4 km）担延误 **3,410.52 h = 全网 71.37% / `service` 内 75.64%**，只占 `service` 流量 **9.77%** ⇒ 逐车 **72.81 s/veh vs 2.54 s/veh（28.7×）**；`f_pos` **0.088818** vs `w_ep` **0.756366** ⇒ **位置面被证伪、端点归属成立**。**★A3**：邻干道 `service` 仅 **1.8736%** vs 内部 **92.4830%** ⇒ 非主线回溢。**★A4**：`sat_share_D` **0.1394** / `cell_share_D` **0.4961**（均 <0.50）⇒ `NEITHER_BOUND`。**★A5**：`f_local` **0.001296**（306/236,044）⇒ `NEGLIGIBLE`（**局部循环支路被证伪**）。**★A6**：`s_end` **71.3681%** / `s_mid` **22.9884%** / `s_main` **1.8736%**。**★暴露四面**：time **94.36** / count 27.81 / distance 18.56 / volume **4.31**（%）。**★events**：12 链 `n_enter≥1` 全齐，`dwell_p50` **280–6,423 s** 而链长 **1.9–140.8 m**。**★验证**：负例 **11/11**、BLOCKED **3/3**、独立复核 `VERIFY_OK=True`。prereg `4e7ffa3c…` / 脚本 `audit_endpoint_access_absorption_7_9g1.py`。**★R-G1-1…8**。产物 `reports/endpoint_access_absorption_7_9g1/`（16 件） |
+| **7.9G-2** 「时间 / 数量 / 距离 / 体积」四面口径统一（可证伪命题：**既有四面统计口径是否自洽？统一后的 reporting rule 应如何表述？**；⛔ 不重开 G-1 机制结论） | ✅ **完成（2026-09-29）**，`Q1 = DENOMINATOR_SPLIT` / `Q2 = EXPOSURE_IMPACT_DECOUPLED` / `Q3 = CONCENTRATION_ATTENUATED` / `Q4 = FOUR_FACE_PARALLEL_REPORTING`（零仿真只读；硬门 **25/25**、EXIT=0、`CLOSURE=OK`、`converged=True; it=3`、**47.8 s**；`noop_selfcheck_passed=True`；脚本 `scripts/od/audit_caliber_harmonization_7_9g2.py` **73,426 B**） | **★锁 5 事**：①统一分母栈 `D0 = ALL ⊃ D1 = SVC ⊃ D2 = EP_SVC`；②**宇宙必须声明**（默认 `U_loaded`，`U_any` 须带 `_any` 后缀）；③**暴露（count/km/vol）≠ 影响（time）**，不互替；④**不合成总分**；⑤集中度用**覆盖率分数 `f_t`**，⛔ Gini / 常数 `k` 禁用。**★阈值（预先约定）**：`0.5 pp` / `5.0 pp` / `3.0×`。**★侦察（第一手）**：宇宙撕裂可致 **>100%** 份额（`SVC_any` km = `ALL_loaded` 的 **170.96%**）；同对象两个 distance share（**5.716%** vs **3.922%**，差 **1.79 pp**）；Gini **失效**（`ΔGini = −0.0014`、符号反直觉）；`f50` **19.6×** ⇒ 子集内部**相对更分散**；`s/veh` **169.3×**。**★四面实测（EP_SVC｜D0）**：time **71.3681%** / count **3.1560%** / distance **3.9220%** / volume **0.4215%**（极差 **70.95 pp**）。**★实现验收（2026-09-29）**：16+1 件产物；`RANGE_ep = 70.946627 pp`、`universe_spread_pp = 1.962541`、`illegal_mixed_universe_ratio = 1.709605`（170.96%）、`R_50 = 19.803755` / `R_90 = 6.643841` / `R_99 = 1.032118`、`s/veh` ALL 0.430002 → SVC 9.407303 → EP_SVC 72.806547（**169.32×**）；`EP_SVC_any` n **10,156** / km **296.402279**。**★独立复核** `scripts/od/_verify_g2.py` **90/90** `INDEPENDENT_REPRODUCTION_OK`；**★负例** `scripts/od/_g2_negatives.py` **11/11 fired** + `S1 fired=False` + **3/3 BLOCKED complete**。**★口径发现（7 项）**：① 时间面逐位一致**必须 `math.fsum`**（pandas/numpy 顺序求和差 1 ulp = 9.095e-13）；② **pandas 默认解析丢 1 ulp**（`296.40227899999996`→`296.402279`、产物回读 `962.7150059999999`→`962.715006`）⇒ 对照物与产物回读**必须 `float_precision="round_trip"`**；③ **`D2 = (home∪work) ∩ service`**（非全集）；④ G-0 用裸面名、G-1 用带后缀名 ⇒ `FACE_G0_KEY` 双向映射；⑤ **空串经 CSV 往返变 NaN** ⇒ 门 12「非空」须显式 `isna()`；⑥ **pandas 3.0 `df.loc[len(df)]={...}` 静默丢新列**；⑦ 门 09/12 须覆盖全部 share 行载体（含 `denominator_audit`）。**★§8 期望门偏差留痕**：N1 期望 12/09→实测 **10**（`share(ALL_LOADED,time)=105.98%`）、N4 期望 12/10→实测 **09**、N3 期望 15/17→实测 **15**（门 17 判据为 face_role/字段名，**不能**检测值替换）；其余 8 例命中或其超集。prereg `reports/caliber_harmonization_7_9g2/PREREG_7_9G2.md` |
+
 ### 3.2 三层阻抗对照（332×332）
 
 | 层 | 中位 (min) | 均值 (min) | 最大 (min) | 覆盖（长度） | 相对 FF |
@@ -3324,7 +4389,60 @@ python scripts/od/audit_external_data_7_7a.py   # 零仿真审计（6/6 PASS）�
 73. **★文档交付**：版本化用 V2/V4/V6 后缀；保留原完整内容并按原风格撰写；**要求同步 `scripts/od/readme.md` 与技能 `singapore-od-matsim-pipeline/SKILL.md`**。
 74. **★★零仿真拼接多源产物前先统一键的 dtype**：`section_geography.csv` 的 `lta_linkid` 落盘为 **int64**，而 `backtest_one` 断面统计为 **str** ⇒ `merge` 抛 `ValueError: merge on str and int64`；更隐蔽的是 **`directional_repair` 返回的键是 `int`**（`out[int(lid)]`），若用 str 值 `.map()` 会**静默全 NaN**（不报错、但结果全错）⇒ 拼接两侧一律 `astype(str).str.strip()`、映射前 `{str(k): v ...}`。**「没报错」≠「口径对」**。
 
-> 以上 59–73 于 2026-09-17 按精简需要自 `MEMORY.md §6` 原样转存（`MEMORY §6` 保留指针）；`MEMORY.md` 有**注入长度上限**，超限会被**静默截断**，故把长清单落在本文件。
+75. **★★`qsim.timeStepSize` 的量化会污染任何以 `TRAVELTIME` 为基础的评价**：1 s 步长下链路行程时间被**向上取整**（`TT_recorded = ceil(FF)`），而本网络链路 FF **中位 1.37 s / 均值 2.93 s**（>500 m 仅 29 条）⇒ **即使零延误**也会得到 `TT/FF = ceil(FF)/FF ≫ 1`。**三重自检**：① **跨时段对照**（几乎空网时段倍率 ≈ `ceil(FF)/FF` 基准 ⇒ 该口径不含拥堵信号 —— 实测 12–13 时仍 1.552 vs 基准 1.596）；② 逐链路 `|TT/FF − ceil(FF)/FF|` 分布（实测 **82.56% 载流链路零延误**）；③ **单车级**核对 `sum_tt` 是否恰为 `n × ceil(FF)`（实测 23 辆车 / 0.955 s ⇒ 23.0 s）。**评价一律先扣基准**：`真实超额 = TT/FF − ceil(FF)/FF`。⚠️ **断面*流量*（Sim/Obs）不受影响** ⇒ 7.6/7.7 标定结论不变。
+76. **★★`v/c ≤ 1` 是结构性质，不是「容量富余」**：MATSim 链路流出被容量截断，需求超额表现为**上游排队** ⇒ `v/c = HRS8-9avg / CAPACITY` **恒 ≤ 1**、`>1` 恒 **0** 条；`v/c = 1.000000` 的正确读法是 **「已饱和 + 正在排队」**。**不要把 `max v/c = 1.0` 读成「容量富余 / 不会堵」**（7.8-VIA-DIAG 曾如此误读，7.7E 更正）。
+77. **★「全网聚合量」不能用来定位拥堵** —— 要看延迟的**空间分布**而不是总量：`service` 接入短段占链路数 **65%**、却承载 **94.4%** 的真实延误，而 `motorway` 仅 **2.2%** ⇒ 任何「网络级」拥堵标量都会被碎段主导。**必做步**：按 `road_type` / 走廊 / 长度桶**分解**后再下结论。
+78. **★图内文本要过「字体字形」检查**：matplotlib + `msyh.ttc` 渲染缺字形字符（如 `⛔` U+26D4、`⇒` U+21D2）**只发 `UserWarning: Glyph ... missing from font`、不报错**，图上静默缺字 ⇒ 生成图后**必须 grep 日志的 `missing from font`**，并把图内文本限制在 CJK 常用字符 + ASCII（md 正文不受限）。
+
+79. **★★判断某个 MATSim 参数是否生效，必须看 `mobsim`，不能只看「这个 key 存在」**：同一配置里 `trafficDynamics` 可以出现**两次**（`dsim` = `kinematicWaves`、`qsim` = `queue`，值还不同），`flowCapacityFactor` 也同时存在于 `hermes` 与 `qsim`。`controller.mobsim = qsim` ⇒ **只有 `qsim` 的那份生效**，其余是 mobsim 专属/惰性配置（`hermes` 在 `mobsim=hermes` 时才生效）。**只看 key 名会得出完全相反的结论**（"当前动力学已经是 kinematicWaves"）。落地做法：任何容量/动力学/时间步审计，**先把 module 归属与 `mobsim` 一起打印出来**，再谈值。
+80. **★★「采样比例」的分母必须由「流量扩样因子」决定，不能用需求锚**：`s = N_sim/ΣEF` 与正确的 `s = 1/SCALE` 可以差整整一个 `f_work`（实测 0.513369 vs 0.434977，**差 18%**）。判据是**量纲**：`Sim/Obs = 1` 断言 `F_real = SCALE × F_sim`，要保持 `v/c` 一致就必须 `C_sim = C_real/SCALE` ⇒ `f_cap = 1/SCALE`，**与 `ΣEF` 如何定义无关**（`ΣEF` 只是需求锚，且工作点可能故意相对它超采样以弥合口径差）。**任何「比值型」因子落地前，先写一行量纲等式。**
+81. **★「冻结流量投影」不能替代仿真，且必须显式标注为上界**：把 `CAPACITY × (1/SCALE)` 后重算 `v/c` 只给出**一阶上界**（不含排队导致的流量回落与重分配），可用作**预注册预测**与判据前置，但**不得**据此下结论、**更不得**写进校准结果。其价值在于提前暴露方向：本例即显示「即使样本一致，饱和里程也只占全网 1.18%」，从而把下一刀指向机制（`trafficDynamics`）而非继续压容量。
+
+> 以上 59–74 于 2026-09-17 按精简需要自 `MEMORY.md §6` 原样转存（`MEMORY §6` 保留指针）；**75–78 于 2026-09-19 追加（Step 7.7E）**；**79–81 于 2026-09-20 追加（Step 7.9A-0）**；**82–84 于 2026-09-20 追加（Step 7.9B-0）**；**85–89 于 2026-09-20 追加（Step 7.9C-0）**。`MEMORY.md` 有**注入长度上限**，超限会被**静默截断**，故把长清单落在本文件。
+
+82. **★★「某机制会不会改善结果」应先在零仿真下量化它的「作用集合」与「作用位置」，再决定是否跑仿真**：7.9B-0 用 `r_fdiag = FD 天花板 / 路网容量 < 1` 把「换成 `kinematicWaves`」从定性猜想变成 **21,670 条 link / 869.6 km（5.75%）** 的定量集合，再用节点度检验**位置**，从而在**不跑 2 小时仿真**的前提下先否决了「集中在 merge」的假设。**顺序 = 先量化集合 → 再量化位置 → 最后才花钱跑。**
+83. **★★「会变堵」≠「堵得对」——均匀削流是伪改善**：7.9B-0 显示 KW 的 FD 入口上限是**对高容量/高速度路段的整体性 ~10–11% 削流**（expressway 中位 r = 0.90），而非复现真实瓶颈 ⇒ 它**可能让地图变红却不提升结构性保真度**。凡遇「某参数能让结果看起来更合理」，必追问**它作用在哪里**；位置不对的增强 = 与「为让动画变堵而放大 demand」同构的红线违规。
+84. **★比值/约束类判据必须查「缩放是否对称」**：`flowCapFactor` 缩放路网容量但**不**缩放 `maxFlowFromFdiag`（源码注释 L407–412 明确「leave unscaled」）⇒ 两个约束的**相对**强弱随 `f_cap` 漂移，导致 A、B 两刀**不可加**（`f_cap=0.435` 时 FD 入口约束在 **0** 条 link 生效）。**改多参数前先列「各自被谁缩放」。**
+85. **★★结构单元的规模定义必须先量「作用集合」再定，且要防「链式合并出巨块」**：7.9C-0 先做三轮零成本探针——种子节点 **50,617**（deg≥3 且含结构跃变）、短链阈值 **p90 = 52 m**、K-hop 邻域中位 4/10/18 link；再用 union-find 实测发现 **K=2 邻域合并 max 达 3,351 link、短链连通分量 max 38,241** ⇒ 若直接合并会退化成「一个巨块」。最终定稿 = **同层短链连通分量 + ≥1 种子 + 超 200 link 递归拆分** ⇒ 22,722 单元、中位 10、max 200。**先看规模，再选容器**。
+86. **★★聚合方式决定偏差方向，必须先报偏差再做分层控制**：同一套节点分数，用**均值**聚合 ⇒ 大单元被稀释（`ρ(prior, log 规模) = −0.686`）；用**极值**聚合 ⇒ 大单元被偏爱。7.9C-0 取极值（严重度语义）后偏差降到 `+0.025`，**但仍另做「单元规模十等分分层控制」**（C2 层内重算 ρ、C3 层内重算 p80 阈值）——与 7.9B-0 B4 的「同类别对照」同一纪律。**报了偏差 ≠ 控制了偏差**。
+87. **★★位置一致性指标（HitRate/lift 之类）必须先做「共同因子证伪」**：7.9C-0 的 v1.0 基线 `lift = 1.852×` 看起来不错，但两个证伪刀口立刻刺穿它：① **值域**——v1.0 饱和 link 仅 **82** 个（全网 0.0118%），单元 `v/c` 的 p80 阈值只有 **0.022** ⇒ 「模型高拥堵单元」近似**任意排名**；② **共同因子**——`ρ(prior, 单车道容量) = 0.248`、`ρ(v/c, 单车道容量) = 0.449`，且快速路单元 **94.9%** 天然入选候选 ⇒ `lift` 里混着**容量因子**。⇒ 凡「某指标变好了」，先问**它是不是同一个物理量在两边同时出现**。
+88. **★★零仿真残差投影的判据是「置换零分布」，不是相关系数的绝对值**：C2 的 `ρ = 0.0355` 单看无意义；建**同区域内打乱断面**的 400 次置换零分布（mean −0.0079 / sd 0.0480）后得 **p = 0.8125** ⇒ 可**明确断言无关联**。同时必须随附**映射质量**：截面覆盖 **99.7%**、三种映射路径（link 直连/端点/空间最近邻）与兜底距离 p90 **173 m**——否则「无关联」可能只是**映射丢失**造成的假阴性。
+89. **★★numpy 字符串标量当 dict 键会慢 ~100×，脚本会从 35 s 变成跑不完**：7.9C-0 初版用 `{z['ids'][i]: i for i in range(n)}`（693k 个 `np.str_` 键）+ `inc[a].append(i)`（2.8M 次）⇒ 实测 **7 分 25 秒仍未跑完**；改成 `[str(x) for x in arr]` 一次性转 **Python str** 后**全流程 33–43 s**。**凡「数组元素要当键/要做集合成员」，先转原生类型**；先测「作用集合」的规模，再决定容器与类型。
+90. **★★单变量实验的「diff 显式化」门必须把模型层与输出层分开计**：7.9B-1 若只报「共 4 处 diff」会掩盖「模型只改了 1 处」。做法 = 展开 `<parameterset>` 后按 **`module.param`** 归一，断言 **模型层恰好 1 项且 == 目标参数**、**输出层恰好 3 项且 ∈ 白名单**、**`VIOLATION = 0`**。⚠️ 且必须**同名校验 module**：`dsim.trafficDynamics` 与 `qsim.trafficDynamics` **同名**，`dsim` 早已是 `kinematicWaves`（**惰性诱饵**）⇒ **只按 key 名 grep 会得出「已经改过了」的反向结论**。输出层 3 项（`outputDirectory`/`runId`/`writeEventsInterval`）**不进动力学**，必须单列声明。
+91. **★★「作用集合」与「作用强度」要分开量：命中集合 = 0 ≠ 机制未生效**：7.9B-1 的「08–09 小时均值恰落在 FD 入口天花板上」链路数 **KW = 0 vs v1.0 = 32**，但运行期明明有 `maxInflowUsedInQsim` 告警。原因是 **`q_fdiag` 是速率上限（veh/h 瞬时能力），小时均值天然低于它** ⇒ 该指标是**巧合级**。同理 **`v/c≥1` 从 82 降到 10 是「削流后贴容量链路跌破 1.0」，不是拥堵减轻**。⇒ 判「约束是否生效」用**运行期告警 / 逐时步流量是否被削**；**比值型指标在缩放改变后必须换另一族指标（延误型）交叉验证**。
+92. **★★「变堵」与「堵得对」必须两套独立证据链，⛔ 禁止用拥堵量代替位置质量**：7.9B-1 总延误 **+161%**（机制确实变了），但「新增延误落在候选结构单元内的比例」**32.5% → 29.5%**、富集 **1.718× → 1.555×**、最长连通分量仅 **0.857 → 0.954 km**、分量数 **3,603 → 8,223（更碎）** ⇒ **更堵 ≠ 更对**。**量化口径**：机制侧 = Δ延误 / Δ超额里程 / Δ分量 / Δ稳定性（**仿真结果即可判**）；位置侧 = **C3 lift、C2 ρ + 置换 p、落候选单元比例（含 base 与富集）**（**必须空间证据**）。**两者都过才算成功**。
+93. **★★换拥堵定义时要「对称施加 + 明确标注非预登记」**：KW 经 FD 入口上限压低 `v/c` ⇒ 用 `v/c` 判「堵在哪」会系统性低估。故另按**真实超额**（`TT/FF − ceil(FF)/FF`）长度加权复算同一 C3 判据，**对称跑 V1 与 KW**，并**标注为非预登记**（结果同向：own-p80 `1.679× → 1.601×`、同 v1.0 阈值 `1.527×`）。⇒ **允许做「口径稳健性检查」，⛔ 但不允许挑一个让结论变好看的口径充当主判据**；**预登记阈值仍是唯一主判据**。
+94. **★★复用上游「冻结单元定义」的正确姿势 = 溯源执行源码切片 + 位级自校，而不是重抄算法**：7.9B-1 需要 7.9C-0 的 link→unit 映射；重抄 ~300 行单元算法**必漂移**。做法 = `exec` 冻结脚本的**源码切片**（`head 1–102` + L1/C1 块 L115–338，去缩进、去图/输出副作用），再对 `c0_junction_clusters.csv` 做**位级自校**（**22,722 单元**的 `unit_id`/`n_links`/`km`/`prior` 全同，并复现 82 link / 1.151 km 基线）⇒ **既零漂移又免维护**。⇒ **凡「下游要复用上游的冻结中间结构」，优先复用其代码而非其产物，并强制自校**。
+
+95. **★★「结构完整 / 损坏」必须按「瓶颈侧 vs 吸收侧」分列判——同一张图里两类道路的结论可以完全相反**：7.9C-1 检验「网络表达是否阻断回溢」，K1/K4 显示**主线侧完整**（`up_main_m` 中位 **1,957 m**、`≥300 m` 覆盖 **91.5%** 里程；motorway **17.4 links/km**、**0** 条 `>40 links/km`）⇒ **用户预设立场被证伪**；而 K3/K4 又显示**吸收侧（service/connector）99.95% 为回压死端、且被切到 8.9–9.3 m / 50.8–85.0 links/km** ⇒ 结论方向**只在吸收侧成立**。⇒ **凡「网络表达 / 拓扑」类判据，必按「瓶颈侧 vs 吸收侧」分列，⛔ 不可用一个全局结论概括两者**。
+96. **★★「延误落在多长的结构通道上」是检验「拥堵被结构困住」的直接物理量，优于再堆一个相关系数**：C-1 以 `delay_h` 为权计算 `up_chain_m` ⇒ v1.0 加权通道仅 **334 m**（service 内 **107 m** vs motorway 内 **7,921 m**）、**97.34% 的延误落在「无法回压主线」的 link 上**，一句话即证「就地生成、就地吸收」。⇒ **位置/机制类问题优先构造「延误 × 结构」的物理量**（可解释、可复算）。
+97. **★★冻结文件里的「简称掩码」是最隐蔽的静默错误源——必须用「正名 + 计数断言」兜底**：7.9B-1 用 `"CTE" in name.upper()` 识别 CTE，但 v1.0 网络 `name` 中**根本没有**字面 "CTE"（**0 条 link**），掩码**静默退化**为 `Changi ∪ Tampines`（3,647 link），使 CTE 真实延误（**104.57 h / 2.19%**）被漏掉、只报了 **1.76 h**，且方向被读反（KW 实为**削弱** CTE）。⇒ **凡按名称/类别取子集，必须打印「命中 link 数」并断言非零**；`in`/`grep` 类匹配**靠「什么都不匹配」制造假阴性而不报错**。
+98. **★★「份额 / 占比」类结论必须先做 base-rate 归一（`份额 ÷ 里程份额`），否则结论会随分析域反转**：7.9C-1 报「`service` 吃掉 **94.36%** 延误」，7.9D-0 一算 `ratio = delay_share / km_share` 只有 **1.610**（`service` 本就占 58.61% km、64.95% link）⇒ **不构成富集**；而**限定主线邻域后 ratio 反转为 0.171（欠表达 8.5×）**，邻域延误 **96.35%** 落在 `motorway+ramp`。⇒ 凡「某类吃了 X%」的句式，**必须同时报 km 份额与 ratio，并给出「全域 vs 限定域」两套数**。
+99. **★★「拓扑跳数」在碎片化路网里会系统性夸大距离，接口类判据必须同时给物理量**：`d_up = 72 hops` 听起来像「极远」，但 link 中位只有 **~11 m**，换成物理距离只有 **1,952 m**；反之「仅 3.15% 延误在主线 300 m 内」才是可直接采信的表述。⇒ 凡用 hop/hop-count 下结论，**必须附 `dist_*_m` 并报分布**（本步做法：多源 Dijkstra 以 `len` 为权）。
+100. **★★「单跳不可逆」是重言式，不是证据——回溢/耦合类判据必须升维到多跳**：C-1 的 K3「99.95% 回压无能」在「全网只有 **0.049%** 的 `service` link 有主线 feeder」的前提下**必然接近 100%**，不含信息量；7.9D-0 改成多跳 `d_up` 分布后才有判别力（`share(d_up≤3) = 2.78%`，且对阈值 D=1/3/5 稳定）。⇒ **任何「A 无法影响 B」的判据，先算 A、B 的基础接触率**，再决定用单跳还是多跳。
+101. **★★「参数是不是涌现结果」要用「确定性与细分辨率」两刀捅穿**：单看 `cap = 400 veh/h` 无法判断它是建模设定还是涌现。7.9D-0 用 `ndistinct(cap/lanes)` 检验——**类别级**因 `other` 合并 5 种 highway 而报 `False`（如实上报），**细分辨率**（`highway × lanes`）显示 **13/13 类型组内 `min = max`** ⇒ 容量是**纯查表赋值**。⇒ 归因「薄储存 / 低容量」时，**必须做确定性检验，并按最细可分辨粒度报**；预注册粒度不足时应并列补充、而非改预注册。
+102. **★★「接口距离 / 耦合距离」必须用物理口径，跳数只是碎片化伪影**（**R-DIST-1**）：7.9D-1 里 ramp 到主线「92.73% 单跳不接触」，看似全线断裂，但**多跳物理距离中位仅 478 m、100% 可达**；link 中位仅 11–16.6 m 时，跳数被碎片化放大一个数量级。⇒ 今后 `coupling distance` / `spillback reach` / `interface proximity` **一律以 m/km 为主**，hop 仅作辅助并附换算。
+103. **★★「接口 / 相邻」类判据必须多跳（R-MULTI-1），单跳在碎片化路网上是近重言式**：7.9D-1 的单跳分类 `neither` 占 **92.73%**（`motorway_link` 中间片段两侧都不是主线），与 7.9C-1 的 K3、7.9D-0 的 D3 同型 ⇒ 单跳判据**靠“什么都不匹配”制造假阳性**。
+104. **★★「暴露面」≠「时间面」——占比必须用与目标一致的分母**：`service` 占 **90.26%** 的出行端点（暴露面），却只占 **5.15%** 的自由流时间（时间面）；真正吃掉 off-mainline 时间的是**干道（37.87%）**。⇒ 报告「某类很重要」时**必须声明是暴露面、里程面还是时间面**，三者常指向不同对象。
+105. **★★「恒等于 X」类口径断言必须用「唯一值」而不是「p10=p90」**：7.9D-0 写「`service` 自由流被硬编码为 20 km/h（p10=p90）」，7.9D-2 细查发现**有 10 个不同值（5–70 km/h）**、20 km/h 仅占 **96.80%** ⇒ `SERVICE_SPEED_FIXED=False`；真正严格唯一的只有**容量 400**。⇒ 「恒定」类结论一律用 `ndistinct` 断言，并**同时给出例外比例**。
+
+106. **★★「时间归属」与「延误归属」可以是不同层——必须分别报，且各自声明基数**（7.9E-0）：干道承载 off-mainline **车时 63.71%**（时间主场），但延误份额仅 **29.78%**、`service` 仍以 **57.10%** 居首 ⇒ 「谁占时间」≠「谁占延误」。⇒ 归因结论**必须写清是时间面还是延误面**，并给对应基数。
+107. **★★「某项是否富集」会随基数翻转——`delay_ratio` 必须与所用基数绑定声明**（7.9E-0）：`arterial_core` 的 `delay_ratio` 在**结构基数**下 **4.41（富集）**、在**车时基数**下 **0.47（欠表达）**；`service` 恰相反（0.72 vs 6.43）。⇒ 单报一个 ratio 必然误导，须**双基数并报**（承接 §4-98 的 base-rate 纪律）。
+108. **★★「靶场不可分辨」本身就是结论——目标断面表的道路构成必须先行体检**（7.9E-0）：冻结 576 断面中 **motorway 449 + motorway_link 92 = 77.8%**，arterial 仅 **12** ⇒ 任何「arterial 是否为残差主场」的检验在此靶场上**先天欠功率**（按预注册 BLOCKED，不静默替代）。⇒ 涉及某道路层的残差检验前，**先报靶场该层断面数**；不足则 BLOCKED。
+109. **★★「不可观测」的根因要先分清是「匹配质量」还是「断面域定义」**（7.9E-1）：E-0 的 `12 < 30` 曾被读成「arterial 样本少」；E-1 用独立 crosswalk（A+B 覆盖 **97.48%**、中位匹配 **0.57 m**、p90 **2.92 m**）在全量 1,278 链路里标出 **542** 条 arterial ⇒ **不是匹配不准、也不是 arterial 少**，而是**冻结靶场的 576 个断面 `RoadCat` 只有 `CATA`+`SLIP_ROAD`、arterial 断面恒为 0**。⇒ 「某层不可判」必须分三问且**按下述顺序**：**① 断面域里有这个类吗？② 匹配得上吗？③ 样本够吗？**
+
+110. **★★诊断 crosswalk 必须与正式 calibration crosswalk 永久分离且禁止回流**（7.9E-1；`R-OBS-1`）：E-1 的 1,278 链路映射**只作诊断**，⛔ 不回写 7.3.6A、⛔ 不替换冻结 target、⛔ 不用于调 demand/λ/capacity。⇒ 任何「为了让某层可观测」而**放宽匹配阈值**的做法都等价于**制造样本**，须以「**A+B 主分析 + C 仅敏感度**」（`R-OBS-3`）隔离。
+
+111. **★「三档置信 + 只报主档」是几何匹配的标准姿势**（7.9E-1）：A 严格（≤25 m ∧ ≤30° ∧ 语义兼容）/ B 方向几何（≤50 m ∧ ≤30°）/ C 仅几何（≤80 m），主分析用 **A+B**（优先 A）。E-1 实测 **C 档未增加任何匹配**（A+B 已达上界 97.48%，缺口全在 33 条无几何链路）⇒ 放宽到 C 只会**制造样本而不增加信息**。
+
+112. **★★零仿真「自审门」绝不能扫自己的源码文本**（7.9E-0 → 7.9E-1，**同类坑第二次**）：E-0 用 `'subprocess' not in sys.modules`（pandas 惰性导入 `subprocess` ⇒ 误报）；E-1 初版用 `token not in source`，而**检查函数自身的字面量就含 `subprocess.run` / `java -`** ⇒ **自指误报**（`E1.02` 假 FAIL）。⇒ 一律改成 **AST 门**（解析 `Import` / `ImportFrom` / `Attribute` 调用，检查 `banned_modules` 与 `spawn_attr_calls`），**不扫原始文本**。
+
+113. **★★「聚合类别的各组成部分符号相反」时，聚合均值是抵消伪影、不可作归因依据**（7.9E-2）：`arterial_core = primary ∪ secondary ∪ tertiary` 的 flow-weighted 残差分别是 **+7.6% / −34.6% / −41.7%** ⇒ 三类**符号相反**，加权聚合后 **+0.0027 ≈ 0** 纯属抵消 —— 于是 `NO_ARTERIAL_COUPLING_SIGNAL` 是**类别构造伪影**，不是物理结论。⇒ 凡「某聚合类是否残差主场」，**必须先报其内部各子类的残差符号与量级**；符号不一致时**禁止在该聚合层下结论**，须下沉到子类。
+
+114. **★★分层置换统计量必须先做「退化层」体检**（7.9E-2）：RoadCat 分层 `p = 0.05247` 看似「临界无信号」，但 **69.3% 的统计量来自 CATA 层里唯一一条被误映射成 `primary` 的链路（残差 −1.000）** —— 该层 `arterial:n=1 / non:338` 属**退化层**。⇒ 分层检验须同时输出 ① 每层 `n_art / n_non`、② 每层 `|Δmean| × n` 的贡献占比、③ **限定有效层（`n≥30 ∧ 双臂≥5`）** 与 **leave-one-stratum-out** 两套 p。本例三值 = **0.0525（全层）/ 0.0080（仅 CATB）/ 0.0400（去 CATA）** ⇒ **结论完全取决于退化层处理方式**。
+
+115. **★★「诊断域扩容」时，与正式域 overlap 的双相关 + 误差分解是必报项**（7.9E-2；`R-RES-1`）：E-2 的 1,278 诊断残差与 7.7C-0 的 576 正式残差 overlap **576/576**、Spearman **0.9662** / Pearson **0.9398** / mean bias **+0.0229** / MAE **0.0722** / RMSE **0.4655** ⇒ 证明扩容域**口径一致**（RMSE≫MAE 表明重尾）。⇒ 任何「换域重算」必须报这四个量，否则无法排除**人为制造尺度误差**；且 ⛔ expanded residual **永久不得回写为正式 target**。
+
 
 ## 5. 复用与扩展
 
@@ -3667,12 +4785,49 @@ REM 注意：不改 λ / crosswalk；不重跑 MATSim；7.3.6A Final Crosswalk �
 | **★Step 7.7A LTA 分车型交通量（入场审计）** | ✅ **完成审计，判 `VEHICLE_TYPE_VOLUME_UNAVAILABLE` / `COMPOSITION_EXPLAINS_GLOBAL_LEVEL_NOT_SPATIAL_PATTERN`（零仿真；6/6 校验）**：`reports/external_validation_7_7/`（8 文件）。**★Q1**：本地与开放数据**均无**断面级分车型交通量（`TrafficFlow_Data.json` 仅总量 10 字段；DataMall 无分类计数端点；`data.gov.sg` 仅全国年度车队构成）。**★Q2 零成本先验**：Census T104 方式构成 vs 7.6C/H 空间残差 ⇒ region r=**−0.3600** / PA r=**+0.2533**（R²=**0.0641**），构成极差仅为残差极差的 **1/3.83 ~ 1/5.66** ⇒ **车型构成解释总体量级（0.6825 ↔ 0.6830，差 0.07%）但不解释空间分布**。**★三方向一致**：`dR/df≈0`（7.6F-1）、`dR/dλ≈0`（7.6G）、`dR/d构成≈0`（7.7A）。**★下一步**：严格版挂起（须 LTA 申请，见 `STEP7_7A_EXTERNAL_DATA_REQUEST.md`）；建议先推 **7.7C（空间残差归因，零外部依赖）**，同步准备 **7.7B（HTS 出发时刻）**。 |
 | **★Step 7.7C-0 空间残差归因基线审计** | ✅ **完成，判 `RESIDUAL_LOCALIZED_TO_PA_LOCATION`（零仿真只读；14/14 校验；173.8 s）**：`reports/spatial_residual_7_7c0/`（19 文件）。**★六维**：OD 供需（ρ(A/P)=−0.70，**EAST 反例**）/ 方向性（跨 f/λ **8/8 稳定**）/ 道路等级（**排除**，motorway 0.9922）/ twin 拓扑（`has_reciprocal_pair` η²_excess **0.1423**）/ 长度归一化（**反而扩大 8.61 pp**）/ PA 梯度（outflow ρ=−0.40）。**★核心**：`radial×reciprocal` 交叉表 ⇒ `radial_in\|recip=False` **0.9915≈1.000**，twin 与方向性两机制**独立可加** |
 | **★Step 7.7C-1 时段实现敏感性（零仿真解析上界）** | ✅ **完成，判 `TEMPORAL_SPATIAL_SENSITIVITY_FAIL_DEFER_HTS`（零仿真；7/7 校验；ratio 0.1104）**：`reports/spatial_temporal_sensitivity_7_7c1/`（8 文件）。**★关键修正**：初版全局标量乘子 ⇒ 结构恒不变（退化）⇒ 改**断面级** `share_8_9(s)`。**★7 profile**（含 P4 结构镜像 / P5–P6 日级 p10/p90 可行带）。**★命名组**：EAST/NE/`radial_in` 位移上界 **1–4 pp** vs 残差 **30–34 pp** ⇒ ratio ≤ **0.118**。**region/radial 排序全 profile 保持**；`radial_in`\|`recip=False` **0.9915** 不变。⛔ 详见 §2.43 |
+| **★Step 7.7D 空间残差归因收口（零仿真收口审计）** | ✅ **完成，判 `SPATIAL_RESIDUAL_ATTRIBUTION_CLOSED_WITH_UNRESOLVED_STRUCTURAL_LAYER`（硬门 7/7 + 软门 2/2 PASS）**：`reports/spatial_residual_closure_7_7d/`（3 文件 + 证据 manifest）。**★G1–G9 十门**：W01 锚点 / C0↔W01（tol 1e-12）/ f·λ 稳定性（span 1.85 / 3.23 pp）/ `radial×reciprocal` 闭环（in|False 0.9915）/ temporal 上界 0.1104 / 构成排除 6/6 / 排除层 `eta2_excess` ≤ .001 / 剩余结构层明文。**★收口三类**：已解释 f·λ·构成；已排除 road_class·section aggregation·observation semantics·temporal realization·scalar demand·λ；未解释 PA/OD allocation·twin·directionality（§2.44）。**⛔ 不再为追 HRS8-9 聚合拟合跑 demand/λ grid 或 HTS MATSim 标定。** |
+| **★Step 7.8 Final Model Freeze（最终模型冻结）** | ✅ **完成，判 `FINAL_MODEL_FROZEN_AND_REPRODUCIBLE`（零仿真定版；硬门 23/23）：`reports/final_model_7_8/`（9 件，含 6 件正式产品 + `STEP7_8_REPORT.md`/`f_integrity_checks.csv`/`step7_8_summary.json`）。**★版本线正式定格**：`7.3 crosswalk → 7.4 capacity/sampling → 7.6E route-choice → 7.6F demand → 7.6G λ 边界 → 7.6H 独立验证 → 7.7A 车型排除 → 7.7C-0/1 → 7.7D 收口 → **`Singapore_OD_MATSim_Final_v1.0`** → **STOP**`。**★模型身份**（`FINAL_MODEL_MANIFEST.json`）：`f_work=1.180222` / `lambda_ref=0.075`（⛔ 非最优）/ `scale=2.29897` / `f_cap=1.0` / `route_choice=R01_rc_min` / `sim_agents=236044` / `crosswalk=7.3.6A` / `calibration_target=0.8589732` / `validation=W01` / `spatial_residual_status=UNRESOLVED_STRUCTURAL_LAYER`。**★7.8D 空间残差边界保留不藏**（`FINAL_SPATIAL_RESIDUAL_BOUNDARY.csv`，55 行）。**★#168 门 23/23 全过**，含 **G22 = 全部 14 件冻结输入跑前后 mtime+sha256 逐位未变**（read-only 硬证据）与 **G21 = 6 件产品落盘**。**★新硬约束**：7.8 之后任何修改 `输入与算法锁` 条目 ⇒ **新版本 v1.1**，⛔ 不得就地改 v1.0；**后续 = 7.9 Structural Repair（新研究问题）**，⛔ 非「把 0.9993 调到 1.00」。 |
+| **★`F-2 Q4-R1-R1`（nearest-single-link 局部捕获）** | 🔒 **正式 READY 冻结验收节点（用户裁定 2026-09-28）：`25/25` / `EXIT=0` / `CLOSURE=OK` / `converged=True; it=4`**；prereg `82a03eb8…` / 脚本 `1cbeb201…`；**4 类 × 109 × 3 半径 = 1,308 格**；**⛔ `nearest-single-link` 选择规则本身不得再改**；`Q4-R1` 线**已关闭** |
+| **★技术链（更新，2026-09-28）** | `F2 v2 → v2.1-R2（Q2）→ Q4-R1-R1（Q4 nearest capture）→ 7.9G-0（`service` 延误 R0）→ 7.9G-1（端点/接入就地吸收）→ ★7.9G-2（四面口径统一，**OPEN / prereg 已冻结**）`；**下一步 = 分析脚本 → 25 门 → 负例 → 独立复核 → READY/CLOSED → LTA 分车型 / HTS 出发时刻**。⛔ 不修改 `Singapore_OD_MATSim_Final_v1.0` |
+| **★`7.9G-0`（service 延误机制 R0）** | ✅ **完成（2026-09-28）**：判 Q1 `CAPACITY_CONSTRAINT_NOT_DOMINANT` / Q2 `CALIBER_FRAGILE` / Q3 `SERVICE_PARAMS_DERIVED`；**硬门 25/25 / EXIT=0 / `CLOSURE=OK` / `converged=True; it=4`**；prereg `2db351c8…` / 脚本 `61cfe26a…`。**只审计、不改模型**（⛔ 未碰 v1.0 与 Q4-R1-R1 产物、⛔ 未改 `service` 400 / 端点吸附）；**v1.0 仍为唯一冻结模型、不产生 v1.1** |
+| **★`7.9G-1`（端点/接入就地吸收 R0）** | ✅ **完成（2026-09-28）**：判 A1 `PROPORTIONAL_TO_MILEAGE` / A2 `ENDPOINT_LOCALIZED` / A3 `NOT_MAINLINE_QUEUE` / A4 `NEITHER_BOUND` / A5 `NEGLIGIBLE` / A6 `ENDPOINT_ABSORPTION_DOMINANT`；**硬门 25/25 / EXIT=0 / `CLOSURE=OK` / `converged=True; it=3`**；prereg `4e7ffa3c…`。**机制 = `service` 延误集中在承载 OD 端点的 10,156 条微短链上（`service` 内 75.6%、逐车 28.7×）**；**只审计、不改模型**（⛔ 未碰 v1.0 与 Q4-R1-R1 产物、⛔ 未改 `service` 400 / 端点吸附）；**v1.0 仍为唯一冻结模型、不产生 v1.1** |
+| **★`7.9G-2`（四面口径统一）** | ✅ **READY（2026-09-29）**：prereg `reports/caliber_harmonization_7_9g2/PREREG_7_9G2.md`（**22,238 B** / sha `6df55c42…`）；脚本 `scripts/od/audit_caliber_harmonization_7_9g2.py`（**73,426 B**）。**判 Q1 `DENOMINATOR_SPLIT` / Q2 `EXPOSURE_IMPACT_DECOUPLED` / Q3 `CONCENTRATION_ATTENUATED` / Q4 `FOUR_FACE_PARALLEL_REPORTING`**（硬门 **25/25**、EXIT=0、`CLOSURE=OK`、`it=3`；独立复核 **90/90**；负例 **11/11** + `S1 fired=False` + **3/3 BLOCKED**）。**✅ 只解决"怎么统计、怎么表达"**，⛔ 未重开 G-1 机制结论（未重判 `A1–A6`、未提新假说）。**锁 5 事**：统一分母栈 `D0 = ALL ⊃ D1 = SVC ⊃ D2 = EP_SVC`／宇宙必须声明（默认 `U_loaded`，`U_any` 带 `_any` 后缀）／暴露（count/km/vol）≠ 影响（time）／不合成总分／集中度用覆盖率分数 `f_t`（⛔ **Gini 禁用**、⛔ 常数 `k` 禁用）。**★实测**：四面 EP_SVC｜D0 = time **71.3681%** / count **3.1560%** / distance **3.9220%** / volume **0.4215%**（极差 **70.95 pp**）；`SVC_any/ALL_loaded km = 1.709605`（170.96%）；`R_50 = 19.803755`。输入 **5 件**（不含 `plans`/`events`）+ 对照 **8 件**；**25 门** / **11 负例 + 1 no-op 自检** / **3 BLOCKED** / **16 产物**。⛔ 未改 v1.0、未回写 G-0/G-1。 |
+
 ---
 
 ## 7. 变更记录
 
 | 日期 | 变更 |
 |---|---|
+| 2026-09-30 | **★Step 7.9I-O1 —— B2 车行道对（carriageway pair）层（恢复入口 O1；零仿真只读；20.7 s + 14.1 s + 13.2 s）→ 判 `CARRIAGEWAY_PAIR_AUDIT_READY` + `PAIR_CANDIDATE_PROBE_READY` + `OPPOSITE_LABEL_CONTROL_READY`（三脚本 `n_fail = 0`；9/9 + 5/5 + 8/8 = **22 门**；负例 4/4）** —— 用户裁定「**暂停推进，先冻结收口**」并把阶段标记为 **`7.9I_FROZEN_CLOSED → READY(O1)`**，同时给出 **7 条跨阶段锚点 A1–A7**（已录入 `CLOSURE_7_9I.md §7`；核心 = ① `0.434977` **不进 v1.1**；② `Sim/Obs≈0.766` **只在靶场观测域解释**，不再读作全网需求不足；③ **1:K 尺度错配已实证**，⛔ 不得用 `sum/median/K` 偷换物理测量单元；④ 剩余低载 = **映射链 + 对象定义 + 平行/对层结构**，非单纯「没车」；⑤ KPE/ECP 极端数字已回收，**`r_mixed` 才是设施对象比较依据**；⑥ **方向映射错误已被 `152/152 同向` 排除**，`B2` 改从「对层建模」查；⑦ **v1.0 全程冻结，未产生 v1.1**）。**问题**：**LTA 观测的「一个方向断面」与 MATSim 中由独立节点串表达的另一方向车行道，是什么对应关系？** 预注册 `PREREG_7_9I_O1.md`（运行前冻结；**`G-O1-5` 运行前修订**：原「链内每步方位一致」因 `E_opp` 已筛方位而**恒真** ⇒ 退化判据，改为**拓扑有向路径**判据，实测 `directed_path` **46** / `sum` **11**）。**方法**：`E_opp(s)` = 100 m 内 `MAJOR` + 方位差 `~(bear_s+180°) < 30°` + 排除匹配边，**与 B(b) 的唯一差别 = 去掉 `flow > 0`**（刻意口径扩展）；链分量按 A1 规则取代表值（有向路径 `median` / 否则 `sum`）。**★主引擎**：`Q0_TWIN_PAIR` **10 节/Σobs 18,531.5**、**`Q1_SEPARATE_CARRIAGEWAY` **26 节/43,303.5****、`Q2_NO_OPPOSITE_OBJECT` 2 节/215.5 ⇒ **`B2` 22 节 = Q1 **19** / Q0 3 / Q2 0 = **86.4% 对向车行道为「独立节点串」****（`B(b)-P` 机制被**拓扑证实**）；靶场 576 普查 `PAIR_CONSISTENT` **32.03%**；门 9/9（`G-O1-2` 逐位全等 **Σ139=139**；`G-O1-7` `Σ|E_opp|=159` = 有流 139 + 无流 20）。**★后验 ①**：`r_pair` 中位 **R-sum 2.1512 / R-max **1.8677（带内 [0.5,2]）** / R-med 1.2183**；带内 Σobs 占比 0.3353 / **0.3963** / 0.3494；**`ΣK_pair=57`**；`Σflow_same **47,745.0**` vs `Σflow_opp **254,771.9**`（**5.34×**）；`corr(log obs, log r_pair)=0.0535` ⇒ 尾部**非**低 obs 分母伪影。**★★后验 ②（决定性）**：`B2` 中 **`L1_OPP_LOADED_OK` 15 节 / Σobs 28,918.5 / **75.51%**** —— **对向断面在冻结 canonical 下令 `ratio_median ∈ [0.5,2]`，本侧 `sim_median_xS` 精确为 0**（典型 **46894 → 对向 46009 距 26.4 m、`ratio_median` 1.3168、本侧 0**）；`L2_OPP_ALSO_LOW` 6 节/9,297.0/**24.27%**；`L3` 1 节/84.0/0.22%；全 38 节 `L1` 18/32,181/**51.86%**（严格 `R≤100` 仅 **10 节/30.77%**）；`G-O1Q-5` 双向观测对称中位 **1.371**。**★裁定：`B2` 的 75.51% 属「路网建模对象层面」（一侧被加载、另一侧对象全零），24.27% 才回到需求/路径域。** **★暴露面**：`L1` 的 51.86% 依赖 **300 m** 搜索半径，保守读法 **30.77%**；`E_opp` 非真值对应表。**★缺陷登记**：`G-O1-5` 运行前修订；**`G-O1Q-4` v1 实现与判据文字不符（`0/19`）⇒ 实现缺陷非科学结论，v2 `25/33`**；`G-O1Q-7` 量词过强 ⇒ 改构造性恒等核验；`r_pair` 与 `r_par_sum_opp` 口径不同源。**★下一步（待裁定）**：**`O1-续`** 对 `L1` 15 节做「车行道对账卡」（单侧 way 数量与标签 / OSM `oneway` / 与 `U_UNIT_MISMATCH` 求交），**仍零仿真**；O2 须用户显式裁定解除底线。⛔ 不改 v1.0、不重跑 MATSim、不产生 v1.1；`changed = 0`。 |
+| 2026-09-29 | **★Step 7.9I 阶段冻结收口（CLOSURE）→ 判 `7.9I_FROZEN_CLOSED`** —— 用户裁定「**暂停推进，先冻结收口**」；新建档案 `reports/corridor_scale_audit_7_9i/CLOSURE_7_9I.md`（6 节：冻结声明 / 交付清单 / C1–C9 / R1–R5 / O1–O5 / 复现与恢复入口）。**全链完整性审计：7 脚本 × 6 判决 × 70/70 门 / `n_fail=0`**（20+12+18+8+6+6）。**补齐 `_run_7_9ibbp.log`（原 5/6 → 6/6，全链日志完整）**。**★复现性校验**：重跑 `audit_bb_direction_probe_7_9ibbp.py` ⇒ summary JSON 除 `elapsed_s`（25.5 s→11.0 s 热缓存）外**逐位相同 = True**、CSV **逐位相同 OK**。**良性重复登记（不修改）**：A2/A1/Bb 的 `*_summary_*.json` 与 `_*_audit_*.json` **md5 全等**（`6f357f49…`/`6b65888e…`/`86e21605…`）⇒ 同一 dict 双命名落盘。**★冻结结论 C1–C9**：①「sim 大 5 倍」= 计数基数错配（`ratio_simobs` **5.2818** / `K_pooled` **5.5434** ⇒ 归一 **0.953**）；②覆盖率不得外推（匹配边担全网高峰 **6.64%**、严格 1:1 **10.42%**）；③真缺载收敛 **3 条走廊**（`norm<0.5` 19 条 / obs **23.08%**，前 3 担 **22.42%**）；④A2：KPE/ECP「8 倍缺载」**不成立** ⇒ `r_mixed` **0.385/0.388/0.465**；⑤`U_UNIT_MISMATCH`：KPE 隧道 **16/19 节 `vc_max>1`**（最高 **3.569×**，剩余偏差 **92.6%** 归此项）；⑥A1 杠杆 = **候选对象选取**（`r_chain(P1)` **0.5556**，8.4×→**1.8×**）；⑦M1 主因 = **链缺陷**（`X1` **60 节 / obs 69.16%**）；⑧B(b) 主项 = `B2` **22 节 / 61.72%**，**非**平行边竞争；⑨B(b)-P **152/152 同向、0 反向** ⇒ **方向性对象不一致**。**未解项 O1–O5**（O1 `B2` 车行道对层 / O2 `SIGNAL_MECHANISM_ABSENT` / O3 LTA 分车型·HTS / O4 `B3` 6 节 / O5 `X0` 2 节）。**★恢复入口**：尺度已理清 ⇒ 优先序 **O1 → O3 → O2**（O2 须用户显式裁定解除底线）。⛔ 不改 v1.0、不重跑 MATSim、不产生 v1.1；`changed = 0`。 |
+| 2026-09-29 | **★Step 7.9I-A2 / A1 / B(b) 「观测对象 ↔ MATSim 对象」三刀闭环（Dynamic Realism Audit ⑤⑥⑦；零仿真只读；41.6 s + 20.3 s + 19.7 s + 25.5 s；⛔ 不改 v1.0、不重跑 MATSim、不产生 v1.1）→ 判 `KPE_ECP_OBJECT_AUDIT_READY` + `CHAIN_REAGGREGATION_READY` + `ZERO_FLOW_PARALLEL_LEDGER_READY` + `BB_DIRECTION_PROBE_READY`（四脚本 `n_fail = 0`；18/18 + 8/8 + 6/6 + 6/6 门；负例 4/4 × 4）** —— 用户裁定**把「模型不堵」与「评价不对」拆开**，按 **(1) KPE/ECP 实体核验 → (2) 60 节链重聚合 → (3) 38 节零流量平行边记账** 顺序在**零仿真域**收干净证据链；**★底线：A1/A2/B 未把「观测对象 ↔ MATSim 对象」尺度关系理清前，⛔ 不再调整 v1.0 交通动力学参数**。预注册运行前冻结（`PREREG_7_9I_{A2,A1,Bb}.md`）；脚本 `audit_kpe_ecp_object_7_9ia2.py` / `audit_chain_reaggregation_7_9ia1.py` / `audit_zero_flow_ledger_7_9ibb.py` / `audit_bb_direction_probe_7_9ibbp.py`。**★A2（69 张实体卡）**：`norm = ratio_simobs/K_c` 的**隐含前提「K 条边承载同一股车流」被证伪**；**核心判据 `vc_max = obs_8_9 / max_e cap_eff(e)`** ⇒ **KPE 隧道 16/19 节 `vc_max > 1`**（obs 中位 **12,119** > 最大单边容量 **9,500**；最高 `20,342/5,700 = 3.569×`）⇒ **观测单元 ≠ 仿真单元**；**半径设施重建** matched-only **0.417** → 50 m **0.657** → 100 m **1.439** → 150 m **2.897** ⇒ **crosswalk 只选中低流量子集**；分类（按 Σobs）：KPE 隧道 `U_UNIT_MISMATCH` **92.64%** / ECP `C_CHAIN` **49.88%** + `P_PARALLEL` 38.37% + `S_SLIP_GEOM` 11.74%（**无** `U_UNIT_MISMATCH`，78% 匹配链落 `motorway_link`）/ KPE `U_UNIT_MISMATCH` 58.91% ⇒ **★7.9I-A 缺载倍数必须修正**：`norm` 与设施级口径差 **253%/500%/434%**（远超 15% 门槛）⇒ KPE隧道/ECP/KPE 从 8.5×/7.6×/8.4× 收敛到 **`r_mixed` 2.6×/2.6×/2.2×**；**★口径记法披露**：`n_edge_sec`（逐断面求和，ECP **289**）vs `n_edge_dedup`（去重，ECP **283**，15 行 `shared_section_count=2`）两者都正确 ⇒ 门**同时断言两者并携带实测值**（阈值未改）。**★A1（60 张链卡）**：口径 = 候选集内**弱连通分量划分**，有向**路径** ⇒ `median`/`min(cap)`，**非路径** ⇒ `sum`/`sum(cap)`，`sim_chain = SCALE × Σ_C rep(C)`（链内不重复计数、跨链可加）；四口径 pooled `r_med` **0.1187**（8.4×）/ `r_sum` **0.2871**（3.5×）/ **`r_chain(P0)` 0.1881**（5.3×）/ **`r_chain(P1)` 0.5556**（**1.8×**，重建候选池）；分类 P0 `C_LOW` **100%** → P1 `C_OK` **17.82%** + `C_HIGH` 10.00% + `C_LOW` **72.18%**；**★结论 = 链重聚合本身价值有限，真正的杠杆是「候选对象选取」不是统计量**；走廊：KPE 隧道 17 节/200,410（61.8%）、**AYE 10 节 `r_chain` 中位 0.000**、**TPE 3 节 `r_chain_p1` 中位 5.305 ⇒ P1 是上界非无偏估计**；**★判据退化披露**：原 `G-A1-7` 实测 median rel diff **0.0056**（冻结匹配集内路径分量代表值 ≡ canonical `median`，**构造性恒等** ⇒ 无信息量）⇒ ⛔ 不静默改阈值，记入 `degenerate_criteria`，有效对比改为 **`G-A1-7'`（P1 口径，实测 1.070，标签 `EXPLORATORY_POST_HOC`）**。**★B(b)（38 张记账卡 + 38 张方向卡）**：目标 38 节 / Σobs **62,050.5**（`RoadCat` = `CATA` 22 / **`SLIP_ROAD` 16 = 42%**；`n_matched` min 1 / 中位 3 / max 16 ⇒ **全部匹配成功但匹配边流量精确为 0**）；分类 **`B2_OPPOSITE_ONLY` 22 节 / Σobs 61.72%**、`B1_SAME_DIR_PARALLEL` 10 / 20.73%、`B3_NO_PARALLEL_FLOW` 6 / 17.55%；**★★38 节共 152 条匹配边方向一致性 = 152/152 同向、0 反向**（`d_match_max` 中位 1.8°/5.1°/2.9°）⇒ **「映射选错方向」假设被否定**；**`B2` 同向有流边合计仅 7 条**（`B1` 41 条）而**反向 83 条** ⇒ **`B2` 不是「同向平行边抢流量」**；**`B2` 反向有流边仅 1/22 节存在同节点对反向孪生** ⇒ 该设施被建模为**单向 way**（对向车行道以**独立节点串**另建）⇒ **流量确在「对向车行道」上，但那是网络的另一个对象** ⇒ **观测对象与仿真对象在「方向」维度上不一致**；走廊集中度 **AYE 16 节/37,520.0 + PIE 7 节/15,014.5 = 23 节/52,534.5（84.7% Σobs）**，两走廊 `r_par_same` 中位 **0.000**；**★口径陷阱（新纪律）**：`lta_section_geometry()` 的 `mx/my` 是**局部等距平面米**（`lon×111320·cos(lat0)`，≈1.15e7），**与全网图 SVY21 不同源** ⇒ ⛔ 绝不能与 `Graph.ex/ey` 或 `SEC_GEO_7_6C.mid_x/mid_y` 做距离运算（首版探针混用 ⇒ 距离恒 ≈1.15e7 m ⇒ `n_same = n_opp = 0` **全零伪影**）；A2/A1/Bb 三引擎**均正确使用 `SEC_GEO_7_6C`**，已加防御性文档字符串 + 新增 `G-P0` 坐标同源门。**★阶段判决（本轮冻结）**：**当前主要问题不能继续归因于采样容量折减（7.9A-1 已否定为主因），也不能直接归因于 MATSim 全网需求不足（7.9H：缺口是「改道」非「少跑」，全网 `Σflow` −4.69% vs 匹配边 −24.05%，差 7.2×）。现有证据表明，评价域存在显著的 1:K 映射尺度错配；在消除该尺度效应后，仍存在少数高影响快速路断面的真实低载问题，其主要表现为映射链断裂、平行替代路径及特殊道路设施对象不一致。** **★下一步（待裁定）**：`B2` 需「**车行道对（carriageway pair）**」层（区分「同节点对双向 way」与「独立节点串单向 way」），**仍属零仿真域**；其后才重谈 **7.9J / signals / trafficDynamics**。 |
+| 2026-09-29 | **★Step 7.9I 观测域尺度 + 局部可达性诊断完成（Dynamic Realism Audit ③④）→ 判 `CORRIDOR_SCALE_AUDIT_READY` + `M1_ACCESSIBILITY_AUDIT_READY`（零仿真只读；38.4 s + 46.3 s；⛔ 不改 v1.0、不重跑 MATSim、不产生 v1.1）** —— 用户裁定**暂停 G-3/G-4 与 C（信号）/D（动力学）**，只做 **(a) 靶场比较口径修正** + **(b) M1 可达性归因**，两者均零仿真；判据运行前冻结于 `reports/corridor_scale_audit_7_9i/PREREG_7_9I.md`。**★7.9I-A（73 条走廊）**：三口径并报；**★★核心 = 1:K 计数机制** —— 1 个 LTA 断面典型对应 **K = 5.5434** 条 MATSim 有向边（走廊 `K_c` ∈ 3.0–14.4），池化 `ratio_simobs` **5.2818** ⇒ `5.2818/5.5434 = 0.953` 量级自洽 ⇒ **「sim 比 obs 大 5 倍」主要是计数基数错配**；容量加权 Σ 口径残差 v1.0 **+39.46 pp** / A-1 **+61.35 pp**，⚠ 但该值**主要是 1:K 所致**（sim 计 K 次 / obs 计 1 次 / 容量分母也 K 折），且代表值口径 `−0.0083 pp` **与 canonical `median` 代数同源 ⇒ 不构成独立证据**；**★★独立证据 = 去尺度残差 `ratio_simobs/K_c`**：`norm<0.5` 共 **19 条走廊 / 担 `Σobs` 23.08%**，**前 3 条(KPE 隧道 0.117 / ECP 0.132 / KPE 0.119)担 22.42%**，而 **PIE 1.129 / SLE 1.104 / CTE 1.132 / BKE 0.953** ⇒ 完全可由 1:K 解释 ⇒ **「快速路被低估」分裂成两半：多数 = 计数基数错配；只有 KPE 隧道/ECP/KPE = 真实缺载（缺 7.6–8.5×）**。**★7.9I-B（133 个 M1）**：图 421,406 节点 / 693,575 边；**⚠ 冻结判据缺陷披露** —— 实测 `M1-C 60 节(obs 69.2%)` / `M1-E 73 节` / `M1-A=M1-B=M1-D=0`，因 **133 个 M1 全部落在 `motorway`/`motorway_link`** ⇒ `M1-E` 命中 133/133、**A/B 结构性不可达**；**另三项退化诊断**：全网**单一弱连通分量**（421,406/421,406）⇒ `in_giant` 恒真、`dangling` 恒 0、`dir_diff_median` 最大 23.8°（阈值 30°）⇒ `M1-D` 恒 0；**后验修订分类（`EXPLORATORY_POST_HOC`，阈值一律未改）**：`X1 链缺陷 60 节 / 69.2%`、`X2 匝道或结构 40 / 11.4%`、`X3 平行旁路 22 / 12.4%`、`X4 孤立 9 / 6.2%`、**`X0 未解释 2 / 0.9%`**；**标志位**：`f_chain_defect` 60、**`f_bypass_ge_half_obs` 105(78.9%)**、`f_hop_ge5` 59、**`f_no_flow_in_matched` 38（`Σobs` 62,051 = 13.2%）**；**走廊集中度**：KPE 隧道 18 节 `Σobs` 220,473（**17 多分量 / 0 零流量 ⇒ 车在跑但映射对象错**）、ECP 27/74,583（13 节 ≥5 跳）、PIE 28/63,523、**AYE 21/47,734（16 零流量）**。**★交叉印证**：两个尺度独立指向同一机制 —— **观测值没被映射到"同一股车流"上，而非"车没跑"**。**门/负例**：I-A **6/6 fired**、I-B **4/4 fired**，两脚本 `n_fail = 0`。**★新纪律**：①多边映射**必报计数基数 `K_c`**（否则 1:K 计数错配被误读为物理缺口）；②**「口径修正」不得充当独立证据**（与 canonical 代数同源须显式声明）；③**退化诊断必须披露**（单一连通分量下 `in_giant`/`dangling` 恒真恒 0，⛔ 不得当作"通过"）；④**冻结判据无区分度 = 判据缺陷**（须后验修订并加 `EXPLORATORY_POST_HOC` 标签，⛔ 不得静默改阈值）；⑤**负例必须是非同构扰动**（索引整体位移/整体反向都是同构 ⇒ 必 `fired=False`；本步两次踩坑已修）。**★下一刀（均零仿真）**：(a1) 60 个链缺陷断面改为**沿走廊拓扑取连续有向链**；(a2) KPE 隧道/ECP 结构设施实体核验；(b) 38 个零流量断面的平行边一对一记账；(a1)(a2) 完成后才重谈 7.9J/signals。 |
+| 2026-09-29 | **★Step 7.9H 动态真实性诊断完成（Dynamic Realism Audit ②）→ 判 `SIGNAL_MECHANISM_ABSENT` + 缺口成因锁定为「评价靶场尺度错配」而非需求/容量（零仿真只读；47 s + 81 s + 20.5 s；⛔ 不改 v1.0、不重跑 MATSim、不产生 v1.1）** —— **★起因含一处关键更正**：用户提议的「单因素容量一致性实验」（`flowCapacityFactor`/`storageCapacityFactor` `1.0 → 0.434977`，其余冻结）**已由 7.9A-1 跑完并出判决**；**基线须更正**：`Sim/Obs` v1.0 = **0.9993347697**（不是 0.766），**0.7664760994 就是 A-1 的结果**。**★用户 4 条验收标准逐条实测**：① `Sim/Obs` 回升 → **0.9993348 → 0.7664761（↓0.2329，方向相反）✗**；② 连续拥堵走廊 → 严格档 `vc≥0.85 且 sr<0.70` 0 → **2 条 / 1.141 km** △；③ 空间残差方向 → 高估桶 154 → **65 节**（担 obs 25.16% → **5.69%**）、低估桶 210 → 179（38.58% → **35.17%**）△半改善；④ 无全网锁死 → `stuck=0`、dep=arr=236,044、真实拥堵只担全网 **0.423%** 流量 **✓**。**★H1 缺口去向**：全网 40,008,184 → 38,130,232（**−4.69%**）vs **被 crosswalk 映射的 3,037 条边 2,655,572 → 2,016,818（−24.05%）**、未映射 690,538 边 **−3.32%** ⇒ **缺口主要是「车改道离开被观测边」**（匹配边相对跌幅 = 其余网络的 **7.2 倍**）；走廊间重分配实证 **ECP +83.2% / KPE 隧道 +17.7%** vs **PIE −34.5% / CTE −37.0% / SLE −26.7%**。**★断面分桶（576 节）**：低 `sim/obs<0.5` **210 节担 38.58% obs → 179 节担 35.17%**、≈ `0.5–1.5` 212 → **332**、高 `>1.5` **154 节担 25.16% → 65 节担 5.69%** ⇒ **v1.0 的 0.9993 = 「154 节高估 ↔ 210 节低估」大额正负抵消**。**★「sim 低 obs 高」几乎全是快速路**：**KPE 隧道 19 节 `Σobs 230,268` / `Σsim×S 22,239`（0.097）**、ECP 0.227、PIE 0.124、**AYE 0.092**、TPE 0.201、KJE 0.298、BKE 0.118；成因二分 **M1 真·低载 133 节**（中位 `sum/obs = 0.538`）/ **M2 median 塌陷 77 节**；`sim_median ≡ 0` **53 节**（`sum` 亦 0 者 **37 节** / 纯 M2 **9 节** / 叠加 **7 节**）；**★容量不是约束**（210 节中仅 **4 节** `cap_eff_sum < obs`，中位 `cap_eff_sum = 15,200 veh/h`）。**★H2 假设实测**：**(1)「1:1 最近边」被证否**（576 断面 → **3,037 条唯一匹配边**，min 1 / **max 31** / 中位 **4** / 均值 **5.54**，**严格 1:1 仅 60 节 = 10.42%**）；**(2) 聚合口径敏感性**（`median` **0.9993/0.7665**、`mean` 1.0074/0.7725、**`sum` 4.1616/3.1384**、`max` 1.1113/0.8589 ⇒ **"聚合函数选错"不成立**）；**(3) 覆盖率成立且严重**（匹配边 **159.7 km** / 全网 15,126.5 km 却只担 **6.64% / 5.29%** 高峰流量 ⇒ **靶场只覆盖 6.6%**）；**(4) 关键反证** —— 快速路整体**并不低载**（PIE 689 边担 **991,784 veh/h**、SLE 357,471、TPE 331,340、CTE 229,368、BKE 177,116、**AYE 136,381**）⇒ 真问题 = **「LTA 断面观测值 vs 4 条匹配边中位数」跨尺度比较 + MATSim 走廊内跨边重分配**。**★H3**：严格口径 v1.0 **13 条 / 0.96 km / 0.124%** → A-1 **91 条 / 8.74 km / 0.423%**，中位 `sr` 0.630 → **0.253**；走廊严格档 0 → **2 条 / 1.141 km**、宽松档 0 → **10 条 / 4.236 km**。**★H4 可视化重建（5 图，v1.0/A-1 双版）**：旧 `speed_ratio` 污染与正式口径**逐位吻合**（v1.0 载流 224,432 中 `<0.80` **117,168 = 52.21%**、其中 **99% 是 `LENGTH<50 m`**；过滤后仅 **1,174 = 4.70%**，≡ `n_slow_cut0`/`n_slow_cut50`）；新图 `fig_why_speedratio_fails_v10_A1`（2×2 证明"全红"是仪器问题）、`congestion_map_vc_5bin_v10_A1`（`0.85–1.00` 79 → **530**、`>1.00` 5 → **33**）、`congestion_map_delay_v10_A1`（**249 条 / 20.8 km / 1,497 veh·h → 998 条 / 88.4 km / 6,073 veh·h**）、`congestion_map_ttratio_major_v10_A1`、`congestion_corridors_v10_A1`（双层走廊）。**★正交未决两事**：① **`SIGNAL_MECHANISM_ABSENT`**（config 25 模块 0 命中 / 421,770 节点 694,226 链信号令牌全 0 / `org.matsim.contrib.signals` **不在 classpath**（`libs/` 164 jar 无）/ 恒绿桩 / `DefaultTurnAcceptanceLogic` 只判拓扑 / `NodeTransition` 无 `@StringSetter` 故 **XML 改不动**）⇒ 信号化类链路担 **94.23% 里程 / 56.32% 高峰流量**，真实进口道有效能力 ≈ 饱和流 × 绿信比(0.45–0.55) ⇒ **系统性高估约 2×，与 0.434977 独立且完全未处理**；② M1 真·低载（容量充足却不放车 ⇒ 指向路由分配/路网连通性/OD 空间分布）。**★下一刀候选**：(a) 靶场重标定（走廊级 Σ / 容量加权，**零仿真**）；(b) M1 连通性/可达性归因（**零仿真**）；(c) `matsim-signals` 或绿信比折减容量；(d) `7.9B trafficDynamics` 复评。**★新纪律**：**可视化指标必须报"被谁污染"**（按比率着色前必报过滤前后条数与里程）；**覆盖率必须先算**；**比值指标必须同报聚合函数**。**★新增脚本** `scripts/od/diagnose_gap_7_9h.py`（47 s）/ `build_congestion_maps_7_9h.py`（81 s）/ `audit_signal_mechanism_7_9d0.py`（20.5 s）**+ 产物** `reports/dynamic_realism_audit_7_9/`（`STEP7_9H_REPORT.md` 等 11 件 + 5 张 PNG）。**★冻结影响 = 无**（零仿真、v1.0 仍唯一冻结）。 |
+| 2026-09-29 | **★Step 7.9A-1 采样一致性容量单因子动态实验完成（Dynamic Realism Audit ①）→ 判 `SAMPLING_CAPACITY_NETWORK_BREAKDOWN` × §7 情形 D（20 迭代仿真 226.99 min；零仿真评价 104 s；硬门 0 失败 / 记录项 6）** —— **起因**：领导者反馈「MATSim 动态状态不像真实城市交通、VIA 无拥堵」。**★第一手核实推翻第二嫌疑**：冻结 population 的 `home end_time` **早已分散**（07:00–08:59:59、07 时 **48.71%** / 08 时 **51.29%**、**7,200 个秒级取值**、中位 **08:01:27**、恰 08:00 仅 **44**）⇒ `6.3.3A` 早已固化、**2×2 退化为单因子**（C≡A、D≡B）⇒ 用户裁定只跑 A-1。**唯一变化** `flowCapacityFactor`/`storageCapacityFactor` `1.0 → **0.434977**`（= `1/SCALE`，由 `200,000/459,794` **独立推导**，⛔ 不由观测反演）。**★四指标**：① `N_cong`(`excess>0`) 7,985 → **15,083**（×1.889）；② `n(v/c≥1)` 82 → **501**（×6.110）、`sat_km` 1.1514 → **7.3379**（×6.373）、`max v/c` **首次越过 1**（1.001695）；③ 峰在途 36,176 → **63,706**（legHistogram 36,799 → **69,357**，×1.885）、峰时刻**后移 30 min**、06–12 窗内未到达 104 → **5,241**、`stuck`/全天未到达 **均 0**；④ `concentration_ratio` 3.377 → **3.942**（拥堵**向 7.3.6A 靶场聚集**）。**★★机制分解**（`scripts/od/decompose_simobs_7_9a1.py`，576/576 断面内连接）：`Σsim` **−23.30%**、**非均匀缩放**（**`L1/L0 = Σ\|Δ\|/\|ΣΔ\| = 1.4226`**；345 降 / 186 升 / 45 持平），`\|Δ\|` top-20 **全为高速且 v1.0 高估 2.0–4.9×**（CTE `44900` 2.32 → 0.80、SLE `47376` 1.99 → 0.83、PIE `46623` **4.93** → 3.19），逐断面 `sim/obs` 分布**向 1 压缩**（P75 1.539 → 1.185、P95 2.991 → 2.245）⇒ **§5 ① 四项全改善**（r 0.3452 → **0.4278**、WMAPE 0.7176 → **0.4774**、GEH 中位 26.09 → **15.89**、GEH<5 49 → 88）**而 `Sim/Obs` 跌破护栏**（0.9993 → **0.7665**，`POSITIVE_ONLY 0.8161` / `BEST_DIRECTION 0.7997` **三口径全跌破**）⇒ **§7 情形 D 原文「既有断面流量校准可能依赖了错误的容量尺度补偿」由实测直接坐实**。**★4 项实现/口径留痕（⛔ 未改预注册 `de15361a…`、⛔ 未改任何阈值）**：**`A03` 假门禁**（第 7 次同类复现；runner 跑完后**合法地**把 verdict 改写为 `A1_RUN_COMPLETE` ⇒ 原写死 `PREPARED*` 的判据必 FAIL 并把总判决误压成 `FAILED`）、**`A09` 判决分支是死代码**（`hard_fail` 收录全部 False 门 ⇒ 预注册 §10 的 `NETWORK_BREAKDOWN` **永不可达**；已按 §10 分离 `BREAKDOWN_GATES = (A09, A10b)`）、报告 §8 硬编码「≥ 0.85」（实测 0.7665 也照写"≥"⇒ 已改**按实测动态渲染**）、`onset` 3× 判据**交叉时刻陷阱**（v1.0 曲线平台化 ⇒ `t_onset = 09:20` ≠ 拥堵起点；⛔ `155 min` ≠ 拥堵总时长）。**★§11 提前解出**：`MODE = BASE_CAPACITY`（693,575/693,575 逐位相同）⇒ linkstats 的 `CAPACITY` **不随 `flowCapacityFactor` 缩放**。**★第三份备忘** `CALIBER_RESOLUTION_BREAKDOWN.md`（§10 判决**子义消歧**：本次触发**流量层崩解**（`Sim/Obs<0.85`），**非** `stuck`/`never_arrived` 的**网络崩解** ⇒ 读法按 §7 情形 D）+ 门 `A09d`。**★结论**：**容量按抽样比例收紧是「方向正确、但单独使用会过冲」的一刀** —— 它造出了 v1.0 从未有过的**真实拥堵波**，代价是把断面流量校准从 0.9993 打到 0.7665，而 **0.7665 的成因已查明是「削掉了高速上物理不可能的高估」**；**`0.434977` ⛔ 不得宣布为最终 / 最优容量**；**v1.0 仍为唯一冻结模型、不产生 v1.1**；⛔ 未改网络 / 容量 / 需求 / route-choice / 出发时刻。**下一步 = 待用户裁定**（容量扫描刻画 trade-off vs 信号绿信比**结构性折减**（信号机制零仿真审计判 `SIGNAL_MECHANISM_ABSENT`，不在 classpath）vs 7.9B `trafficDynamics` vs 高速高估归因）。 |
+| 2026-09-29 | **Step 7.9G-2 「时间 / 数量 / 距离 / 体积」四面口径统一 READY → 判 Q1 `DENOMINATOR_SPLIT` / Q2 `EXPOSURE_IMPACT_DECOUPLED` / Q3 `CONCENTRATION_ATTENUATED` / Q4 `FOUR_FACE_PARALLEL_REPORTING`（零仿真只读；硬门 **25/25**、EXIT=0、`CLOSURE=OK`、`converged=True; it=3`、**47.8 s**；`noop_selfcheck_passed=True`）—— 7.9 第十四阶段，⛔ 只解决"怎么统计、怎么表达"，不重开 G-1 机制结论、不回灌 v1.0** —— **新增** `scripts/od/audit_caliber_harmonization_7_9g2.py`（**73,426 B**，1,396 行）+ **16+1 件产物**落 `reports/caliber_harmonization_7_9g2/`（prereg `6df55c42…` / 22,238 B、`STEP7_9G2_REPORT.md`、`g2_*` 14 件）。**★四面实测（EP_SVC ｜ D0，`U_loaded`）**：time **71.368133%** / count **3.155967%** / distance **3.922029%** / volume **0.421506%** ⇒ 极差 **RANGE_ep = 70.946627 pp** ≫ `AGREEMENT_BAND_PP = 5.0` ⇒ **四面不可合并为单一 headline**。**★宇宙撕裂**：`SVC_any km / ALL_loaded km = 1.709605`（**170.9605%**，被门 10 捕获并标注 `ILLEGAL_MIXED_UNIVERSE`）；`universe_spread_pp = 1.962541 > 0.5` ⇒ Q1 `SPLIT`。**★集中度（覆盖率分数）**：`R_50 = 19.803755` / `R_90 = 6.643841` / `R_99 = 1.032118` ⇒ 子集内部延误**相对更分散** ⇒ Q3 `ATTENUATED`（⛔ Gini 仅作描述：ALL 0.999541 / EP_SVC 0.998174）。**★三档强度 `s/veh`**：ALL **0.430002** → SVC **9.407303** → EP_SVC **72.806547**（**169.32×**）。**★★口径级技术发现（7 项，全部为实测驱动）**：**(1) 时间面「逐位一致」只有 `math.fsum` 路径可达** —— pandas/numpy 的**顺序求和**与 G-0/G-1 存储值差 **1 ulp**（D0 `9.095e-13` / D2 `4.547e-13`）；换 `fsum` 后 D0/D1/D2 三档全部 `atol=0` 命中。**(2) pandas 默认快速浮点解析丢 1 ulp** —— 对照物 `296.40227899999996` 被读成 `296.402279`；**产物回读同样中招**（`962.7150059999999` → `962.715006`，使门 15 出现**假失败**）⇒ 对照物与产物回读一律 `float_precision="round_trip"`。**(3) `D2 = (home ∪ work) ∩ service`，不是 home∪work 全集** —— 全集（22,359 条）会得 km `775.332372` / vol `1,148,087`（错）；`∩ service` 才逐位复现 G-1（n_any **10,156** / n_loaded **7,083** / km_any **296.402279** / vol **168,637** / delay **3,410.521558 h**）。**(4) G-0 与 G-1 面名不同**（裸名 `time` vs `time_delay_corr_h`）⇒ `FACE_G0_KEY` 必须双向映射，否则门 15 直接 `IndexError`。**(5) 空串经 `to_csv`/`read_csv` 往返变成 NaN** ⇒ 门 12 原文的「**非空**」必须显式 `isna()`，只做 `dropna()` 后的集合差会**漏检** `denom_scope` 置空（实测漏检 12 行）。**(6) pandas 3.0 `df.loc[len(df)] = {...}` 静默丢弃新列** ⇒ 负例 N10 首跑**空转**；列注入必须走 `list.append(dict)` 或直接列赋值。**(7) 门 09/12 须覆盖「全部 share 行载体」**（含 `denominator_audit`）才与 §6 原文「**每个** share 行」一致。**★独立复核** `scripts/od/_verify_g2.py`（**13,631 B**，**不导入被测脚本**，从 5 件原始输入重算）：**90/90 PASS**、`INDEPENDENT_REPRODUCTION_OK`（12 组四面逐位 / 24 组份额逐位 / 15 组 `f_t`·`R_t` 逐位 / 9 组强度 / 13 组 G-0·G-1 锚点 / closure·manifest 逐件 sha / 不自哈希 / 25 门）。**★负例套件** `scripts/od/_g2_negatives.py`（**12,712 B**，严格按 §8）：**11 真负例 11/11 `fired=True`**、**空负例 `S1` 正确 `fired=False`**（`q3_for` 写死真值 = no-op；套件把 `fired=False` 判失败）、**3 BLOCKED 3/3 `complete=True`**（各 25 行 checks + 6 件终态产物 + EXIT=1 + 状态 `…_BLOCKED`）；沙盒根 `reports/_g2_neg_root2/`。**★§8「期望触发门」预测偏差（实测 vs 预测，逐条留痕、未改任何判据）**：**N1** 期望 12/09 → 实测 **10**（`share_loaded(ALL_LOADED, time) = 1.059809514` = **105.98% > 100%**，被门 10 以**更强**失效信号捕获）；**N4** 期望 12/10 → 实测 **09**（`denominator_audit:2` 组合同键跨宇宙）；**N3** 期望 15/17 → 实测 **15**（+16）；**N2** 期望 15 → 实测 15（+16）；**N9** 期望 23 → 实测 23（+22）；**N5→20 / N6→19 / N7→12 / N8→10 / N10→17 / N11→25 逐条命中**。**★留痕结论**：§8 的「期望门」列是**设计期预测**，与冻结**判据**无关；其中 **门 17 的判据为「`face_role` 归属 + 影响类字段名」，结构上无法检测「把 `count` 值塞进 `time` 面」这类**值替换**攻击**（该类攻击由**门 15** 正确捕获）。**★冻结影响 = 无**（零仿真、冻结件 `changed=0`、G-0/G-1 两目录 `drift=[]`、不回写任何 G-0/G-1 产物、不产生 v1.1）；**下一节点 = LTA 分车型 / HTS 出发时刻**。 |
+| 2026-09-28 | **Step 7.9G-2 「时间 / 数量 / 距离 / 体积」四面口径统一 OPEN → prereg 冻结**（**7.9 第十四阶段**；零仿真只读；⛔ 只解决"怎么统计、怎么表达"，不重开 G-1 机制结论）—— **新增** `reports/caliber_harmonization_7_9g2/PREREG_7_9G2.md`（**22,238 B**，sha256 `6df55c42…`，§1–§12；**冻结输入 5 件**（`pop`/`ls_final`/`ls_viz_ref`/`net_links_runtime`/`src_copy`，**不含 `plans`/`events`**，因 `EP_SVC` 定义已由 G-1 门 10 以 `contract = 1.000000` 过门）+ **只读对照 8 件**（G-0 4 + G-1 4）；**硬门 25**；**判决闭集 Q1–Q4**；**11 真负例 + 1 no-op 空负例自检 `S1` + 3 BLOCKED**；**必需输出 16 件**）。**★锁定 5 事**：①统一分母栈 `D0 = ALL ⊃ D1 = SVC ⊃ D2 = EP_SVC`；②**宇宙必须声明**（默认 `U_loaded`；`U_any` 须带 `_any` 后缀）；③**暴露 ≠ 影响**（`IMPACT = {time}`、`EXPOSURE = {count, distance, volume}`，配三档强度 `s/link`/`s/km`/`s/veh`）；④**不合成总分**（禁跨面加权/归一/求和）；⑤集中度用**覆盖率分数 `f_t = k_t / n_scope`**（`t ∈ {50,90,99}`）+ 与 `D0` 的倍率 `R_t`，`RATIO_CONC_MIN = 3.0`。**★阈值（预先约定，不得事后回调）**：`UNIVERSE_SPREAD_TOL_PP = 0.5` / `AGREEMENT_BAND_PP = 5.0` / `RATIO_CONC_MIN = 3.0`。**★零仿真侦察（第一手）**：**(a)** 宇宙撕裂可致 **>100%** 份额 —— `SVC_any` km = `ALL_loaded` km 的 **170.96%**；**(b)** 同一对象两个 distance share —— `g1_endpoint_service_split.csv` 的 `length_km = 296.402`（`U_any`，10,156 链）vs `U_loaded` 下 EP_SVC **203.385 km**（7,083 链）⇒ **5.716%** vs **3.922%**，差 **1.79 pp** > `0.5 pp`；**(c)** Gini **失效** —— `ΔGini(EP_SVC − ALL) = −0.0014`（0.998174 vs 0.999541），无区分度且符号反直觉 ⇒ 禁作判据；**(d)** 覆盖率分数有区分度且尺度无关 —— `f50` ALL **0.000036** → SVC **0.000112** → EP_SVC **0.000706**（**19.6×**）、`f90` 倍率 **6.65×** ⇒ 子集内部延误**相对更分散**；**(e)** 强度面 `s/veh` ALL **0.4300** / SVC **9.4073** / EP_SVC **72.8065**（**169.3×**）。**★四面实测（EP_SVC ｜ D0，`U_loaded`）**：time **71.3681%** / count **3.1560%** / distance **3.9220%** / volume **0.4215%**（极差 **70.95 pp**）。**★冻结影响 = 无**（零仿真、冻结件 `changed=0`、不回写 G-0/G-1、不产生 v1.1）；**下一节点 = 分析脚本 → 25 门 → 负例 → 独立复核 → READY/CLOSED，随后 LTA 分车型 / HTS 出发时刻**。 |
+| 2026-09-28 | **Step 7.9G-1 端点/接入子系统「就地吸收」机制审计完成 → 判 A1 `PROPORTIONAL_TO_MILEAGE` / A2 `ENDPOINT_LOCALIZED` / A3 `NOT_MAINLINE_QUEUE` / A4 `NEITHER_BOUND` / A5 `NEGLIGIBLE` / A6 `ENDPOINT_ABSORPTION_DOMINANT`（零仿真只读；硬门 **25/25**、EXIT=0、`CLOSURE=OK`、`converged=True; it=3`）—— 7.9 第十三阶段，⛔ 只审计不改模型、不回灌 v1.0** —— **新增** `scripts/od/audit_endpoint_access_absorption_7_9g1.py` + 冻结 `reports/endpoint_access_absorption_7_9g1/PREREG_7_9G1.md`（**17,536 B**，sha256 `4e7ffa3c…`）⇒ **16 件产物**；运行 **340.8 s**。**★可证伪命题（用户裁定）**：`service` 延误是否主要表现为端点接入 / 局部循环 / 短链时间表达的**「就地吸收」**，而非道路容量约束产生的**排队**延误。**★A2 决定性**：端点 `service` **10,156** 条（296.4 km）担延误 **3,410.52 h = 全网 71.37% / `service` 内 75.64%**，却只占 `service` 流量 **9.77%** ⇒ 逐车 **72.81 s/veh vs 非端点 2.54 s/veh（28.7×）**；`f_pos` **0.088818** vs `w_ep` **0.756366** ⇒ **遍历位置效应被证伪、端点链归属成立**。**★A3**：邻接干道 `service` 仅担 **1.8736%** vs 内部 **92.4830%** ⇒ **非主线回溢**。**★A4**：`D` 集 422 条，`sat_share_D` **0.1394**、`cell_share_D` **0.4961** ⇒ 两者均 <0.50 ⇒ `NEITHER_BOUND`（**容量与储存微胞都不是单一绑定约束**）。**★A5**：`f_local` **0.001296**（306/236,044）⇒ `NEGLIGIBLE`（**局部循环支路被证伪**）。**★A6**：`s_end` **71.3681%** / `s_mid` **22.9884%** / `s_main` **1.8736%** ⇒ **端点就地吸收主导**。**★暴露四面（重申 `CALIBER_FRAGILE`）**：time **94.36** / count **27.81** / distance **18.56** / volume **4.31**（%）。**★events 逐车轨迹**：12 条 target 链 `n_enter≥1` 全齐（命中 24,293 事件）；`dwell_p50` **280–6,423 s** 而链长仅 **1.9–140.8 m**、`ff_s` **0.62–25.3 s** ⇒ 与「就地吸收／储存微胞耗尽」一致、与「道路容量排队」不一致。**★验证**：负例 **11/11** 全触发、BLOCKED **3/3** 完整节点、独立复核 `VERIFY_OK=True`（7 件冻结件未变 / prereg 恒等 / 独立 canonical 重算 / 独立端点抽样 40k / 独立契约抽样 40k / 25 门有序 / manifest 字节一致且不自含 / closure OK / 判决 ∈ 闭集）。**★新纪律 `R-G1-1…8`**：大 `.gz` 一律 `zlib.decompressobj(31)`（`gzip` 33 MB/s vs **348 MB/s**）／`bytes.split(b"<tag ")` 吃掉前缀 ⇒ 后续 regex 不得再含该前缀／缓存仅用于**不绕过被测函数**的负例（打 `scan_plans`/`events` 的必须关 `--cache`）／A 类判决须同报四面暴露／机制判决须「位置面 vs 延误面」分列／「就地吸收」须逐车口径复核／机制闭集必须含否定分支／⑧**负例必须"改变可观测结果"**——把变量写死为**真值**是 no-op 空负例，只证明"没抓到"而非"能抓到"；必须取**与规则相矛盾**的取值，且套件须把 `fired=False` 判为失败、不得静默通过。**本轮自查 4 处**（E1 `CONTRACT` 键错存成 link→权重致契约恒 `0/0/236044`，**门 10 自抓**；E2 同源 `split` 吃掉 `<person ` 前缀致 `pid` 恒空，改 `\A\s*id="…"` 后抽样 5000/5000=1.000000；E3 `events_trace` 性能 `gzip`→`zlib` + 仅命中目标链正则，666 s→331.8 s；**E4 负例设计缺陷**——N9 首跑把 `a4` 写死为**真值** `NEITHER_BOUND` ⇒ **空负例（no-op）**、不产生任何可观测变化、门 17 自然不触发 ⇒ 被套件自抓（`fired=False`）；改取**与规则相矛盾**的 `FLOW_CAPACITY_BOUND` 后门 17 FAIL、24/25、BLOCKED）。**★负例全套复跑（E4 修复后）落新沙盒根 `reports/_g1_neg_root_r2/`**——旧根单用例 >50 文件/轮 ⇒ `build()` 的 `rmtree` 撞 `SAFE_DELETE_BULK_CONFIRM_REQUIRED` 使全套用例**静默夭折**；修：`G1_NEG_ROOT` 参数化 + 对非新鲜目录**硬失败**（不静默）⇒ **复跑结果 N1–N11 全 `fired=True`（11/11，含 N9 现已真触发：`A4=FLOW_CAPACITY_BOUND`、门 17 FAIL、24/25、BLOCKED）、P1–P3 `complete=True`（3/3，各 25 行 / 6 件终态产物 / EXIT=1）、`ALL_EXPECTED_GATES_FIRED=True`、`PREFLIGHT_BLOCKED_NODE_COMPLETE=True`、EXIT=0**（7 min 45 s / 3 并发；N5 391 s、N11 290 s 为关缓存重算）。**★冻结影响 = 无**（零仿真、冻结件 `changed=0`、不产生 v1.1）。 |
+| 2026-09-28 | **Step 7.9G-0 `service` 延误机制 R0 结构审计完成 → 判 Q1 `CAPACITY_CONSTRAINT_NOT_DOMINANT` / Q2 `CALIBER_FRAGILE` / Q3 `SERVICE_PARAMS_DERIVED`（零仿真只读；硬门 **25/25**、EXIT=0、`CLOSURE=OK`、`converged=True; it=4`）—— 7.9 第十二阶段，⛔ 只审计不改模型、不回灌 v1.0** —— **新增** `scripts/od/audit_service_delay_mechanism_7_9g0.py`（48,460 B，sha256 `61cfe26a…`）+ 冻结 `reports/service_delay_mechanism_7_9g0/PREREG_7_9G0.md`（14,221 B，sha256 `2db351c8…`）⇒ **15 件产物**。**★Q1**：已载流 `service` 62,407 条中 `v/c` 中位 **0.0225**、饱和仅 **74（0.1186%）**且只担 **13.95%** 延误 ⇒ **容量约束非主因**（判据 `sat_delay_share < 0.50`）；集中度 top-10 **62.17%** / top-100 **96.01%**。**★Q2**：`raw` **45.904%** vs `corr` **94.357%**；**暴露面四面** time **94.36** / count 27.81 / distance 18.56 / volume **4.31**（%）；跨时段极差 **0.0573 > 0.05** ⇒ **`CALIBER_FRAGILE`**（须四面并报，⛔ 不得单报 94.36%）。**★Q3**：`service` `cap = 400×permlanes` **100.000%**、全网 **99.689%**、`qsim` 无覆盖 ⇒ **参数是派生实现量，不是机制旋钮**。**★验证**：负例 **11/11** 全触发、BLOCKED **3/3** 完整节点、独立复核 `VERIFY_OK=True`。**★新纪律 `R-G0-1…5`**：发现门≠执行门（门禁不得编码期望结论，否则合法负结果被误判 BLOCKED）／manifest 不自哈希且不含 closure／写入终局状态的判据须排除该门自身／汇总件数字须与分解件同源／占比必须并报暴露面。**本轮自查 5 处**（E1 门 16 误判 `FRAGILE`、E2 门 24 自引用振荡、E3 manifest↔closure 2-循环、E4 summary 头条漏赋值 0.0、E5 复核脚本自身少乘 service 掩码 82 vs 74）。**★冻结影响 = 无**（零仿真、冻结件 `changed=0`、不产生 v1.1）。 |
+| 2026-09-28 | **★`F-2 Q4-R1-R1` 正式记为 READY 节点，`Q4-R1` 线关闭（用户裁定）** —— **冻结验收 = `25/25` / `EXIT=0` / `CLOSURE=OK`**；prereg `82a03eb8aac0dc5d7ba610f8f0e3ba53e1cc1e0bd92ca00f60dbc8fdcd7c5f7f`（16,772 B）/ 脚本 `1cbeb2014fb6e2303099d7bbcbae58725e5b84518942f1e2bfc548a268227679`（98,312 B）。**技术链正式记为 `F2 v2 → v2.1-R2（Q2）→ Q4-R1-R1（Q4 nearest capture）→ service delay mechanism`**，下一步 = **`service` 延误机制**（避免继续在已基本收口的几何匹配线上迭代）。**本轮 9 项修复全落地**：① 恢复 4 类邻域 ② grid = 1,308 ③ 真独立 selection re-derivation（1308/1308、max abs Δ=0）④ 真独立 SELF exclusion audit（violations 全 0）⑤ selection flow-blind 改 **AST 语句区间**结构化检查 ⑥ Q4 traceability 保持 23 字段 ⑦ 门 16 升级为 `WRITEBACK_VERIFICATION`（manifest↔磁盘↔closure 三方一致）⑧ 门 25 修正为真实 `…_v2_1_R2` 路径 + 8 件非 Q4 产物 SHA 对照（8/8 identical + 本地重算 2/2）⑨ BLOCKED 路径完整物化 + 最终三方状态闭环（坏输入 ×3 均产出 25 行 checks + 5 件产物 + EXIT=1）。**负例矩阵 10/10 全部按预期门触发**（此前 5 个空门 16/20/22/24/25 现均有可证伪反例）。**★同层对照 R2(max-flow) → R1-R1(nearest) median ratio 20→100 m**：sec/parallel **+0.365 → +0.020**、ter/parallel **+0.499 → +0.007**、sec/twin +0.0915 → −0.0033、ter/twin +0.0042 → −0.0879 ⇒ **nearest 规则去掉此前明显的 max-over-N 单调膨胀**（用户要求：先记住、待 R1-R1 自身过 25 门后落定 —— 已过门）。**★新纪律 `R-Q4R1R1-1…7`**：闭包表不得含自身（自引用破坏不动点）／独立重导必须从原始候选池重算／BLOCKED 必须是完整可审计节点／词窗式静态检查改 AST 语句区间／环境：`rmtree` 触发批量删除门、`tasklist` 输出须 GBK 解码／R2 节点本就含 4 类邻域。**本轮自查 5 处**（E1 闭包自引用致不收敛、E2 漏导出 `distance_same`、E3 `rmtree` 触发 SAFE_DELETE 门改新沙盒根、E4 `tasklist` GBK、E5 prereg 计数 16→15 并重算哈希）。 |
+| 2026-09-28 | **台账补记：`7.9F-0/1/2` + `F-2 v2.1-R2` + `Q2` 正式诊断**（此前仅存于各自 `reports/` 目录与项目记忆，本轮统一补入 §3.1 与 §6）—— `7.9F-0 v2` 判 `GRADE_CAPACITY_AUDIT_READY`（12/12 + 补充 3/3；**容量纯查表 ⇒ 无 link 级信息**）；`7.9F-1 v2` 判 `AGGREGATION_AUDIT_READY`（12/12；**83 零断面 = 68 真零 + 15 median 塌陷**；obs 加权 −0.0139→+0.0110）；`7.9F-2 v2` 判 `MECHANISM_AUDIT_READY`（16/16；**D4/D5 只作描述**）；`F-2 v2.1-R2` 判 `LOCAL_CAPTURE_DIAGNOSTIC_READY`（18/18；**Q2 升为正式 negative diagnostic**）。 |
+| 2026-09-20 | **Step 7.9E-0 Arterial-Layer Delay Attribution Audit 完成 → 判 `ARTERIAL_LAYER_AUDIT_BLOCKED`（零仿真只读；硬门 **11/12**；**22.1 s**）—— 7.9 第九阶段（干道层），⛔ 不回灌 v1.0** —— **新增** `scripts/od/audit_arterial_delay_7_9e0.py` + 冻结 `reports/arterial_delay_attribution_7_9e0/PREREG_7_9E0.md`（sha256 `4fa98a96…12ea08f1`）⇒ 8 件产物。**E1**：arterial_core 车时份额 **0.6371**（时间主场）/ 结构份额 0.0676；**E2**：`delay_share` `service` **0.5710** > arterial **0.2978**，`delay_ratio` 结构 4.41 vs 车时 0.47 **翻转**；**E3 BLOCKED**（576 断面中 motorway/motorway_link **77.8%**、arterial 仅 **12** <30）；**E4**：arterial→mainline 中位 **1,309.9 m**、`≤300 m` 5.32%、hop 52（辅）⇒ 深居离主线。**新规则**：时间面≠延误面须分别报基数；靶场构成须先行体检。⛔ 暂不改 service 400 / 端点吸附；**不产生 v1.1** |
+| 2026-09-20 | **Step 7.9E-1 Arterial Observability Expansion 完成 → 判 `OBSERVABILITY_BLOCKED`（零仿真只读；独立 diagnostic crosswalk；硬门 **10/12**；**24 s**）—— 7.9 第十阶段（可观测性层），⛔ 不回灌 v1.0** —— **新增** `scripts/od/audit_arterial_observability_7_9e1.py` + 冻结 `reports/arterial_observability_7_9e1/PREREG_7_9E1.md`（sha256 `4d5ee3e1…6751d`）⇒ **12 件产物**。**匹配质量**：A+B 覆盖 **97.48%**（1,278/1,311 上界）、中位 **0.57 m**、p90 **2.92 m**、方向差中位 **1.38°**；全量标出 **542** 条 `arterial_core`。**★★根因**：576 残差断面 `RoadCat` 仅 `CATA` 326 + `SLIP_ROAD` 250，A+B 代表链路 motorway 328 / motorway_link 247 / primary_link 1 ⇒ **arterial residual n = 0（三档全 0）** ⇒ **冻结靶场定义域不含 arterial**，既非匹配质量亦非 arterial 少。**新规则 `R-OBS-1~5`**（正式/诊断 crosswalk 永久分离；先证可观测再判归因）。**两个坑**：① 零仿真自审门**自指误报**（检查函数字面量含 `subprocess.run`/`java -`）⇒ 改 **AST 门**；② `section_length_m` → `length_m` **别名回退**。⛔ 暂不改 service 400 / 端点吸附；**不产生 v1.1** |
+| 2026-09-20 | **Step 7.9E-2 Expanded Diagnostic Residual Domain 完成 → 判 `NO_ARTERIAL_COUPLING_SIGNAL`（零仿真只读；复用 E-1 独立 diagnostic crosswalk + 冻结 SCALE；硬门 **12/12**；**60–73 s**）—— 7.9 第十一阶段（扩展诊断残差域），⛔ 不回灌 v1.0** —— **新增** `scripts/od/audit_expanded_residual_7_9e2.py` + 冻结 `reports/arterial_expanded_residual_7_9e2/PREREG_7_9E2.md`（sha256 `c9e68272…e6cc`）⇒ **12 件预注册产物 + 3 件事后补充**。**★可观测性解决**：A+B 覆盖 **97.48%**、有效残差 **1,278**、**arterial 12 → 542**。**★formal bridge**：overlap **576/576**、Spearman **0.9662** / Pearson **0.9398** / MAE **0.0722** / RMSE **0.4655**。**★耦合**：arterial 均值 **+0.0027** vs 非 **+0.0904**、Spearman **−0.0216**、η² **0.0013**、非分层 p **0.1969**、**分层 p **0.05247**（临界 ≥0.05 ⇒ 无信号）**。**⚠️ 事后稳健性（不改判决）**：分层统计量 **69.3% 来自 CATA 单条误映射 `primary`（残差 −1.000）**；仅 CATB `p=0.0080`、去 CATA `p=0.0400`、去 CATB `p=0.1679`。**★★真实结构 = 等级单调梯度**（motorway +2.0% / primary +7.6% vs trunk −20.2% / secondary −34.6% / tertiary −41.7%，flow-weighted）⇒ **`arterial_core` 符号抵消、聚合均值是伪影**。**新规则 `R-RES-1~6`**。**运行前修 1 处**：`W01_DIR_CANDIDATES` 路径笔误（缺 `W01_rc_min`）⇒ 修正为 `matsim_final_7_6h/outputs/W01_rc_min/ITERS/it.19`。⛔ 暂不改 service 400 / 端点吸附；**不产生 v1.1** |
+| 2026-09-20 | **Step 7.9D-1 Ramp Interface Audit 完成 → 判 `RAMP_INTERFACE_CONTINUOUS__RAMP_NOT_A_DELAY_HOST`（零仿真只读；硬门 **11/13** + 补充 **3/3**；**19.7 s**）—— 7.9 第七阶段（主线接口层），⛔ 不回灌 v1.0** —— **新增** `scripts/od/audit_ramp_interface_7_9d1.py` ⇒ 新目录 `reports/ramp_interface_7_9d1/`（**预注册 `PREREG_7_9D-1.md`（sha256 `5c8fd9c1…8983`）+ 报告 `REPORT_7_9D1.md` + 8 件产物**）。**用户裁定**：研究对象由 `service+connector` **收窄**为 `mainline ↔ ramp ↔ local-access`。**★新增两条永久规则**：**R-DIST-1**（接口距离一律 meter/km，hop 仅辅助）、**R-MULTI-1**（接口判据必须多跳）。**★单跳近重言式**：`neither` **92.73%**。**★接口连续**：多跳 `acc_m` 有限率 **100%**、ramp 中位 **478 m**；`egr_m` 中位 419 m；链长中位 500 m、片段中位 16.6 m。**★车道/容量连续**：车道下降仅 **1.85%**、`Δcap/lane` 中位 **+200**。**★★ramp 非延误宿主**：车流 9.22% vs 延误 **1.46%**、`ratio 0.719`、按车流归一 0.158；延误加权 `acc_m` 647 m ⇒ 耦合方向通、量太小 ⇒ **与 C-1/D-0 连续一致：问题不在主线接口层**。**⚠️ 预注册缺陷如实上报**：`R1.05/R1.06` FAIL 系「`min>0`」逻辑不可能（主线种子恒 0），**不改预注册**、改列补充门 `S1.01–S1.03` 3/3 PASS。**★冻结影响 = 无**：未跑仿真、未改参数、冻结件 `changed=0`；**v1.0 仍为唯一冻结模型、不产生 v1.1**。■**教训 §102–104**：接口距离必须物理口径；接口判据必须多跳；暴露面 ≠ 时间面 |
+| 2026-09-20 | **Step 7.9D-2 Terminal Representation Audit 完成 → 判 `MIXED__TERMINAL_AND_MAINLINE_COMPARABLE`（零仿真只读 + 自由流时间；硬门 **13/13**；**27.5 s**）—— 7.9 第八阶段（端点表示层），⛔ 不回灌 v1.0** —— **新增** `scripts/od/audit_terminal_representation_7_9d2.py` ⇒ 新目录 `reports/terminal_representation_7_9d2/`（**预注册 `PREREG_7_9D-2.md`（sha256 `03f24243…3369`）+ 报告 `REPORT_7_9D2.md` + 6 件产物**）。**★端点**：O `service` **0.7068** / D 0.6685 / 至少一端 **0.9026**（`expansionFactor` 加权 O 0.7170）；按组 O `local` **0.9011**。**★自由流接入时间**：`T_acc` 中位 **124.8 s**、`T_egr` 103.6 s、`T_terminal_lb` 中位 **234.3 s**（p90 417.8）。**★★全网自由流时间分解**：总 **24,905.2 车·h**、off-mainline 14,146.7 ⇒ **`share_offmain = 0.5680`**（实际 0.6364；KW 0.6049）⇒ 判 `MIXED`。**★★最重要发现**：off-mainline 由**干道主导**（mainline 0.4320 / arterial **0.3787** / local 0.0998 / ramp 0.0895），**`service` 仅 0.0515** ⇒ **端点暴露面（90%）≠ 时间面（5%）**，把矛头指向 `service` 的 400 veh/h **会指错对象**。**★精度修正**：`cap/lane` 严格 = **400**；自由流速度**非严格恒定**（10 值 5–70 km/h、20 km/h 占 **96.80%**）⇒ `SERVICE_SPEED_FIXED=False`；D-0「恒 20 km/h」仅 p10=p90 意义成立。**★冻结影响 = 无**：未跑仿真、未改容量/吸附、冻结件 `changed=0`；**v1.0 仍为唯一冻结模型、不产生 v1.1**。■**教训 §102–105**：接口距离物理口径；接口判据多跳；暴露面≠时间面；「恒定」类断言须用 `ndistinct` + 例外比例 |
+| 2026-09-20 | **Step 7.9D-0 Access-System Delay-Trapping Audit 完成 → 判 `DELAY_TRAP_OFF_MAINLINE_BY_CONSTRUCTION__BASE_RATE_DOMINATED`（零仿真只读；硬门 **15/15** + 补充 **2/2**；**33.0 s**）—— 7.9 第六阶段（接入结构层），⛔ 不回灌 v1.0** —— **新增** `scripts/od/audit_access_delay_trapping_7_9d0.py` ⇒ 新目录 `reports/access_delay_trapping_7_9d0/`（**预注册 `PREREG_7_9D-0.md`（sha256 `564310dee…6ee85`，运行期重算 **MATCH=True**）+ 报告 `REPORT_7_9D0.md` + 8 件数据产物**）。**用户裁定**：问题收窄为「**为什么回溢无能的 `service/connector` 短链能持续吸收大量延误，却不能把压力反馈到主线**」；三接口 = `主线容量 ↔ 接入拓扑 ↔ 局部储存`；**零仿真结构审计优先**（⛔ 不改 network、⛔ 不跑 MATSim），**先写预注册再读任何仿真输出**。**★★决定性发现 = base-rate 控制让结论反转**：`ratio = delay_share / km_share` ⇒ 全网 `service` **1.610**（不构成富集；本就占 58.61% km / 64.95% link），**限定主线邻域（`d_up≤3`，**15,319 links / 2.209%** / 13,125 nodes）后 ratio = 0.171（欠表达 8.5×）**，邻域延误 **96.35%** 落在 `motorway+ramp`（78.42% / 17.93%）⇒ **主线上本无压力可沉**。**①单向阀 = 证伪**：全岛 sink-valve（`mw_in ∧ acc_out ∧ ¬mw_out`）**仅 13 个**节点（邻域占比 **0.00099**，`VALVE_PRESENT=False`）；mainline-in 节点 **8,567** vs out **8,566**（8,550 重合）⇒ 主线**几乎完全可逆**。**②薄储存 = 成立但是"查表赋值"**：邻域 `fill_time` p25/中位/p75 = 4.53/**9.18**/17.28 s、**89.81% < 30 s**（全网中位 10.43 s、82.56%）；`cap/lanes` 按 `(highway × lanes)` **单值确定（13/13 类型，组内 `min=max`）** ⇒ `service`=**400**、`residential`=700、`tertiary`=900、`secondary`=1200、`primary`=1500、`motorway`=1900（veh/h/lane）；`cap_ratio_ref`：`service` **0.222**、`connector` 0.722、`ramp` 0.944。**③排队耦合 = 构造性缺失**：延误加权 `d_up` = **72.33 hops**、`share(d_up≤3)` = **0.0278**、`share(d_up>3)` = **0.9722**（`COUPLING_ABSENT=True`；敏感度 D=1/3/5 → 0.0278/0.0278/**0.0280** 稳定）。**④终端暴露（描述性、无裁决权；读冻结输入人口 `pop_W01`，⛔ 不用 `output_plans`/`linkstats`）**：**236,044** 出行，起点落 `service` **0.7068**、终点 **0.6685**、**至少一端 0.9026**（对照 km 0.5861）⇒ **出行两端都挂在 400 veh/h、20 km/h、≈1.55 车储存的"车道"上**。**★补充（非预注册，不改变判决）**：hop → 米翻译（延误加权上游距主线 **1,952 m**；`≤300 m` **0.0315**、`>1000 m` **0.7354**）⇒ 跳数被碎片化夸大但结论不变；细分辨率容量确定性 **13/13 单值**（预注册类别级 `CAP_DETERMINISTIC=False` 因 `other` 合并 5 种 highway，**两者并列如实上报**）。**★更正 C-1（已追加到 `REPORT_7_9C1.md` 更正附录）**：K3「回溢无能 99.95%」是**单跳口径近重言式**（仅 **0.049%** 的 `service` link 有主线 feeder）⇒ 升维多跳后 `share(d_up≤3)` 仅 **2.78%**；「延误被吸收到 service/connector」的**因果解释被取代**；研究对象**收窄为 `ramp`**（唯一邻域富集类，ratio **1.597**，邻域延误 17.93%）；C-1 **verdict 字符串字面不变**。**★CTE 门（D0.13 断言）**：正名 `Central Expressway` **603 links**、v1.0 **104.57 h（2.19%）**、KW **56.68 h（0.45%）**；旧掩码 `"CTE" in name.upper()` **命中 0**（`banned_mask_hits==0` 已断言）。**★冻结影响 = 无**：零仿真、未改参数/network、冻结件 `changed=0`；**v1.0 仍为唯一冻结模型、不产生 v1.1**；**本步只"证明"，不"修"**。■**教训 §98–101**：「份额类」结论必须先做 `份额 ÷ 里程份额` 归一（否则随分析域反转）；拓扑跳数在碎片化路网里须附物理距离；「单跳不可逆」是重言式、耦合判据必须升维多跳；「参数是否涌现」要用「确定性 + 最细可分辨粒度」两刀捅穿 |
+| 2026-09-20 | **Step 7.9C-1 Structural Spillback Validation 完成 → 判 `SPILLBACK_CHANNEL_INTACT__DELAY_TRAPPED_OFF_MAINLINE`（零仿真只读；硬门 **11/11**；**23.7 s**）—— 7.9 第五阶段（拓扑通道层），⛔ 不回灌 v1.0** —— **新增** `scripts/od/audit_structural_spillback_7_9c1.py` ⇒ 新目录 `reports/structural_spillback_7_9c1/`（**预注册 `PREREG_7_9C1.md` + 报告 `REPORT_7_9C1.md` + 7 件数据产物**）。**用户裁定**：C-1 **不**再回答「KW 是否有效」（B-1 已回答），只回答「**网络表达方式是否阻断拥堵从瓶颈向上游传播的结构通道**」；冻结**三条证据链**（真实候选瓶颈→上游传播路径→下游储存/阻塞能力）与**四条检查**（K1 主线可传播通道 / K2 下游储存回溢 / K3 service-connector 回压死端 / K4 超短 link 碎化）；**统一拓扑框架** = `class × corridor(name) × junction-cluster(unit)`。**★K1 = 通道完整**（`up_main_m` 中位 **1,957 m**、p90 15,537 m；`≥300 m` 按里程 **91.52%**、`≥1000 m` **75.84%**）⇒ **✗ 不支持「被切断」**。**★K3 = 断点成立**（`service∪connector` 回压死端 **99.95%**、motorway 仅 **0.17%**）。**★K4 = 快速路不碎、服务网极碎**（motorway **17.43 links/km**、中位 37.8 m、**0** 条 `>40`；connector **85.01**、service **50.81** links/km，中位 8.9–9.3 m、72–89% ≤20 m）。**★K2**：候选 **5,490** 中**仅 387（7.05%）含主线 link**；`fill_time` 中位 **9.80 s**、**51.02% < 10 s**。**★决定性对账**：v1.0 延误 **4,778.8 h** → motorway **2.50%** / **service 94.36%**；KW **12,482.1 h** → motorway 3.95% / service 88.01%；**延误加权通道 v1.0 = 334 m**（service 内 **107 m** vs motorway 内 7,921 m）、**97.34% 延误落在回压死端 link 上**（KW 95.97%）⇒ **「就地生成、就地吸收」**。**★裁决（对用户假设的诚实回应）**：预设「网络表达阻断快速路回溢通道」**未被支持**（主线通道完整 + 快速路未碎化）；被表达方式伤害的是**非主线接入/服务子系统** ⇒ 应将结论从「queue / KW 参数不对」改写为 **「拥堵的生成与吸收都被结构性地困在离主线的、拓扑终端的接入子系统里」**。**★附带发现**：冻结结构先验**本身不偏向快速路**（候选单元仅 7.05% 含主线 link）；与 7.9C-0 的 C2（残差不向结构单元富集）叠加 ⇒ **「结构先验」与「实际延误」都不落在快速路上**。**★更正 7.9B-1**：B-1 的「CTE 走廊 1.76→24.22 h」系**旧掩码**（`name` 无字面 "CTE"，实际命中 **Changi ∪ Tampines**）；**CTE 正名 104.57 h（2.19%，v1.0）→ 56.68 h（0.45%，KW）** ⇒ B-1 三层 verdict 不变，但「KW 未复现唯一真实快速路排队链」的数值须更正为 **KW 削弱/转移**；已在 `REPORT_7_9B1.md` 追加更正附录。**★冻结影响 = 无**：未跑仿真、未改参数、冻结件 `changed=0`；**v1.0 仍为唯一冻结模型、不产生 v1.1**。■**教训 §95–97**：「结构完整/损坏」须按**瓶颈侧 vs 吸收侧**分列；「延误×结构通道」是检验「被困住」的直接物理量；**冻结文件里的简称掩码**须用「正名 + 计数断言」兜底 |
+| 2026-09-20 | **Step 7.9B-1 `qsim.trafficDynamics: queue → kinematicWaves` 单变量机制实验完成 → 判 `KW_CHANGES_CONGESTION_MECHANISM__KW_POSITION_NOT_IMPROVED__STABILITY_OK`（仿真侧 **49/49** + 分析侧 **14/14**；仿真 **177.5 min**；分析 **400.6 s**）—— 7.9 第四阶段，★**真·单变量实验（非调参）**，结果落**独立目录**、⛔ 不回灌 v1.0** —— 用户裁定：7.9C-0 冻结后进入 B-1，**唯一改动 = `qsim.trafficDynamics`**，其余 v1.0 条件（`f_cap=1.0`/`SCALE=2.29897`/`λ=0.075`/`f_work=1.180222`/`N_sim=236,044`/R01 rc_min/`stuckTime=10`/`removeStuckVehicles=false`/network/OD/crosswalk/seed/departure）**全部继承**；**红线 = 「机制变化」与「位置改善」严格分离**。**新增** `scripts/od/run_kw_single_variable_7_9b1.py`（配置派生 + **49 门** + 点火；模型层 diff **恰好 1 项**、输出层 **恰好 3 项**、`VIOLATION=0`；`dsim.trafficDynamics` 同名诱饵未触碰；`inflowCapacitySetting` 未覆盖 ⇒ 默认 `INFLOW_FROM_FDIAG`）／`scripts/od/analyze_kw_7_9b1.py`（零仿真三层分析，**14 门**）／`scripts/od/_build_link_unit_map_7_9b1.py`（**溯源执行 7.9C-0 冻结源码切片** 重建 link→unit 映射，**22,722 单元位级自校**）⇒ 产物 `matsim_kw_7_9b1/`（配置+audit+`outputs/W01_kw/`）与 `reports/kw_single_variable_7_9b1/`（**13 件**，含 `REPORT_7_9B1.md`）。★**结果**：L1 机制变化**成立**（`Sim/Obs` 0.9993→**0.8506**、超额 4,705→**18,860**、延误 4,779→**12,482 h（+161%）**、`A_10:19` 0.89%→**3.52%**）；L2 **无长链**（分量 3,603→**8,223** 更碎、最长仅 0.857→**0.954 km**、**超额落候选单元比例 32.54%→29.45%**、富集 1.718×→**1.555×**）；L3 **位置未改善**（C3 lift 1.852×→**1.835×**、C2 ρ +0.0267(p .200)→**−0.0078(p .485)**、辅助超额口径 1.679×→**1.601×**）。★**延误去向**：`service` **88.0%**、**CTE 仅 0.19%**（未复现 7.7E 认定的 CTE 排队链）。★**结论**：**「变堵了 ≠ 堵得对了」**——满足「机制变化」、不满足「位置改善」。★**冻结影响 = 无**：实验**未被采纳** ⇒ **v1.0 仍为冻结模型、不产生 v1.1**；14 件冻结输入 sha256+mtime `changed=0`。■**教训 §90–94**：diff 门须模型/输出分层且**校验 module 同名**；「作用集合=0」≠ 机制未生效（`q_fdiag` 是速率上限）；「变堵」与「堵得对」须两套独立证据链；换拥堵定义须**对称施加 + 标注非预登记**；复用冻结中间结构应**执行其源码切片 + 位级自校** |
+| 2026-09-20 | **Step 7.9C-0 结构性瓶颈审计完成 → 判 `STRUCTURAL_BOTTLENECK_PRIOR_ESTABLISHED`（零仿真只读结构审查；硬门 **25/25**；~35 s）—— 7.9 第三阶段（空间结构层），⛔ 非 7.8 前置、不回灌 v1.0** —— **新增** `scripts/od/audit_structural_junction_cluster_7_9c0.py` + 输入预处理 `_build_network_cache_7_9c0.py`（⇒ `_cache_network_7_9c0.npz`：link 属性 + 421,406 节点坐标 + 断面 crosswalk）；**新目录** `reports/structural_junction_cluster_audit_7_9c0/`（10 件）。★**三层尺度**：L1 junction-cluster（同层短链 ≤52 m 连通分量 + 结构种子；**22,722 单元 / 460,001 link / 66.3%**，单元 ≤200 link）、L2 short-chain（ramp/connector/service 链）、L3 corridor（仅宏观，⛔ 非第一判据）。★**C1 结构瓶颈先验（零流量；门 C0.22 源码自检）**：`mean(merge_deficit, lane_narrowing, class_transition, ramp_mainline)` 取单元内**最大值**；`storage_shortage_proxy` 均值 **0.0058** ⇒ 判别力为零、剔除。★**C2 残差投影**：映射覆盖 **99.7%**（空间最近邻兜底 p90 173 m）⇒ **ρ = 0.0355 / 置换 p = 0.8125 ⇒ W01 残差未向结构瓶颈单元聚集**（规模分层后同结论）。★**C3 HitRate/Coverage 预登记 + v1.0 基线**：0.4475 / 0.3705 / **lift 1.852×**，附**共同因子证伪**（`ρ(prior,单车道容量)=0.248`、`ρ(v/c,单车道容量)=0.449`；饱和 link 仅 82、p80 阈值 0.022）⇒ **lift 不得读作位置成功**。★**C4 B-1 最小观察集冻结**（8 层）。★**自检**：v1.0 拥堵基线 **82 link / 1.151 km 与 7.9A-0 逐位一致（C0.17）**；`changed=0` |
+| 2026-09-20 | **Step 7.9B-0 交通动力学机制审计完成 → 判 `TRAFFIC_DYNAMICS_MECHANISM_AUDIT_COMPLETE`（零仿真只读结构审查；硬门 **16/16**；~8 s）—— 7.9 第二阶段（结构审查），⛔ 非 7.8 前置、不回灌 v1.0** —— **新增** `scripts/od/audit_traffic_dynamics_7_9b0.py` ⇒ 新目录 `reports/traffic_dynamics_audit_7_9b0/`（7 件）。**源码证据 15 条全部从 `tools/matsim-2026.0/matsim-2026.0-sources.jar` 现场重新核对**（非凭记忆）：`HOLE_SPEED_KM_H = 15.0`(L175)、`maxFlowFromFdiag`(L414)、`INFLOW_FROM_FDIAG` 分支(L447/460)、`case queue: ... break`(L394)、`maxInflowUsedInQsim` 初值(L391)、储存公式(L487/L509/L547)、`inflowCapacitySetting` 默认(L73)、**`maxFlowFromFdiag` 不乘 `flowCapFactor`** 的源码注释(L407–412)、`DEFAULT_EFFECTIVE_CELL_SIZE = 7.5`(NetworkImpl L59)、`stuckTime=10`/`removeStuckVehicles=false`(QSimConfigGroup L95/L96)。**B1**：生效 = `qsim = queue`；`dsim = kinematicWaves` 惰性；`inflowCapacitySetting` 未设 ⇒ 默认 `INFLOW_FROM_FDIAG`。**B2**：`queue` **无**额外入口约束（源码级）。**B3**：被卡 link **21,670（3.1244%）/ 869.589 km（5.7488%）**（local 132 / collector 1,005 / **arterial 15,526（492.4 km）** / **fast 2,386（138.1 km, 100%）** / **expressway 2,621（212.9 km, 97.98%）**）；★被移除入口容量 **8,784,415 veh/h**；★`MAX_CAP_FOR_ONE_LANE` 与 `INFLOW_FROM_FDIAG` 的 r<1 集合**代数恒等**（`fd_lane×lanes/cap ≡ fd_link/cap`）。**★B4 预登记假设被证伪**：被卡 link **不**集中于 junction —— 全样本 **0.268×**、同类别 0.18–0.65×、严格 in-degree≥3 **0.090×**、from-node 平均入度 **1.207 vs 1.882** ⇒ KW 入口上限 = 对高速/高容量路段的**整体 ~10–11% 削流**（expressway 中位 r 0.90、fast 0.89），**非**节点级瓶颈机制 ⇒ ⚠️ **可能让地图变堵却不提升结构保真度**（与「为让动画变堵而放大 demand」同构的红线风险）⇒ B-1 必判**拥堵位置**。**B5**：link 中位 **11.0 m** / p90 52.0 m、**24.34% 里程 < 20 m**、节点间距 **35.9 m**、度 ≥3 节点 **242,388（16.0/km）**、度-2 直通 42.5% ⇒ **无长「度-2 链」**（中位 corridor **1** 条 link）⇒ **7.9C 改做 junction cluster 聚合**；KW 储存放大 **20,922 links（3.02%）**、`queue` 0。**★★A×B 非可加**：`flowCapFactor` 缩放 `flowCapacityPerTimeStep`/`storageCapacity` 但**不**缩放 `maxFlowFromFdiag` ⇒ `f_cap=0.435` 时 FD 入口约束在 **0** 条 link 生效（1.0 时 21,670）；KW 储存机制 **`f_cap` 不变**（比值判据）⇒ 0.435 下两模型只差储存侧 ⇒ **支持 B1(`f_cap=1.0`) → B2(叠加 0.435) 串行**（⛔ 不一次改两个机制）。**B-1 预登记**：仅 `queue→kinematicWaves`、其余继承 v1.0；`Sim/Obs` 仅崩解护栏 ≥0.85；主看 `v/c` 分布 / 饱和里程 / 峰 `aggV/C` / 真实超额 / 回溢链；无实质变化且未崩 ⇒ **`TIMEDYNAMICS_NOT_PRIMARY`** ⇒ 转 7.9C。**`stuckTime=10` / `removeStuckVehicles=false` 保留观察、非第一变量**。⛔ 未跑 MATSim、冻结件跑前后快照 `changed=0`（201 件）。 |
+| 2026-09-20 | **Step 7.9A-0 采样—容量一致性审计完成 → 判 `SAMPLING_CAPACITY_CONSISTENCY_AUDIT_COMPLETE` / `SAMPLING_CAPACITY_INCONSISTENCY_CONFIRMED`（v1.0 冻结后只读结构审查；硬门 **22/22**；~10 s）—— 7.9 第一阶段（结构审查），⛔ 非 7.8 前置步骤** —— **新增** `scripts/od/audit_sampling_capacity_7_9a0.py` ⇒ 新目录 `reports/sampling_capacity_audit_7_9a0/`（8 件）。**定位（用户 2026-09-20）**：`7.8 v1.0 冻结 → 7.7E 事后只读诊断 → 状态形成机制结构性不足 → 7.9 Structural Repair / v1.1`；⛔ 结果不回灌 v1.0。**① 四个实际生效值**（四源逐位一致）：`qsim.flowCapacityFactor` **1.0** / `qsim.storageCapacityFactor` **1.0** / `qsim.trafficDynamics` **`queue`** / `qsim.timeStepSize` **`00:00:01`**。**★惰性诱饵（新坑）**：全配置 `trafficDynamics` 出现**两次** —— `dsim` = **`kinematicWaves`**、`qsim` = **`queue`**；因 `controller.mobsim = qsim`，**只有后者生效**（`hermes.*CapacityFactor = 1.0` 同理惰性）⇒ A-1 的**唯一容量旋钮是 `qsim.*`**；**只看 key 名会得出「当前已是 kinematicWaves」的相反结论**。**② ★★分母歧义（本步最重要）**：`s = N_sim/ΣEF = 236044/459794 = **0.513369**`（⛔ 误用）vs `s = N_sim/(SCALE·N_sim) = 1/SCALE = **0.434977**`（✅ capacity 一致性因子），两者之比恒 **1.180220 = f_work** ⇒ 不是误差而是**分母选错**。**量纲证明**：`Sim/Obs = 1`（冻结 **0.9993347697**）断言 `F_real = SCALE × F_sim`；要 `v/c_sim = v/c_real` ⇒ `C_sim = C_real/SCALE` ⇒ **`f_cap = 1/SCALE`**（与 `ΣEF` 定义无关）。`ΣEF = 459,794` 是 **Census Car Only 需求锚**，模型实际表示 `SCALE×N_sim = **542,658**` 辆（= **1.180222 倍**需求锚，弥合 7.6A `CALIBER_GAP`）⇒ 拿需求锚当流量分母会把因子**算高 18%**。★ **稳健性**：`1/SCALE = N_base/ΣEF` **与工作点缩放无关**。**③ 模型物理含义**：236,044 辆 = 真实 **43.4977%** 样本，却用 **100% 容量** ⇒ **`v/c_sim ≈ 0.43498 × v/c_real`** = 7.7E「流量对上、状态不足」的机制解释。**④ ★零仿真预注册预测（冻结流量一阶上界、高估饱和）**：`n(v/c≥0.5)` 2,813→**16,049**（×5.71）/ `n(v/c≥0.9)` 220→**5,413**（×24.60）/ `n(v/c≥1.0)` **82→4,187**（×51.06）/ 饱和里程 **1.151→178.114 km**（×154.69；占全网 15,126.5 km 的 **0.008%→1.177%**）/ 全时段 `Σ流量/Σ容量` 0.052792→**0.121368** / 峰 `aggV/C`（7.7E E4）0.102447→**0.235522** ⇒ ★**即使 sample-consistent，饱和里程也仅 1.18%、峰 aggV/C 仅 0.236 ⇒ 仍不预期全网级拥堵波**，改变集中在**局部瓶颈** ⇒ **情形 C 优先**；方向性 = 在途峰 ↑ / 通过量 ↓ / **`Sim/Obs` 下移**（⛔ `0.9993` **不得**作 A-1 目标，仅**崩解护栏 ≥0.85**）。**⑤ A-1 计划（待批准，本步不执行）**：唯一变化 `qsim.flowCapacityFactor` / `storageCapacityFactor` `1.0 → **0.434977**`（**单点派生值，不做 0.35/0.40/0.45/0.50 扫描** —— 那是参数拟合）；新版本 **v1.1** 新目录；⛔ 不动 OD / `f_work` / λ / `SCALE` / population 236,044 / R01 / 7.3.6A / network / W01 / `randomSeed=4711`。**四项预注册读法**：A 拥堵显著增强且流量保持 ⇒ 表示尺度统一（非调参）；B 拥堵增强但 stuck/崩溃 ⇒ 转 **7.9B 瓶颈与存储结构**（⛔ 不把容量调回）；C 增强很少 ⇒ 转 **`trafficDynamics`**；D 流量严重恶化 ⇒ 查 flow scale × capacity × departure 耦合。★ **A/B/C 三刀必须串行**。**⑥ 纪律**：⛔ 不为了让 VIA 变红加 demand；⛔ 不为制造拥堵降容量/改 λ/改 route-choice；⛔ 不重定义 congestion index。**★本步自查 3 处**：① `E4.entries` 是**累计链路进入数**、非在途量（首版 A0.21 误读，改用 legHistogram `enr_car` 后复现 **36,799 @08:55**）；② `SCALE×N_sim` 是**车辆数**而非流量率；③ md 表格单元格含 `|` 会**拆列** ⇒ `md_table` 统一转义 + 数值去尾零。⛔ 未跑 MATSim、未改任何冻结件（三个冻结目录跑前后 mtime 快照 **`changed=0`**、n_files=212）、**7.8 门 23/23 不受影响**。 |
+| 2026-09-19 | **Step 7.7E 拥堵状态合理性审计完成 → 判 `CONGESTION_STATE_PLAUSIBILITY_AUDIT_COMPLETE`（零仿真只读事后审计；硬门 **20/20**）—— ★直接回应 7.8-VIA-DIAG，**推翻既有读法**，并承接用户硬约束「不得为让动画变堵而放大 demand」** —— **新增** `scripts/od/audit_congestion_plausibility_7_7e.py` ⇒ 新目录 `reports/congestion_plausibility_audit_7_7e/`（22 件）。**★两条口径先纠正**：① **`v/c ≤ 1` 是结构性质**（MATSim 流出被容量截断 ⇒ 超额表现为**上游排队**），故 `v/c = HRS8-9avg/CAPACITY` **恒 ≤ 1**、`v/c = 1.000000` 意为**饱和 + 排队**；**7.8-VIA-DIAG 把它读成「容量富余」是错的**；② **★★`qsim.timeStepSize = 1 s`**（config 第 222 行）⇒ 链路行程时间**向上取整** `TT = ceil(FF)`，而本网络链路 FF **中位 1.37 s / 均值 2.93 s**（>500 m 仅 **29** 条）⇒ **即使零延误** `TT/FF = ceil(FF)/FF ≫ 1`。**★E1 容量来源**：`capacity = lanes × capacityPerLane(road_type)` 确定性函数；限速与源副本**逐位一致**、可比区间车道数完全一致（源副本 `lanes` 27 万条缺失，不参与比较）；快速路 **motorway 1900 / trunk 1800 / motorway_link 1700 在参考带内**，**超出上沿的是干道与地方道路**（primary 1500>1200 等）⇒ **H1「容量被设得离谱地大」不成立**；利用率 全部 **7.9%** / 已载流 **12.8%** / 快速路走廊 **28.5%** / 干道 7.8% / 地方 0.9%。**★E2/E2b（决定性）**：10 条快速路原始 `TT/FF` **1.20–1.44**「看起来每条都在堵」→ 扣 **`ceil(FF)/FF` 基准**（**只由几何决定、跨时段恒定 1.567–1.596**）后 **9/10 ≈ 0（−0.002~+0.008）**，**仅 CTE +0.085**。**★跨时段对照**：几乎空网的 **12–13 时（仅 18,694 车·链路）倍率仍 1.552 ≈ 基准 1.596** ⇒ **该口径测的是量化不是拥堵**；**82.56% 载流链路零延误**；单车级：`e138309_138310`（15.924 m / FF 0.955 s）07:00 23 辆车 `sum_tt` **恰为 23.0 s**。**★★按道路类型分解（本步最重要新证据；08–09 全网 4,779 车时真实延误）**：**`service` 占 94.4%（4,509 h，超额 +5.580）** / `motorway` **105 h（2.2%，全在 CTE）** / `motorway_link` 68 h / `residential` 25 h / `primary` 20 h / `trunk` 14 h / `tertiary` 13 h ⇒ **真实延误主体 = 大量 20 km/h 单车道 `service` 接入短段（容量 400 辆/h）的局部瓶颈，不是快速路排队拥堵**。**饱和链路 82 条 / 总长 1.15 km**：**74 条为 6 m `service` 短段** + **8 条 CTE motorway**（4 车道 / 90 km/h / 容量 7600，节点 `7214→…→20261`，SVY21 x≈29.4–29.7k、y≈33.0–33.3k = **CTE 中段 Jalan Toa Payoh / Kampong Java**），构成 **≈0.40 km 排队链**。**★E3 空间连续性**（宇宙 82,167 条载流 ≥20 m；**200 次随机置换**）：原始 `TT/FF>1.2` 最长链 **0.601 km**（随机 1.402，p=1.000，z=−2.54）、`>1.5` **0.420 km**（随机 0.623，p=0.870，z=−0.78）⇒ **比随机更分散**（`ceil(FF)/FF` 只取决于 FF 小数部分、与地理/上下游无关 = 伪影签名）；**扣量化后 真实超额>0.1**（638 条）最长 **0.499 km**、随机 0.417、**p = 0.165、z = +0.46 不显著** ⇒ **与随机不可区分、无连续拥堵走廊**。**★E4 峰值演化**：峰值在途 **36,799 @ 08:55**（`N_sim` 236,044 的 **15.6%**）、peak/median **8.27**；15 min `Σ流量/Σ容量` 峰值 **0.102**、真实超额全程 **+0.083~+0.221** ⇒ **无 AM 拥堵波**；events↔linkstats 最大相对差 **0.0000%**（另：09:15 后需求崩塌、仅 `service` 载流 ⇒ 倍率被动放大 = **伪影放大非拥堵波**，图中已标注）。**★裁决**：H1 **不成立** / H2 **主因** / H3 **成立（放大视觉错觉）** / **H4 度量伪影（决定性）**。**★★「交通流量校准成功 ≠ 拥堵状态校准成功」**：576 断面 `Sim/Obs = 0.9993348`（总量级匹配）vs 利用率 12.8% / 走廊真实超额 ≈0 / 无波 ⇒ **状态形成机制未被校准**。**★纪律**：⛔ **不得为「让动画堵起来」放大 demand**；正解 = **7.9 Structural Repair / v1.1**（结构修复 + 调小 `timeStepSize` 或改逐车行程时间评价），须另立版本 + 独立验证链。**★本步自查 4 处**：① `v/c = 1.000000` 误读；② 被量化污染的 `TT/FF` 口径（**7.6/7.7 标定用断面*流量*，未受影响**）；③ 「CTE 是全网唯一真实拥堵」过度概括（改为「唯一真实拥堵的**快速路走廊**」）；④ E3 第三判据 z **为正** ⇒ 不得写「z 全为负」。**★工具教训**：Edit 连 5 次静默丢改动 ⇒ 一律 **Python 锚点补丁 + `assert count == 1`**（14 处锚点一次命中）；matplotlib 缺字形字符须从图内文本剔除。⛔ 未跑 MATSim、未改任何冻结件（`reports/final_model_7_8/` 全件 mtime 仍 **2026-09-19 21:44**）、**7.8 门 23/23 不受影响** |
+| 2026-09-19 | **Step 7.8-VIA-DIAG「VIA 早高峰不拥堵」三层诊断（零仿真只读派生，非新版本）** —— 用户追问「为什么我用 VIA 看…一点儿都不拥堵」。**新增** `scripts/od/diagnose_via_congestion_7_8.py` ⇒ 新目录 `reports/via_congestion_diagnosis_7_8/`（4 件）。**★三层归因**：① **VIA Network 层不带交通属性**、`output_links.csv.gz` 仅 10 列无行程时间字段 ⇒ 须另加 **`Dynamic Link Attributes`** 层（手册 §3.2.5）+ 窗口设 08–09 + 按 `speed` 着色；② 路网 **693,575 条碎段、中位 11.0 m**（>1 km 仅 **23** 条），且 MATSim 行程时间取整秒 ⇒ 短段倍率失真；③ **v/c 恒 ≤1**（max 1.000000、>1.0 零条），拥堵指数 **1.4143**（剔 ≤50 m 后 **1.2091**）。**★新证据**「按条数 57% 超 1.2 vs 按长度仅 34%」解释了地图为何偏绿。**★自查**：首版按位置贴两表 ⇒ **行序不同致整体错配**，改按 `link id` 显式 merge + `LENGTH` 一致性断言。`matsim_viz_7_8/README.md` 同步。⛔ 未跑 MATSim、未改冻结件、不作标定证据 |
+| 2026-09-19 | **Step 7.8-VIZ-RUN 为 VIA 重跑 W01 开启 events** —— 用户追问「VIA 看哪个文件夹」。**发现** 7.8 定版 `writeEventsInterval=0` ⇒ 无 events，VIA 车辆层不可用（7.6 全家族同此）。**新增** `scripts/od/run_via_events_7_8_viz.py` + 新目录 `matsim_viz_7_8/`（`matsim_final_7_6h/` 一字未动）。准备步 **29/29**；白名单差异**仅 3 项**、214 参数全展开逐位比对；运行 **117.67 min**、过程门 **40/40**、判 **`VIA_EVENTS_REPRODUCTION_CONFIRMED_BITEXACT`**（it.19 linkstats 693,575/693,575 max|Δ|=0.0）；events 163,305,988 条 / 1.69 GB、dep=arr=236,044。**readme §2.46 + §3.1 + `matsim_viz_7_8/README.md`**。⛔ 输出层重执行、**非新版本**；⛔ 不得作新标定证据 |
+| 2026-09-19 | **Step 7.8-VIZ 可视化看板 + ★冻结产物勘误** —— 用户诉求「我想可视化一下效果」。**新增** `scripts/od/make_final_model_dashboard_7_8.py`（**零仿真**、只读冻结件）⇒ `reports/final_model_7_8/` 增 **2 件附加件**（⛔ 非 6 件冻结产品）：`FINAL_MODEL_DASHBOARD.html`（**自包含单文件**、219 KB、零依赖、浅深主题自适应、12 面板）、`ERRATUM_spatial_residual_boundary_pa_all.csv`。**★★发现并定位 1 处冻结产物缺陷**：`FINAL_SPATIAL_RESIDUAL_BOUNDARY.csv` 的 `pa_all` 层 ratio 出现**负值** ⇒ 根因是源列 `7.7C-0 / c0_6_pa_gradient.csv → R_PA` **实际语义为「Q−1」**（核对 ANG MO KIO `R_PA`=0.681533 ↔ 真值 ratio **1.680415**），而 `freeze_final_model_7_8.py` L366–367 当 ratio 处理 ⇒ **双重变换**（`ratio_FROZEN` 偏 **−1.0**、`rel_dev` 再偏 −1.0；**37/37 行**；max |Δ| **0.9999**）。**影响边界**：仅此展示表——模型身份（f / λ / SCALE / f_cap / R01 / population / network）与 **#168 全部 23 门不受影响**。**其余三层正确**（576 断面表重算核对，|Δ| ≤ **4.6e-7** = 发布精度）：`region` 5/5（CENTRAL −7.82% / EAST **−31.75%** / NORTH +23.09% / NE **+33.88%** / WEST +2.84%）、`radial` 3/3（`radial_in` **−30.67%** / `radial_out` +14.50% / circumf +9.61%）、`pa_key` 10/10（ORCHARD **+142.00%** / BUKIT TIMAH **+138.61%** / TUAS **−86.99%** / HOUGANG **−86.98%** …）。**处置**：⛔ **未就地改冻结件**（改锁 = v1.1）⇒ 看板按真值呈现 + 「口径校验」面板显式标注 + 另出勘误 CSV；**是否升 `v1.0.1` 待用户裁定**。**★本步自查 3 处口径陷阱**：① 「逐位一致」误用（冻结 CSV 按**发布精度**存储 ⇒ 容差须 **1e-6**；与 7.7D G2 / 7.8 G6 **同族第 3 次**）；② 按「有坐标」筛掉 2 断面 ⇒ 全局 ratio 变化 ⇒ 所有 rel_dev 偏移 **0.07 pp**（NE 33.95% vs 33.88%）⇒ **分组聚合须用全 576 行**；③ `rel_dev_vs_global` = **`ratio/全局−1`**（非 `ratio−1`）。**★渲染验证链**：`node --check` → **jsdom 无头 DOM 断言**（`jsdom@22.1.0`，Node 20 须 CJS 版）→ **Chrome headless 截图**（浅/深双主题 + 2× 局部放大）+ PIL 分片目检；L2 抓出 1 处对账 bug、L3 抓出 4 处视觉缺陷。**#168 门 23/23 仍成立（本步未触碰任何冻结件）** |
+| 2026-09-19 | **Step 7.8 Final Model Freeze & Validation Package 完成 → 判 `FINAL_MODEL_FROZEN_AND_REPRODUCIBLE`（零仿真定版；硬门 23/23；0.1 s）—— ★项目从「研究」切换为「定版」** —— 用户裁定：**不再做「7.8A 继续分析」，直接进入 7.8 最终模型冻结**（继续调参已无足够证据收益，反易把「模型诊断」退回「参数追拟合」）。**新增** `scripts/od/freeze_final_model_7_8.py`（**零仿真**；只读 14 件冻结输入；仅写入新目录 `reports/final_model_7_8/`）。**★7.8A 参数冻结**：`f_work=1.180222`（7.6G `L75` direct）/ `λ_ref=0.075`（7.6G 敏感度中心，⛔ **非最优 λ**）/ `SCALE=2.29897` / `f_cap=1.00` / `R01_rc_min` / `N_sim=236,044` / 7.3.6A crosswalk / `calibration_target=0.8589732`；**三层带独立不合并**（工作点 `f*=1.180222` / λ 带 `[1.1637,1.1938]` / 静态靶场带 `[1.06945,1.16418]`）。**★措辞纪律落入产物**：λ 只写「工作中心参数，可检测但不可靠识别」；`f_work` 只写「最终工作点，非唯一真实值」。**★7.8B 输入与算法版本锁**（Input / OD / Sampling / Network / Route Choice / Crosswalk）+ config 指纹（`seed=4711` / `SpeedyALT` / `qsim` / `lastIteration=19` / `fractionOfIterationsToDisableInnovation=0.8` / `[ReRoute .15, ChangeExpBeta .85]` / `learningRate=0.5` / `routingRandomness=0.0` / `flow+storageCapacityFactor=1.0`）+ 7.6H 相对 R01 的**3 项白名单差异**。**★版本语义**：任何修改均 = **新版本 v1.1 Structural Repair**，⛔ 不得就地改 v1.0。**★7.8C 验证包（W01）**：`Sim/Obs FROZEN` **0.9993347697** / implied `f*` **1.180866** / `f_realized` **1.1801564**；`A_10:19`(M/C/S) **0.8899 / 0.9038 / 0.8568 %**、`parity_gap_rel` **0.0964%**、`Q19/Q̄` **1.001972**、`never_arrived=0` / `max_stuck_car=0`、departure = arrival = **236,044**；跨步对账 X1 三口径 **Δ≤4.9e-8** / X2 四口径 **Δ=0.00e+00**（逐位）。**★7.8D 空间残差边界（保留不藏）**：`FINAL_SPATIAL_RESIDUAL_BOUNDARY.csv` **55 行**（region 5 / radial 3 / PA 37 / 关键 PA 10）；EAST **−31.75%**、`radial_in` **−30.67%**、NE **+33.88%**、ORCHARD **+142.00%**、BUKIT TIMAH **+138.61%**、TUAS **−86.99%**、HOUGANG **−86.98%** ⇒ **不使用「失败项」措辞**，而是 **Final Model — Known Spatial Residual Boundary**，状态 `UNRESOLVED_STRUCTURAL_LAYER`；归因三类继承 7.7D。**★7.8E Manifest**：`model_version=Singapore_OD_MATSim_Final_v1.0` + 14 件冻结输入 sha256 证据 manifest（`manifest_self` 说明自身 hash 不含以免循环）。**★#168 完整性门 23 条全 PASS**：G1–G7 冻结真值逐位/容差一致、G8 config 继承 7.6E 四项、G9 运行控制、G10–G11 输入存在、G12 正 cell **71,136**、G13 `car_od_total` **459,794**、G14 三层带未合并、G15 空间残差仍在、G16–G19 上游判决一致、G20 纪律、G21 六件产品落盘、**G22 全部 14 件冻结输入跑前后 mtime+sha256 逐位未变（read-only 硬证据）**、G23 `W01` it.19 产物存在。**★停止规则**：7.8 完成 **STOP**；后续若继续研究 = **7.9 Structural Repair / Model v1.1**（新研究问题），⛔ **非**「继续把 v1.0 的 `Sim/Obs` 从 0.9993 调到 1.00」。**★本步自查 2 处脚本缺陷**：① G6 曾以**发布用四舍五入常量**（0.8589732）配逐位比较 ⇒ 改为按 7.6C-2 自声明 `tol=1e-6` 并保留全精度真值（Δ **4.331e-08**）；② G21 曾在 manifest 自身写入**前**扫描产品 ⇒ 改为落盘后**两遍写 + 全量重扫**（`products` 仅列非自身 5 件）。**新增产物** `reports/final_model_7_8/`（9 件） |
+| 2026-09-19 | **Step 7.7D 空间残差归因收口完成 → 判 `SPATIAL_RESIDUAL_ATTRIBUTION_CLOSED_WITH_UNRESOLVED_STRUCTURAL_LAYER`（硬门 7/7 + 软门 2/2；零仿真）** —— **★收口审计（非新模型、不造新变量）**：把 7.6H/7.7A/7.7C-0/7.7C-1 串成可关闭归因链。10 门全 PASS（W01 锚点逐位 / C0↔W01 tol 1e-12 / f span 1.85 pp / λ span 3.23 pp / `radial×reciprocal` 闭环 / temporal ratio 0.1104 / 构成排除 6/6 / 排除层 η²_excess ≤ .001）。**★适配器修正**：预置版用**占位路径**致 6/8 门**假 BLOCKED**（证据其实都在）⇒ 仅改数据接入（路径/列/机会校正指标），**判定阈值与判决串一律未改**；原版存 `.user_orig_backup`。**★两条 bug 自查**：① G2 曾用四舍五入常量配 `1e-12` 容差（改为对 7.6H 实测真值逐位）；② G5 补充证据曾因 `pd.read_csv` 把 `True/False` 解析为 **bool** 而误判 C1 全部 profile 不稳定（`astype(str)` 修正后 **7/7 稳定**）。**结论边界**：不证明 twin/directionality 为因果机制，仅证明其余层不足 ⇒ 问题收缩到结构层 |
 | 2026-09-19 | **Step 7.7C-1 时段实现敏感性完成 → 判 `TEMPORAL_SPATIAL_SENSITIVITY_FAIL_DEFER_HTS`（零仿真；7/7 校验）** —— **★方法学修正**：初版脚本以「**全局标量**」`share_8_9` 作乘子 ⇒ 所有断面同乘一系数 ⇒ `rel_dev_g` 数学**恒等不变**（`P1_UNIFORM` Δ 逐组 = **0.0000**），属退化设计、**无法回答空间敏感性**；**改为断面级 temporal shape**（`sim_8_9(s|P)=sim_8_9_scaled(s)×share_8_9(s|P)`，取 6.3.3A 冻结底表 `trafficflow_link_hour_basis.csv`，CV **0.0909**）。**★效应分离**：水平效应（全局 Sim/Obs **0.9993→0.4972**）vs 结构效应（`rel_dev_g`）。**★7 profile**：P0 / P1(退化参照) / P2(断面级) / P3(外推×2) / P4(结构镜像) / P5,P6(日级 p10/p90 可行带)。**★P0 MUST_MATCH 7.6H 逐位**（0.9993348；EAST −0.317524 / NE +0.338833 / `radial_in` −0.306727）。**★gate**：`S_spatial`=0.3388 vs `A_temporal`=0.0374 ⇒ **ratio 0.1104 < 0.20 ⇒ FAIL**（全组 0.0924）；**region/radial 排序在 7/7 profile 下严格保持**。⛔ **HTS 暂不接入 MATSim**（除非需检验 departure×route-choice×congestion 耦合）。详见 §2.43 |
 | 2026-09-19 | **Step 7.7C-0 空间残差归因基线审计完成 → 判 `RESIDUAL_LOCALIZED_TO_PA_LOCATION`（零仿真只读；14/14 校验；173.8 s）** —— **7.7C 拆两层**（用户裁定：先 7.7C-0 再 7.7C-1，**不直接进 7.7B/HTS**）。**★六维归因**：① OD 空间供需（`A/P` vs 残差 ρ=−0.70，但 **EAST 反例**）② 方向性（`radial_in −30.67%` vs `radial_out +14.50%`，跨 f/λ **8/8 稳定**）③ 道路等级（`motorway` 0.9922，**η²_excess=−0.0069 排除**）④ **`has_reciprocal_pair`**（True 0.3711 / False 1.2035，2 组 η²_excess **0.1423**）⑤ 长度归一化（极差 33.88%→42.49%，**反而扩大**）⑥ PA 梯度（`od_outflow` ρ=−0.40）。**★核心交叉表**：`radial_in\|recip=False`（130 断面, 18.6% obs）= **0.9915 ≈ 1.000**；`radial_in\|recip=True` = 0.1738（−82.6%）⇒ **twin 表征 + 方向性两机制独立可加**。`MUST_MATCH_BASELINE` 逐位复现 7.6H（8.674e-17）。产物 `reports/spatial_residual_7_7c0/` |
 | 2026-09-19 | **Step 7.7A 入场审计完成 → 判 `VEHICLE_TYPE_VOLUME_UNAVAILABLE` / `COMPOSITION_EXPLAINS_GLOBAL_LEVEL_NOT_SPATIAL_PATTERN`（零仿真只读；6/6 校验）** —— **7.6 正式收口**（`W01`=236,044 为正式独立验证基准；**取消同口径 200k 复跑**）。**Q1**：`TrafficFlow_Data.json` **字段全集 10 个**、`Volume` = 全部机动车合计（无车型字段）⇒ 车型不可分解；LTA DataMall 端点清单**无**分类计数端点；`data.gov.sg` 仅**全国年度车队构成**。**Q2 零成本先验**：Census 2020 Table 104 方式构成 vs 7.6C/H 区域与 PA 空间残差 ⇒ region r=**−0.3600**、PA r=**+0.2533**（R²=**0.0641**），构成极差（17.1 / 36.5 pp）仅为残差极差（65.6 / 206.4 pp）的 **1/3.83 ~ 1/5.66**。**全域 `car_share_pmv = 0.682452` 与 7.6A D01 断面 `Sim/Obs = 0.6830` 差 0.07%** ⇒ **车型构成解释总体量级、不解释空间分布**。⇒ 空间残差在 **f / λ / 车型构成三方向同时不敏感**，定位到 OD 空间结构 / 观测口径 / 网络表征 / 时段实现。产物 `reports/external_validation_7_7/`。**未启动 MATSim、未取外部数据、未改冻结件**。 |
