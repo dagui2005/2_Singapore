@@ -1,0 +1,23 @@
+﻿check,name,pass,detail
+A1,源配置 == 7.8 登记的冻结 sha256_16,True,8f44fb349bff9cf1 vs 8f44fb349bff9cf1
+A2-flowCapacityFactor,qsim.flowCapacityFactor 命中唯一（n=1）且旧值 1.0,True,old='1.0' n=1
+A2-storageCapacityFactor,qsim.storageCapacityFactor 命中唯一（n=1）且旧值 1.0,True,old='1.0' n=1
+A3-outputDirectory,controller.outputDirectory 命中唯一（n=1）,True,old='D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc'
+A3-runId,controller.runId 命中唯一（n=1）,True,old='W01_rc_min'
+A3-writeEventsInterval,controller.writeEventsInterval 命中唯一（n=1）,True,old='0'
+A4,param 标签总数不变（无结构性改动）,True,342 -> 342
+M1,配置 diff 恰为 5 项白名单（无越界改动）,True,全展开参数=209 diff=5 非白名单=0 
+M2,qsim 块内仅 2 个容量参数变化（其余逐位不变）,True,"qsim diff = ['flowCapacityFactor', 'storageCapacityFactor'] (n_qsim=30)"
+M3,hermes.*CapacityFactor 保持 1.0（惰性，未被顺手改）,True,flow=1.0 storage=1.0
+M5,继承断言：seed/线程/迭代/network/plans/动力学/路由/评分逐位不变,True,drift=NONE
+M6,linkStats.writeLinkStatsInterval == 1（评价口径依赖）,True,=1
+G-01,网络 SHA16 == 冻结值（与 v1.0 同一网络）,True,f55795995b87d330 vs f55795995b87d330
+G-02,OD/plans SHA16 == 冻结值（与 v1.0 同一人口）,True,e96ed83ff59c0f5e vs e96ed83ff59c0f5e
+G-03,生效配置 qsim.flowCapacityFactor == 0.434977,True,=0.434977
+G-04,生效配置 qsim.storageCapacityFactor == 0.434977,True,=0.434977
+G-05,randomSeed 与 v1.0 相同（4711）,True,=4711
+G-06,numberOfThreads 与 v1.0 相同（8）,True,=8
+G-07,lastIteration == 19（不得为展示效果加迭代）,True,=19
+G-08,输出目录为实验专属且不在 v1.0 内,True,D:\Luan\2026-05\2_Singapore\experiments\E-CAP-01_scale_capacity\outputs\E-CAP-01
+G-09,v1.0 目录 mtime 未变（冻结件 0 漂移）,True,drift=NONE
+G-10,1/SCALE 与写入值自洽（|1/2.29897 - 0.434977| < 5e-7）,True,exact=0.434977402924

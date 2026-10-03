@@ -1,0 +1,6 @@
+﻿key,src,new,whitelisted
+controller.outputDirectory,D:\Luan\2026-05\2_Singapore\matsim_final_7_6h\outputs\W01_rc_min,D:\Luan\2026-05\2_Singapore\experiments\E-CAP-01_scale_capacity\outputs\E-CAP-01,True
+controller.runId,W01_rc_min,E-CAP-01,True
+controller.writeEventsInterval,0,19,True
+qsim.flowCapacityFactor,1.0,0.434977,True
+qsim.storageCapacityFactor,1.0,0.434977,True

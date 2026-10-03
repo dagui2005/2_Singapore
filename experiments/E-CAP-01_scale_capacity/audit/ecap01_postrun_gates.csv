@@ -1,0 +1,12 @@
+﻿check,name,pass,detail
+P-01,v1.0 冻结目录 mtime 未变（0 漂移）,True,drift=NONE
+P-02,输出目录为实验专属且不在 v1.0 内,True,D:\Luan\2026-05\2_Singapore\experiments\E-CAP-01_scale_capacity\outputs\E-CAP-01
+E01,v1.0 it.19 linkstats 载入,True,n_links=693575
+E01b,E-CAP-01 it.19 linkstats 载入（同一网络 ⇒ 同链数）,True,n_links=693575
+P-03,never_arrived == 0（legHistogram 全天口径）,True,"dep=236,044 arr=236,044 未到达=0 (0.0000%)"
+P-04,max stuck_car == 0（legHistogram 逐 bin 峰值）,True,max stuck_car=0
+P-05,CAPACITY 语义消解成功（BASE_CAPACITY ⇒ E-CAP-01 用 cap_mul=1/SCALE）,True,mode=BASE_CAPACITY n_common=693575 同值=693575 比值命中=0
+P-06,v1.0 face_metrics 复现基线（82 / 1.1514 km / 2813 / 220 / 7985）,True,n_ge1=82 sat_km=1.1514 n_ge0.5=2813 n_ge0.9=220 n_cong0=7985
+P-07,冻结模块复算 v1.0 Sim/Obs == 0.9993347696792919（±1e-9，cycle）,True,recomputed=0.9993347696793 n_sections=576
+P-08a,E-CAP-01 Sim/Obs(cycle) == A-1 0.7664760994478101（±1e-6，逐位复现）,True,E-CAP=0.7664760994478  Δ=+0.000e+00
+P-08b,E-CAP-01 Sim/Obs(it.19) == A-1 0.7725115296237909（±1e-6）,True,E-CAP=0.7725115296238  Δ=+0.000e+00

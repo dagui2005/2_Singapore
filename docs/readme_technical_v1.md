@@ -4225,6 +4225,508 @@ M1 = `median 口径 sim/obs<0.50` 且 `sim_sum×SCALE < obs` ⇒ **133 节**（M
 **★产物**：`o1_pair_cards_7_9io1.csv`（38 卡）、`o1_pair_census_7_9io1.csv`（576 普查）、`o1p_pair_candidate_cards_7_9io1p.csv`、`o1q_opposite_label_cards_7_9io1q.csv`、3 份 summary JSON、3 份 `_run_*.log`。
 
 **★下一步（建议，待裁定）**：**`O1-续`** —— 对 `L1` 的 15 节做「车行道对账卡」（该物理段**是否只建了一条单向 way** / OSM `oneway` 标签 / 与 `7.9I-A2` `U_UNIT_MISMATCH` 求交），**仍零仿真**。O2 / 动力学参数**须用户显式裁定解除底线**。
+**⇒ 已于同日执行完毕，见 `§2.68`。**
+
+---
+
+### 2.68 Step 7.9I-O1-续 —— 车行道建造核验 + OSM way-level 结构 + `U_UNIT_MISMATCH` 求交（**零仿真 / 只读 / 23.2 s + 26.3 s；⛔ 不改 v1.0**；判 `CARRIAGEWAY_BUILD_AUDIT_READY` + `UINT_MISMATCH_INTERSECT_READY`）
+
+**状态**：**`7.9I_FROZEN_CLOSED → READY(O1) → O1 ✓ → O1-续 ✓`**（用户 2026-09-30 裁定「下一步顺序固定为 ①→②→③」）。报告 `reports/corridor_scale_audit_7_9i/STEP7_9I_O1CONT_REPORT.md`。
+
+**要回答**：① ★「**少建一条车行道**」与「**两条都建了，但其中一条没有被路由使用**」必须**严格分开**；② OSM `oneway` 与 way-level 结构（给①**源头证据**，⛔ 不得因「MATSim 出现两条独立 node-string」就推断「OSM 本来就是双 way」）；③ 与 `7.9I-A2` 的 `U_UNIT_MISMATCH` **求交**。
+
+**引擎**：`scripts/od/audit_carriageway_build_7_9io1c.py`（**12/12**，负例 4/4）＋ `scripts/od/audit_uint_mismatch_intersect_7_9io1i.py`（**7/7**，负例 3/3）⇒ 合计 **19 门 / `n_fail = 0`**；两卡片重跑**逐位相同**。
+
+**★口径（唯一关键区分）**：
+
+| 对象 | 定义 |
+|---|---|
+| **本侧对象** | 交叉表 **primary matched 边**（`n_match` / `n_match_flow`） |
+| **对向对象** | `R_MS=100 m` + `MAJOR` + `circ_diff(bear_e, bear_s+180°) < 30°` |
+| **邻近同向池** | 仅作**披露 / 双胞胎搜索**，⛔ **不作**「本侧对象」（100 m 内会混入邻近**其它道路 / 匝道**的同向有流边） |
+
+**★死管诊断（本步新增）**：对每条 matched 边沿 **入度=1** 反向链上溯至端点（`max_steps=2000`），`head_inflow(e) = Σ_{j∈in-edges(端点)} flow_j`。
+
+**★结果**：
+
+| # | 命题 | 实测 |
+|---|---|---|
+| **D1** | 本侧车行道**都已建** | matched 对象缺失 **0/38**；`build_class = S2_MS_SELF_BUILT_UNLOADED` **38/38** ⇒ **无「少建本侧」** |
+| **D2** | 对向亦已建 **36/38**（33 节有流）；缺失 **2 节** | `{172382, 45187}`（均 `EAST COAST PARK SERVICE ROAD`）；`G-O1C-7`：**`{MATSim 无对向} ≡ {OSM `O_SELF_ONLY`}`，对称差 = ∅** ⇒ **源头同缺，非转换丢边** |
+| **D3** | **OSM 源头 = 每方向一条独立 `oneway=yes` way**（⛔ 非转换伪影） | MAJOR way **6,694**；`oneway=yes` **92.83%**（`no` 仅 1）；L1 15 节 OSM 同向 way **48**（47 yes）/ 对向 way **40**（39 yes） |
+| **D4** | **零流的两种形式** | **`ISO_DEAD_TUBE` 18 节 / Σobs 36,150.5 / 58.26%**（**18/18 上游 `head_inflow=0`** ⇒ 结构性无接入）· **`ISO_TWIN_EXISTS` 18 节 / 25,537.0 / 41.15%**（300 m 内同向有流对象，中位 **35.54 m**）· `ISO_BYPASS_NO_TWIN` 2 节 / 363.0 / 0.59% |
+| **D5** | **与 `U_UNIT_MISMATCH` 完全不相交** | 38 节 `vc_max` p10 **0.065** / p50 **0.339** / p90 **0.513** / **max 0.597** ⇒ **0/38 U**；字面交集 **3 节**（ECP：`S_SLIP_GEOM` 1 / `P_PARALLEL` 2，`vc_max` 0.266–0.435）；对照 A2 范围 69 节 U = **17**（KPE 隧道 16/19，最高 `3.569×`） |
+| **D6** | **★「少建一条车行道」在本数据集上不成立** | 唯一成立的分类 = **「两条都建了，本侧没有被路由使用」（38/38）** |
+
+**零流链长**：p50 **6.5** / p90 **15.8** / **max 36 边**（沿 `入度=1` 上溯 36 步仍 Σflow = 0）。**`B2` 22 节内部**：`DEAD_TUBE` **14 节 / Σobs 25,638.0（66.94%）**、`TWIN_EXISTS` 7 节 / 12,395.0（32.37%）、`BYPASS` 1 节 / 266.5。
+
+**★机制细化（对用户正式裁定的细化，非否证）**：
+
+> **不是「少建」，也不是「容量/单元错配」，而是「已建成的本侧车行道在拓扑上没有被接入
+> （`ISO_DEAD_TUBE`，58.26% Σobs），或被更近的平行同向对象替代（`ISO_TWIN_EXISTS`，41.15% Σobs，中位 35.5 m）」。**
+
+**★缺陷登记（详见报告 §8 / summary `criteria_revision`）**：
+
+- **`D-1 / D-2`**：`build_class` 与 `G-O1C-5/6/7` **v1 用「几何同向池」代理「本侧对象」** ⇒ 纳入邻近其它道路同向有流边 ⇒ 首跑 FAIL **3** 项；v2 残留同根因 ⇒ 再 FAIL **1** 项 ⇒ **判据设计缺陷（非实现缺陷、非科学结论）**，已改 **matched 边** 口径。**阈值未改**（`R_OSM=60 / R_MS=100 / R_TWIN=300 / DIR_OK=30`）。
+- **`D-3`**：`G-O1I-3` 首版「U 与非 U 均出现」，实测 `U = 0/38` ⇒ **恒不可满足（命中 0% 的退化门）** ⇒ 拆为「**交集 = ∅**（可证伪结论）」＋「`vc_max` 非退化（`p90/p10 = 7.94`）」；阈值 `vc_max > 1.0` **未改**。
+- **`D-4`**：`R_OSM/R_MS/R_TWIN/DIR_OK` 为预注册常量，**未做敏感性扫描** ⇒ ⛔ 不得当绝对计数。
+- **`D-5 / D-6`**：2 节来自**服务道**（⛔ 不得与主线混算）；「双胞胎」⛔ **不等于**「同一物理车行道」（需 detector 元数据，本步不具备）。
+- **`D-7`**：**`elapsed_s` 为单次运行量、非确定** —— 本节标题引用 **23.2 s / 26.3 s** = 正式首跑（见 `_run_*.log`）；**复现跑会重写 `*_summary_*.json` 的 `elapsed_s`**（本次 69.3 s / 44.7 s）⇒ ⛔ 不得以墙钟做文档↔产物对账；确定性仅指**卡片内容**（AST 无随机源 + 卡片逐位一致）。
+
+**★产物**：`o1c_build_cards_7_9io1c.csv`、`o1c_build_summary_7_9io1c.json`、`o1i_uint_intersect_cards_7_9io1i.csv`、`o1i_uint_intersect_summary_7_9io1i.json`、`_run_7_9io1c.log`、`_run_7_9io1i.log`、`STEP7_9I_O1CONT_REPORT.md`。**步级数据源**：`Singapore_OD_MATSim_FinalData/07_RoadNetwork/osm-lines_expanded.shp`（EPSG:4326→3414；`osm_id/highway/oneway/name/ref`）。
+
+**★下一步（建议，待裁定）**：**`O1-续②`：接入（access）审计** —— 对 `ISO_DEAD_TUBE` 的 18 节（58.26% Σobs）沿零流链找「本应有接入、实际没有」的节点，比对 OSM 是否有连接 way ⇒ 区分**转换丢边** vs **源头无接入**；对 `ISO_TWIN_EXISTS` 的 18 节核验「替代对象」是否**同一物理车行道**。**仍零仿真**。⛔ `signals` / `trafficDynamics` / `speedFactor` **须用户显式裁定解除底线**；**不产生 v1.1**。
+
+**⇒ 已于同日执行完毕（用户收紧口径：只推 `ISO_DEAD_TUBE` 18 节；`ISO_TWIN_EXISTS` 仅证据），见 §2.69。**
+
+---
+
+### 2.69 Step 7.9I-O1-续② —— 死管链「接入（access）审计」（**零仿真 / 只读 / 69.7 s；⛔ 不改 v1.0**；判 `DEAD_TUBE_ACCESS_AUDIT_READY`）
+
+> **阶段**：**`7.9I_FROZEN_CLOSED → O1 ✓ → O1-续 ✓ → O1-续② ✓`**
+> **范围（用户 2026-09-30 收紧口径）**：**只正式推进 `ISO_DEAD_TUBE` 18 节（Σobs = 36,150.5）**；`ISO_TWIN_EXISTS` 18 节**仅证据整理**，标签 **`TWIN_GEOMETRIC_SUBSTITUTE`**，⛔ **不做「同一物理车行道」裁定**（缺 detector / 设施元数据）。
+> **交付**：`scripts/od/audit_access_dead_tube_7_9io1c2.py` ｜ `PREREG_7_9I_O1CONT2.md` ｜ `o1c2_access_cards_7_9io1c2.csv`（**18 行 Access Card**）｜ `o1c2_access_summary_7_9io1c2.json` ｜ `STEP7_9I_O1CONT2_REPORT.md`。
+> **门禁**：硬门 **10/10**、负例 **5/5**、`n_fail = 0`；卡片重跑 **SHA256 逐位一致**（`098eb298c15d63c2`）。
+
+**★Access Card 字段（11 项）**：`section_id` / `dead_chain_len` / `upstream_zero_depth` / `first_nonzero_dist` / `OSM_access_n` / `MATSim_access_n` / `link_evidence`（`motorway_link`/`trunk_link` 两侧证据）/ `conversion_loss` / `route_accessible` / `final_class` / `confidence`。
+
+**★口径（冻结）**：死管链 = 同向**零流**单链（上游 `in-deg==1`、下游 `out-deg==1`，无启发式）；`R_ACC=60 m`、`R_MS2=50 m`、`DIR_OK=30°`、`COV_MIN=0.5`、`SAMPLE_M=10 m`；`ACCESS_TYPES` = 可驾驶类（⛔ 排除 footway/cycleway/service/residential…）；**B 判据 = OSM link way 的顶点覆盖率 ≥ 0.5 ⇒ 已转换**。
+
+**★结果（A/B/C 三支全为 0）**：
+
+| 支 | 判据 | 实测 | 裁定 |
+|---|---|---|---|
+| **A** 源头无接入 | `OSM_access_n == 0` | **0/18**（min 1 / max 10） | ⛔ 不成立 |
+| **B** 转换丢失 | `OSM_link_n>0 ∧ 已转换==0` | **0/18**（**24/24** link way 全转换；`cov_frac` min **0.654** / p50 **1.000**） | ⛔ **不成立** |
+| **C** MATSim 无入口边 | `MATSim_access_n == 0` | **0/18**（1 条 13 节 / 2 条 5 节；5 节入边即 link 类） | ⛔ 不成立 |
+
+> **★核心裁定**：**「OSM 有入口 → MATSim 接入丢失」在本批不成立** ⇒ **问题不在路网构建链**；⛔ **不应**据此修改 `build_impedance.py` 的转换逻辑（`(u,v)` 去重 / `0.1 m` 网格合并**未删除本批任何接入**）。
+
+**★细化 D / E（预注册并列的细化轴，非后验补丁）**：
+
+| 类 | 规则 | 节数 | Σobs | 占比 |
+|---|---|---|---|---|
+| **D** `D_NO_LOCAL_LIVE_SAME_DIR` | `ms_same_live == 0` | **14** | **28,361.0** | **78.45%** |
+| **E** `E_LOCAL_LIVE_SAME_DIR_EXISTS` | `ms_same_live > 0`（1 / 4 / 2 / 6） | **4** | **7,789.5** | **21.55%** |
+
+`first_nonzero_dist`（链头 → 最近活流节点）p10 **17.4** / p50 **37.5** / p90 **61.3** / max **100.2 m**；`dead_chain_len` p50 **13** / max **36**；`route_accessible` **18/18 = True**（预注册即披露为**不区分量**，仅作契约/反例量）。
+
+**★缺陷登记（详见报告 §8 / summary `criteria_revision`）**：
+
+- **`R1`**：B 判据「单点」→「**顶点覆盖率**」 —— 单点口径把**端点落在路口空档**的 way 误判为未转换（49054 `479127292` 覆盖率 **0.893**）⇒ **判据设计缺陷**；`COV_MIN=0.5` 冻结。
+- **`R2`**：负例 `N3` 原为**空扰动**（`mx/my` 从未被使用）⇒ `fired=False`（**仪器缺陷**）；已改「**OSM 不投影（EPSG:4326）**」。**主路径判据/阈值未改**。
+- **`D1`**：A/B/C 全空 = **判据退化** ⇒ 已在**预注册阶段**并列 **D/E**（非后验）。
+- **`D2`**：`route_accessible` 不区分（18/18 True）。
+- **`D3`**：`R_ACC/R_MS2/DIR_OK/COV_MIN/SAMPLE_M` 为预注册常量，**未做敏感性扫描**。
+- **`D4`**：`ACCESS_TYPES` 是判定的一部分（改类型集会改 `OSM_access_n`）。
+- **`D5`**：`ms_same_live` **含非 MAJOR** 边 ⇒ 与 O1-续 `ISO_TWIN_EXISTS` 的 **MAJOR** 口径**不同**，⛔ 两口径不得混用。
+- **`D6`**：**近旁活流 ≠ 同一车行道**（`first_nonzero_dist` p50 37.5 m 仅说明近旁；需 detector 元数据）。
+
+**★下一步（建议，待裁定）**：**D（78.45% Σobs）** ⇒ 方向/走廊层的**有向路径级**追踪（仍零仿真）；**E（21.55% Σobs）** ⇒ 对象对应关系（缺 detector 元数据，须谨慎）。⛔ `signals` / `trafficDynamics` / `speedFactor` **须用户显式裁定解除底线**；**不产生 v1.1**。
+
+**⇒ 已于同日执行完毕（用户裁定推进 D-path 后），见 §2.70。**
+
+---
+
+### 2.70 Step 7.9I-D-path —— D 类零流链「上游有向路径追踪」（**零仿真 / 只读 / 1.9 s；⛔ 不改 v1.0**；判 `DPATH_TRACE_READY`）
+
+> **阶段**：**`7.9I_FROZEN_CLOSED → O1 ✓ → O1-续 ✓ → O1-续② ✓ → D-path ✓`**
+> **范围**：**只追 D 类 14 节**（`D_NO_LOCAL_LIVE_SAME_DIR`，Σobs = **28,361.0**；O1-续② 中占 **78.45%** 的最大残块）
+> **交付**：`scripts/od/audit_dpath_7_9id1.py` ｜ `PREREG_7_9I_DPATH.md` ｜ `o1d_trace_cards_7_9id1.csv`（**14 行 × 35 列**）｜ `o1d_trace_summary_7_9id1.json` ｜ `STEP7_9I_DPATH_REPORT.md`
+> **门禁**：硬门 **10/10**、负例 **6/6**（＋1 项空扰动披露）、`n_fail = 0`；Card 重跑 **SHA256 逐位一致**（`866023f85b504655`）。
+
+**★口径（冻结）**：上游零流域 `hr(·)` = 从链头 `head` **只经 `flow==0` 的边**反向 BFS（`HOP_MAX=120`、`CAP_DOM=60000`）；候选集 `C_in = {e: flow(e)>0 ∧ to(e)∈dom(hr) ∧ hr≥1}`；`e_near = argmin(hr, −flow, e)`；承载链 `A*` = 从 `e_near` 出发的**单度活链**；`OPP_MIN=150°`、`DIR_OK=30°`、`D_PAR=60 m`、`CARRY_MIN=0.50`。
+
+**★D1–D5 结果**（互斥，优先级 **D5 > D3 > D2 > D1 > D4**）：
+
+| 类 | 判据 | 节数 | Σobs | 占比 |
+|---|---|---|---|---|
+| **D1** 同向平行链 | `dbear ≤ 30° ∧ d_own ≤ 60 m` | **0** | 0.0 | 0.00%（**结构性退化**） |
+| **D2** 对向/对层 | `dbear ≥ 150°` | **6** | 16,075.0 | **56.68%** |
+| **D3** 同走廊更远处汇入 | `dn_live > 0`（本链下游同对象有活流） | **5** | 6,535.0 | **23.04%** |
+| **D4** 拓扑替代 | 同向远 408 m / 斜交 114–137° | **3** | 5,751.0 | **20.28%** |
+| **D5** 深度内无承载对象 | `C_in = ∅` | **0** | 0.0 | 0.00% |
+
+**★第二轴（承载充分性）**：`carry_scaled = flA_in × SCALE / obs` ⇒ **`F_ADQ`（≥0.50）5 节 / 8,220.0 / 28.98%**；**`F_LOW`（<0.50）9 节 / 20,141.0 / 71.02%**（其 `carry_scaled` 仅 **0.043–0.407**）。⛔ `K_pooled = 5.5434` ⇒ **仅量级参照，不作独立判据**。
+
+**★流量守恒证据**：`R_cons` **0.041 / p50 0.4375 / 13.364**（6 取值，**14/14 可检验**）；`Rn` 13/14 ≈ **1.000**（承载链几乎取尽尾节点入流）、172382 = 0.524；**`Rd = 0` 3 节**（48586/48337/48983）⇒ 承载链流量在链头**全部终止**。
+**★共享结构**：14 节只对应 **6 条**上游承载链（20–129 边，**1.18–3.67 km**）⇒ 残块在上游对象层面**高度集中**。
+**★独立诊断**：欧氏最近活边 **13/14 节为对向**（0.929）；拓扑最近与欧氏最近**仅 2/14 一致**（零流团惰性遍历可能把 `e_near` 拉到物理不相邻对象 ⇒ 必须同报）；`ms_same > 0` 12/14 节（近旁**有**同向对象但**全部零流**）。
+
+**★判读（严格执行用户纪律）**：
+- ⛔ **D1–D4 一律写作「承载对象替代 / 路径重分配」，不得写作「映射错误」**（未与 OSM way / LTA detector / 设施对象建立对应）。
+- ⛔ **D1 = 0 只能读作「本层判据下不可检出」**（D 类定义即排除「链头 50 m 内同向活流」）。
+- ⛔ **D2 不得读作「对向车行道在承载」**（对向对象流向相反，不可供流）⇒ 只能读作「**本方向未检出同向供流对象**」。
+- ✅ 证据**偏向**「**车没有进入这条路（本方向）**」，而**不是**「进入了走廊但被平行有向链承载」（后者仅弱支持，限于 408–568 m 同向/斜交对象）。
+
+**★缺陷登记**：**`R1`** 负例 `N5` 原设计（上游域放宽为全边）实测**空扰动** ⇒ 负例设计缺陷；已改 `max_steps=1` ＋ 新增 `N6`（`D3` 判据关闭），原扰动降级为**披露项**（**「零流-only」不是本刀选择杠杆**）；**主路径判据/阈值未改**。**`D6`** ★**单位口径更正**：`LENGTH` 实测为 **m**（长边 `LENGTH/欧氏` p50 = **1.0000**；全网 **15,126.5 km**），已固化为 `G-DP-1` 自检。
+
+**★下一步（建议，待裁定）**：①**D2（56.68% Σobs）对象级核验** —— 把 `C_in` 方向条件放松为「同向」并允许**跨 1 条活边**上游扩展，检验是否只是被域口径挡住（仍零仿真）；②**`F_LOW` 9 节（71.02% Σobs）量级缺口核验** —— 属**观测域**问题，须先补 LTA detector / 设施元数据。⛔ `signals` / `trafficDynamics` / `speedFactor` **须用户显式裁定解除底线**；**不产生 v1.1**。
+
+**⇒ 第 ① 项已于同日执行完毕（用户裁定推进 D2-review），见 §2.71。**
+
+---
+
+### 2.71 Step 7.9I-D2-review —— 「供流对象检索敏感性实验」（D 类 14 节 · 重点原 D2 六节）
+
+**判决**：**`D2REVIEW_READY`** ｜ 硬门 **11/11** ｜ 负例 **6/6** ｜ `n_fail = 0` ｜ 1.8 s ｜ **零仿真**
+**预注册**：`reports/corridor_scale_audit_7_9i/PREREG_7_9I_D2REVIEW.md` ｜ **报告**：同目录 `STEP7_9I_D2REVIEW_REPORT.md` ｜ **引擎**：`scripts/od/audit_d2review_7_9id2.py`
+**卡片**：`o1e_d2rev_cards_7_9id2.csv`（14 行 × 33 列）｜ **汇总**：`o1e_d2rev_summary_7_9id2.json` ｜ **Card SHA256(16)** = `bc323212de2f4d5a`（连续 3 次跑逐位一致）
+
+**★正式问题（用户裁定）**：**是否因为当前候选域过窄，把「同向供流对象」人为排除掉了？**
+
+**★设计（唯一自由度 = 候选域）**：
+- **R0**（基准）= D-path 冻结口径（候选域 = `head` 经**零流边**反向可达，`MAX_ACTIVE = 0`）；
+- **R1**（实验）= **仅**把候选域放宽为「反向游走**允许跨越至多 1 条活边**」（`MAX_ACTIVE = 1`）；
+- ⛔ `obs` / `SCALE` / `capacity` / **链定义** / `D1/D3/D4` 判据**五个不动** ⇒ **R1 不改变任何 `final_class`**（`G-D2R-3` 实证：`r0_class` 与 `e_near_id` 与 D-path 卡片**逐节一致**）。
+
+**★原 D2 六节裁定（核心）**：
+
+| `section_id` | `obs_8_9` | R0 `dbear` | R0 `carry` | R1 `same_dir_n` | R1 同向 `fl_max` | **`carry_scaled`（域上界）** | 裁定 |
+|---|---|---|---|---|---|---|---|
+| 48461 | 4,118.0 | 178.6° | 0.122 | 55 | 103 | **0.058** | `F_LOW` |
+| 49054 | 3,481.5 | 179.3° | 0.234 | 31 | 103 | **0.068** | `F_LOW` |
+| 48708 | 2,393.5 | 179.9° | 0.209 | 53 | 103 | **0.099** | `F_LOW` |
+| 47189 | 2,334.5 | 163.4° | 2.071 | 43 | 109 | **0.107** | `F_LOW` |
+| 47163 | 1,967.0 | 179.0° | 0.255 | 53 | 103 | **0.120** | `F_LOW` |
+| 45927 | 1,780.5 | 166.6° | 2.715 | 39 | 109 | **0.141** | `F_LOW` |
+| — | **Σ 16,075.0（56.68% Σobs）** | — | — | — | — | **`F_ADQ = 0/6`** | — |
+
+⇒ **原 D2 六节中，放宽候选域后能找到「同向、量级合理」（`carry_scaled ≥ 0.50`）供流对象的节数 = `0 / 6`。**
+
+**★三条防退化轴（因预期结果 = 判据命中 100%，按 `readme §4` 纪律预注册即并列）**：
+
+| 轴 | 实测 | 说明 |
+|---|---|---|
+| **A1 下界轴** | `same_dir_carry_max ∈ [0.058, **0.452**]`，**14/14 < 0.50** | 0/14 是**连续上界**结论，非二值退化 |
+| **A2 对照轴** | R0 选中对象 `r0_carry_scaled` 最高 **11.894**，**5/14 节 ≥0.50** | 域内**确有**高承载对象，只是**方向不对** ⇒ 检索器正常（不是「找不到对象」） |
+| **A3 反证轴** | 负例 `NF1`（方位 +180°）⇒ **`F_ADQ = 11/14`** | 判据**能**产出 `F_ADQ` ⇒ 主路径 0/14 是**真实空缺**而非仪器失效 |
+
+**★「域过窄」被双重排除**：
+
+| 口径 | 同向候选节数 | `carry_max` 范围 | `≥0.50` 节数 |
+|---|---|---|---|
+| **R0 冻结域**（零流-only） | **14/14**（每节 2–37 个） | [0.028, 0.407] | **0** |
+| **R1 扩展域**（≤1 条活边） | **14/14** | [0.058, 0.452] | **0** |
+
+R1 杠杆**确实生效**：域 **64,888 → 67,606** 节点（+2,718）；候选 **4,105 → 5,081**（+976）；**14/14 节**均新增（`G-D2R-5`）。
+**★几何面**：同向候选到**本链**最小距离**下界 407.9 m**（`same_dir_within_60m_of_chain = 0`）；`same_dir_fl_max ≤ 109 veh/h`；hop 序 vs 欧氏序 **9/14** 一致（5 节不一致，**已同报**）。
+
+**★判读（严格）**：
+- ✅ **答**：**不是候选域过窄**。三条独立口径（对象存在性 / 量级合理性 / 几何距离）一致 ⇒ 偏向
+  **「本方向交通没有沿该 MATSim 车行道进入，而是在更上游发生路径分配差异」**；
+  ⛔ **不是**「零流链内部存在路径/连接断点」（该支要求同向合理供流对象**大量存在**，实测 `0/14`）。
+- ⛔ `D1 = 0` **未重解释**；⛔ 全程只称「**承载对象替代 / 路径重分配**」，未升级为「映射错误」。
+- ⛔ `F_LOW`（71.02% Σobs）**未与 D2 混解**（用户指定），仍独立待裁。
+- ⛔ `carry_*` vs `obs` 的 `K_pooled = 5.5434` ⇒ 仅量级参照。
+
+**★缺陷登记**：**`R1`**（**实现缺陷 + 门禁缺口**）—— `same_dir_euc_dist` 误把**候选数组序号**当**全局边索引**（`G.ex[i_e]`），首跑出现 1.5e4–2.4e4 m 的物理不可能值（新加坡南北向 < 25 km）⇒ 改为 `dd_sd.min()`；**并新增硬门 `G-D2R-10`**（由 card 内边 id 反算距离，`|Δ| < 0.06 m` ∧ ≤ 全网坐标跨度 55,773 m），该门在缺陷版下必 FAIL，用于堵住「无门可拦」缺口。**主判据/阈值/`same_dir_first_*`/`carry_max`/`class` 全部未变**。
+
+**★下一步（建议，待裁定）**：**D2 裁决已收敛**（不是检索域问题）⇒ 若继续只剩两条须**先补外部语义**的路线：① LTA detector / 设施级元数据；② 观测域归属核验（`obs` 是否本就不应由本方向承接）。⛔ 缺元数据时**不得**以几何邻近替代。**`F_LOW`（71.02%）** 仍独立待裁。⛔ `signals` / `trafficDynamics` / `speedFactor` **须用户显式裁定解除底线**；**不产生 v1.1**。
+
+**⇒ 已于同日执行完毕（用户裁定**换问题**：不再问「哪条 MATSim edge 该承接」，改问「LTA 这个数到底测了什么」），见 §2.72。**
+
+---
+
+### 2.72 Step 7.9I-O3 —— 「LTA 观测对象语义审计」（OBS-DOMAIN）
+
+**判决**：**`OBS_DOMAIN_AUDIT_READY`**（硬门 **10/10**、负例 **6/6 fired**、`n_fail = 0`、35.0 s、**零仿真只读**）；阶段链 → **`… → D2-review ✓ → O3 ✓`**。Card SHA256 **`32daf852192a0c1d`**（两次跑逐位一致）。报告 `STEP7_9I_O3_REPORT.md`；预注册 `PREREG_7_9I_O3.md`；引擎 `audit_obs_domain_7_9io3.py`。
+
+**★正式问题（用户裁定，换问题）**：⛔ 不再问「哪条 MATSim edge 应该承接这些车」；✅ 改问 **「LTA 的这个数，到底在现实世界中测量了什么？」**
+**官方依据**（用户引用 + 本地 `docs/LTA_DataMall_API_User_Guide.md` L1029 **逐字确证**）：`TrafficFlow` = *"hourly average traffic flow, taken from a representative month of every quarter during 0700-0900 hours"*（Quarterly）⇒ `Traffic Flow` ≠ `Detector Loop` ≠ `Traffic Count`。
+
+**范围**：主集 = **`F_LOW` 9 节**（Σobs **20,141.0**）；参照 = `F_ADQ` 5 节；基线 = 全域 **1,311 obs LinkID / 1,278 有几何**。
+
+**★四事实逐项回答**：
+
+| # | 问题 | 实测回答 |
+|---|---|---|
+| **①** | 观测对象是「单车行道」还是「道路断面/设施」 | **结构层 = 有向路段**（**1,278/1,278 全 2 顶点**、长度 p50 **128 m**、同路名 `obs` 唯一率 p50 **1.0000**）；**设施归属层 ⛔ `OBS_OBJECT_UNRESOLVED`** |
+| **②** | 一观测对象覆盖多个承载对象？ | **LTA 侧：否**（`sib_uniq_frac` **0.9706–1.0000**）；**跨层：是**（`1 LTA LinkID ↔ K` MATSim 边，`K` **1–14**，`K_pooled 5.5434`） |
+| **③** | `Volume` 语义 | **通过该有向路段的工作日 08 时中位机动车流量**（`vol_int_frac = 1.0` 整数计数；日间 CV p50 0.075；`obs_h7/obs_h8` p50 0.988；`n_h8_wd = 20`）；⛔ **无车型字段** |
+| **④** | 回到 MATSim | **本刀不做**（用户明确「最后才回到 MATSim」） |
+
+**★A–E 分类**：`A = 0 · C = 0 · D = 11 · B = 3 · E = 0`（主集 `F_LOW`：**`D` 7 / `B` 2**；参照 `F_ADQ`：`D` 4 / `B` 1）。
+判据：`A`=`nv>2 ∨ len>500 m`；`C`=`sib_n≥3 ∧ sib_uniq_frac<0.50`；`D`=`K_primary>1`；`B`=`facility_binding==UNRESOLVED ∧ ¬A ∧ ¬C`；`E`=¬(…)（**本批结构性不可达**，须披露）。
+
+**★★最关键可操作发现：`DATA_ACQUISITION_GAP`（本地文档 ≠ 实际数据）**
+
+| 表 | 实际字段 | 本地文档声称 | 差异 |
+|---|---|---|---|
+| `TrafficFlow_Data.json` | `LinkID,Date,HourOfDate,Volume,StartLon/Lat,EndLon/Lat,RoadName,RoadCat` | `LinkID, **VehicleType**, Volume, **Timestamp**` | ⚠ **`VehicleType`/`Timestamp` 不存在** |
+| `DetectorLoop.dbf` | **`OBJECTID`（1）** | `…, RD_CD, **LANE_NUM**, **DETECTOR_ID**, REMARKS` | ⚠ **标识字段全部缺失**；★`REMARKS` 归类已更正，见 §2.74 §0 |
+| `RoadSectionLine.dbf` | `RD_CD,RD_CATG_NA,RD_CATG__1,RD_CD_DESC`（4） | `…, RD_CD, RD_CATG_NAM, …` | ⚠ **无 `LinkID`**；`RD_CD`/`RD_CATG_NA` **100% 空** |
+
+⇒ **语义无法闭合不是「LTA 没有元数据」，而是「本批未取得」**：① `DetectorLoop` 属性字段下载时被剥离；② `RoadSectionLine` 本地版无 `LinkID`；③ 本地无 Junction/Turning-Count 数据集。
+且 `DetectorLoop` 与断面**不共址**（共址率 **25 m 3.5% / 50 m 8.2% / 100 m 19.9% / 200 m 43.9%**；`det_min` p50 **222 m**；本批 14 节 **113.6–673.8 m**）。
+
+**★全域基线**（1,278 LinkID）：`{2 顶点: 1278}` · 长度 p10 53 / **p50 128** / max 201 m · 同路名 `obs` 唯一率 **p50 1.0000** · 到最近**对向**观测对象垂距 p10 15 / **p50 40** / p90 669 m（**≤60 m 占比 0.504**；`PERP_R=250 m` 内无对向对象 **249 条**）。
+
+**★判读（严格）**：
+- ⛔ `A = 0` / `C = 0` **只能读作「未检出」**，**不得**读作「因此 = 单车行道」。
+- ⛔ `D` 成立**只能**读作「**跨层基数 ≠ 1**」；⛔ `B` 命中**只能**读作「**本地不可判定**」。
+- ⛔ `det_min_m` 小 ⇒ 只能说「附近有线圈设施」，**不得**说「该观测对象由该线圈测量」（**几何邻近 ≠ 物理对应**）。
+- ✅ 未改 D 类判据、未重解释 `D1 = 0`、未把 `F_LOW` 与 ④ 混解。
+
+**★缺陷登记**：**`R1`**（**仪器实现缺陷（签名设计）**）—— 首版 `sig` 含 `Σdet_n_100`（基线**恒 0**：最小 `det_min` 113.6 m > `DET_R` 100 m ⇒ 无判别量）且**未含** `Σobs_8_9` ⇒ 负例 `N3`（不投影）/`N4`（hour 7）**空扰动假阴性**；改为含 `Σobs_8_9` 与 `Σdet_min_m`，**主路径判据/阈值/分类/卡片字段全部未改**。另 `D1` `facility_binding` 单值退化（由 `N5` 反证为**数据缺失**）、`D2` `E` 不可达、`D3` `opp_perp_m` 含 `inf`、`D5` 文档≠数据（6 项，已固化 `G-O3-3`）、`D6` `direction_ok_frac = 1.0` 不区分量。
+
+**★下一步（建议，待裁定）**：① **补齐观测对象语义元数据** —— 重新获取含属性的 DataMall Geospatial `DetectorLoop` + 申请 On-Request **Junction Loop Counts**（`JunctionID`/`DetectorID`/15-min counts）⇒ 方可判 **B**；② **事实④（回到 MATSim）** 须待 ① 闭合后执行。⛔ `signals` / `trafficDynamics` / `speedFactor` **须用户显式裁定解除底线**；**不产生 v1.1**。
+
+---
+
+### 2.73 Step 7.9I-O3-METADATA —— 「恢复 TrafficFlow → Detector / 道路设施 可连接身份链」（O3-METADATA）
+
+**判决**：**`O3_METADATA_AUDIT_CLOSED`**（硬门 **9/9**、负例 **5/5 fired ∧ 5/5 命中设计可观测量**、`n_fail = 0`、**零仿真只读**）；阶段链 → **`… → D2-review ✓ → O3 ✓ → O3-METADATA ✓`**。产物 SHA256 前 16 位两次跑逐位一致（`e50738292de820ee` / `ac7eb1743ca870e2` / `533846204afc3623`）。报告 `STEP7_9I_O3METADATA_REPORT.md`；预注册 `PREREG_7_9I_O3METADATA.md`；引擎 `audit_o3_metadata_7_9io3m.py`。
+
+**★用户裁定**：**① 补齐 LTA 设施级标识字段**（不走②；**不把 TrafficFlow 从硬校准域剔除**）。目标 = **恢复 `TrafficFlow` → `Detector` / 道路设施 的可连接身份链**；纪律 = **先补元数据，不改模型、不改评价器、不跑仿真**。
+
+**★方法学关键（本节点新增）**：LTA 交付的 shapefile **自带 `*.shp.xml` FGDC 元数据**，其中 `CopyFeatures` / `Append` / `FeatureClassToFeatureClass` 的**字段映射串逐字记录了源库（`GDM.LTALayers`）schema** ⇒ **这是本批数据内部唯一可用的「官方 schema 自证」来源**（⛔ 非第三方推断）。据此做**三方对账**：官方（`*.shp.xml`）× 交付（`*.dbf` 字节级表头 + 逐记录填充率）× 文档（本地 `.md`）。
+
+**★官方 GDM schema（逐字恢复）**
+
+- **`DetectorLoop`（12）**：`JOB_NUM`(20) · `TYP_CD`(4) · `LVL_NUM`(2) · `EXCEPTION_IND`(1) · `LAST_UPD_USRID_NUM`(8) · `LAST_UPD_DTTM` · `CRT_USRID_NUM`(8) · `CRT_DTTM` · **`RD_CD`(6)** · `PKG_REF`(50) · `SHAPE_Length` · `SHAPE_Area`
+  要素定义：*"…electronic loop on the road surface at **signalised junctions**, to detect **traffic movements** for **traffic control** purpose"*
+- **`RoadSectionLine`（11）**：`JOB_NUM` · **`RD_CD`(Road Code,6)** · **`RD_NAM`(Road Name,150)** · `RD_CATG_NAM`(20) · `EXCEPTION_IND` · `LAST_UPD_*` · `CRT_*` · `PKG_REF`(50) · `SHAPE_LEN`
+  注：两处映射分别写作 `SHAPE.LEN` / `SHAPE_LEN`（同字段两种拼法），规范化后唯一计数 11。
+  ★**并集口径更正**：`RoadSectionLine.shp.xml` 含源库变更日志 `AddField … REMARKS TEXT # # 200 …`（Date=20140801）⇒ 官方并集 **11 → 12**（见 §2.74 行 §0 更正）。
+
+**★★三方对账结果**（已按 §2.74 的自查更正重列）
+
+| 图层 | 官方（FGDC ∪ `AddField`） | 交付 | 官方 schema 中不存在者 | `OFFICIAL_ONLY` |
+|---|---|---|---|---|
+| `DetectorLoop`（16,275） | 12 | **`{OBJECTID}`** | **`DETECTOR_ID` · `LANE_NUM`**（2） | **10** |
+| `RoadSectionLine`（15,329） | 11（★并集 **12**） | `RD_CD`(**0%**) `RD_CATG_NA`(**0%**) `RD_CATG__1`(100%) `RD_CD_DESC`(100%) | **∅** | 9（含 `RD_NAM`） |
+| `TrafficFlow_Data`（75,899） | — | `LinkID Date HourOfDate Volume StartLon StartLat EndLon EndLat RoadName RoadCat` | `VehicleType` · `Timestamp` | — |
+
+**★★精确化 O3 的 `DATA_ACQUISITION_GAP`**：`DETECTOR_ID` / `LANE_NUM` **从来不在 LTA 公开 geospatial schema 里**（本地文档**臆造**）⇒ 真正被剥掉的是 **10 个非几何字段**（`JOB_NUM`/`TYP_CD`/`LVL_NUM`/`EXCEPTION_IND`/`LAST_UPD_*`/`CRT_*`/`RD_CD`/`PKG_REF`/`SHAPE_*`）。
+
+**★连接键可用性**：代码级 **`RD_CD`（Road Code）双侧不可用**（`DetectorLoop` 侧字段被删；`RoadSectionLine` 侧填充率 **0.0000 / 15,329**）；道路名级 **`RD_CD_DESC ↔ RD_NAM` 可用**（文本类完整保留）。
+**⇒ 即便拿到属性完整版 `DetectorLoop`，本套连接最多到「道路名 / 道路码」级 —— 不是检测器级，更不是链路级。**
+
+**★剥空模式（观测，不推断动机）**：`RoadSectionLine` **保文本（100%）、清代码（0%）**；`DetectorLoop` **全清（含几何派生量 `SHAPE_Length`/`SHAPE_Area`）** ⇒ **两图层剥离强度不同，非同一规则**。
+**★双路径一致**：`Static` 原件与 `Dynamic` 重下 zip 字段集**全等 = `{OBJECTID}`** ⇒ 缺口**不是单次下载失误**。
+
+**★On-Request 官方口径（逐字，2026-10-01 抓取）**：**`Indicative Traffic Counts at Junctions by Loop Detectors`** —— *"…captured by each loop detector installed at **signalised intersections**, **without vehicle classification counts**"*；字段 `Junction ID` · `Detector ID` · `Date and time for each collection period` · `Indicative traffic counts`；频率 **Daily**；格式 `XLS/CSV/TXT`。
+**★与 `DetectorLoop` 同要素域** ⇒ 同一套设施的**两个视角**（几何 vs 计数）⇒ **`Detector ID` 的唯一可能来源 = On-Request，不是公开 geospatial 层。**
+
+**★四门状态（用户裁定的 M1–M4；M1 运行前拆两支并冻结）**
+
+`M1a = ABSENT`（`RD_CD` 未恢复，公开 geospatial 可补） · `M1b = ABSENT`（`DETECTOR_ID` 不可得，**仅** On-Request 可补） · `M2 = BLOCKED`（依赖 `M1a`） · `M3 = BLOCKED`（无 lane/direction 字段来源） · `M4 = BLOCKED`（依赖 `M1a+M1b+M3`）
+
+**★判读纪律（必须遵守）**：⛔ **`BLOCKED` 只读「上游依赖未满足」，不得读作「不可连接」**（否则把「数据未到」误判为阴性结论 = 「假门禁」违规）；⛔ `M1b = ABSENT` 只读「**本批公开层无此字段**」，**不读「LTA 无检测器身份」**；⛔ `M1a = ABSENT` 只读「**本批 `RD_CD` 被剥空**」，**不读「道路码不可得」**。
+
+**★负例（5/5 fired ∧ 5/5 命中设计可观测量）**：`N1` 注入伪造 `DETECTOR_ID` ⇒ `M1b` `ABSENT→PRESENT`；`N2` 模拟「属性完整版到手」（双侧填充率 1.0）⇒ `M2` `BLOCKED→EVALUABLE`；`N3` 键「层级」切到道路名级 ⇒ `key_available` `0→1`；`N4` 官方 schema 源退化到 `*.dbf` ⇒ `official_n` `23→5`；`N5` 注入伪造 `LANE_NUM` ⇒ `M3` `BLOCKED→PRESENT`。`sig_base = (23, 5, 3.0, 3, 0)`。
+
+**★缺陷登记 `R1`（仪器实现缺陷 —— 负例契约可实施性）**：首跑 `N3 fired=False` / `N2 hit=False` —— `N3` 原设计字段 `RD_CATG__1` **在 `DetectorLoop` 侧不存在** ⇒ **空扰动**（判据不可实施）；`N2` 仅单侧注入。修订为 **键「层级」切换**（code vs name）+ **双侧注入**；**主路径判据 / 阈值 / M 门定义 / 采集目标 / 门数（9）/ 冻结边界一律未改**。属**仪器层缺陷，非科学结论**。**未登记风险**：`TrafficFlow_Links` **无 `*.shp.xml`** ⇒ 该图层无官方 schema 自证源（未对其做三方对账）。
+
+**★边界保持冻结**：`B = BINDING_UNDECIDABLE` **不升级** · `TWIN_GEOMETRIC_SUBSTITUTE` **仅几何证据** · `F_LOW` **不是"需求不足"** · v1.0 冻结（`SCALE=2.29897`/`N_sim=236,044`/`target=0.8589732`）· `signals`/`trafficDynamics`/`speedFactor` **不碰**。
+
+**★下一步（待裁定，本节点不擅自启动）**：**第一优先** 属性完整版 `DetectorLoop`（公开 geospatial）—— ⛔ **即使成功也不含 `DETECTOR_ID`**；**第二优先** On-Request `Indicative Traffic Counts at Junctions by Loop Detectors`（`Detector ID` 的唯一来源）—— ⛔ **不得先假定能与 `TrafficFlow.LinkID` 一一连接**，可连接性须到手后实测。数据到手后按 **`M1a → M1b → M2`（最关键）`→ M3 → M4`** 重评（仍零仿真）。
+
+---
+
+### 2.74 Step 7.9I-O3-DATA-RECOVERY —— 「恢复 `TrafficFlow` → `Detector` / 道路设施 可连接身份链」（**零仿真 / 只读**；判 `O3_RECOVERY_AWAITING_INPUT`）
+
+> 预注册 `PREREG_7_9I_O3RECOVERY.md`（运行前冻结）· 引擎 `scripts/od/audit_o3_recovery_7_9io3r.py` · 报告 `STEP7_9I_O3RECOVERY_REPORT.md` · 采集清单 `ACQUISITION_MANIFEST_7_9I_O3RECOVERY.md`
+
+**§0 ★自查更正（本步对 O3-METADATA 的正式更正 —— 先读）**
+
+官方 schema 自证源**不止 FGDC 字段映射串一种写法**，还有源库变更日志里的 **`AddField` 语句**（源库身份：`Database Connections\gdm@pdn4.sde\GDM.LTALayers\GDM.<Layer>`，ArcSDE / Oracle `gispprod`，`User=GDM`，`Version=SDE.DEFAULT`）。
+**⇒ 权威 schema = FGDC 映射串 ∪ `AddField`**；**仅用 FGDC 正则会漏字段**（实测 29 图层：仅 **6** 个含 FGDC 映射串，**22** 个含 `AddField`）。
+
+| 图层 | `AddField` 记录 | 更正后判定 |
+|---|---|---|
+| **`RoadSectionLine`** | ✅ `AddField …\GDM.RoadSectionLine REMARKS TEXT # # 200 Remarks NULLABLE NON_REQUIRED`（**Date=20140801**） | `REMARKS` = **真实源字段** ⇒ 从「臆造」**移出**，改入 **`SOURCE_ONLY_STRIPPED`**；官方并集 **11 → 12** |
+| `DetectorLoop` | ⛔ **无 `AddField`** | 维持「FGDC 未声明」，**降级** **`UNCONFIRMED_IN_SOURCE`** ⇒ ⛔ **不得再称「臆造」** |
+
+**未受影响**：`DETECTOR_ID` / `LANE_NUM` **仍是文档独有**（`DetectorLoop` 官方 = FGDC 12 ∪ `AddField` ∅ = **12**）。
+**连带修正**：O3-METADATA 的 `G-M4`「文档独有 3 个」→ **2 个**；`G-M1` 并集口径 `RoadSectionLine` 11 → **12**。本文件 §2.72/§2.73、`CLOSURE_7_9I.md` §14.2、`PREREG_7_9I_O3.md` §2.1、`PREREG_7_9I_O3METADATA.md` 已同步。
+
+**★纠正后的五跳恢复链**（逐跳独立判定，**不得跳级**；⛔ 旧链 `DetectorLoop → DETECTOR_ID → TrafficFlow` **已被 O3-METADATA 正式证伪**）
+
+```text
+① TrafficFlow LinkID ──(RoadName / RoadCat)──▶ ② RD_CD
+                                                  │
+                                                  ▼
+                                        ③ RoadSectionLine（RD_CD / RD_NAM）
+                                                  │
+                                                  ▼
+                                        ④ DetectorLoop（RD_CD / JOB_NUM / 几何）
+                                                  │
+                                                  ▼
+                                  ⑤ Junction / Detector ID  ← 仅 On-Request 有
+```
+
+**★运行前否定性先验（P1/P2/P3，必须写进结论）**
+
+| # | 事实 | 结论 |
+|---|---|---|
+| **P1** | `RD_CD` 在**三个独立图层**近全空：`RoadSectionLine` 0/15,329 · `CyclingPath` 0/4,830 · `LampPost` **61/126,916（0.048%）** | 「保文本（`RD_CD_DESC` 100%）/ 清代码（`RD_CD` ≈0%）」是**跨图层重复出现的模式** ⇒ 可能**不是交付剥离，而是源库未赋值** |
+| **P2** | `LampPost` 61 条非空 `RD_CD` **全部 6 字符**，去重仅 **6 个**：`ZZ190A`(46) `ZZ202A`(11) `ZZ161A`(7) `ZZZ43A`(4) `ZZ203A`(3) `PUP06M`(4) | 与官方 `RD_CD(Road Code,6)` 声明**吻合** ⇒ **`RD_CD` 确存在于源数据**；但取值形如**内部占位码**（`ZZ`/`ZZZ` 前缀）⇒ **很可能不是可用道路码体系** |
+| **P3** | 剥空**逐图层差异化**：29 层 = **A 完全剥空 14**（含 `DetectorLoop`）· **B 保文本清代码 3**（`RoadSectionLine`/`LampPost`/`CyclingPath`）· **C 字段完整 12**（含真 ID 如 `BUS_STOP_N`/`GNTRY_NUM`/`STN_NAM`） | 存在**可获取的完整版图层**；但**不保证** `DetectorLoop`/`RoadSectionLine` 在完整版中 `RD_CD` 有值 |
+
+⇒ **硬性顺序**：**先实测 `RD_CD` 填充率，再谈连接**；⛔ 不得因「拿到了官方 schema 声明的字段」就宣布「连接链已恢复」。
+
+**★五个能力门 + 冻结常量**
+
+`MIN_FILL = 0.01`（1%；标定依据：`LampPost` 0.048% ⇒ 取 1% 则**明确判否**，取 0.01% 则**误判为可用**）· `M4_CLOSE_MIN = 0.50`
+
+| 门 | 判据 | 本轮取值 |
+|---|---|---|
+| `M1a` | `RoadSectionLine` 侧 `RD_CD` 存在 ∧ 填充率 ≥ `MIN_FILL` | **`ABSENT`** |
+| `M1b` | 检测器标识字段存在（`DetectorLoop.DETECTOR_ID` **或** On-Request `Detector ID`）∧ 填充率 > 0 | **`ABSENT`** |
+| **`M2`** ★最重要 | `RD_CD` **双侧可用** ∧ `intersection ≠ ∅` | **`BLOCKED`** |
+| `M3` | `LANE_NUM` 存在，或检测器侧方向可恢复 | **`ABSENT`** |
+| `M4` | `F_LOW 9` 节设施级闭环比例 ≥ 0.50 | **`BLOCKED`**（`m4_closed = 0/9`） |
+
+**★逐跳连接统计（`o3r_recovery_layers.csv`；用户点名必须输出 1:1/1:N/N:1/N:M + 覆盖率 + `K_pooled`）**
+
+| 跳 | `n_left` | `n_right` | 匹配 | `c_1_1`/`c_1_N`/`c_N_1`/`c_N_M` | 状态 |
+|---|---:|---:|---:|---|---|
+| `①→②` `TF LinkID ─(RoadName)→ RD_CD` | **1,278** | **0** | 0 / 0 | 0/0/0/0 | **`BLOCKED_EMPTY_SIDE`** |
+| `②→③` `RoadSectionLine (RD_CD)` | 0 | 0 | 0 / 0 | 0/0/0/0 | **`BLOCKED_EMPTY_SIDE`** |
+| `④→⑤` `DetectorLoop → On-Request` | 0 | 0 | 0 / 0 | 0/0/0/0 | **`BLOCKED_EMPTY_SIDE`** |
+
+**★状态机与判决**
+
+```text
+无恢复件        -> status=BLOCKED, verdict=O3_RECOVERY_AWAITING_INPUT   (全部产物齐备, EXIT=0)
+有恢复件:
+   M1a ABSENT 或 M1b ABSENT -> RECOVERY_INCOMPLETE_FIELD_MISSING
+   M2 BLOCKED               -> RECOVERY_FIELDS_PRESENT_LINKAGE_BLOCKED
+   M2 EVALUABLE: M4>=0.50   -> RECOVERY_STAGE_1_CLOSED ; 否则 RECOVERY_PARTIAL_CLOSURE
+```
+
+**⇒ 本轮判 `O3_RECOVERY_AWAITING_INPUT`**（用户尚未放入恢复件）：`status = BLOCKED`、**全部产物齐备、`EXIT = 0`、⛔ 不 Traceback**。
+
+**★硬门 `G-O3R-1`–`G-O3R-12`（12 门）**：官方 schema 自证可复现（`DetectorLoop` FGDC 12 ∪ `AddField` 0 = **12**；`RoadSectionLine` FGDC **11** ∪ `AddField` **{`REMARKS`}** = **12**）· 本地 29 层普查可复现（**A 14 / B 3 / C 12**）· `LampPost` `RD_CD` 格式证据（**61 / 全 6 字符 / 去重 6**）· `AWAITING_INPUT` **受控收口** · 6 负例全部 `fired ∧ hit` · AST 无 `subprocess`/`os`/`java` · v1.0 快照 `changed = []`（84 文件）· **manifest 最后生成、不自哈希** · 终局闭环物化 `o3r_closure.csv`。
+
+**★负例（`N1–N6`，全部共用同一 `compute(p)`；恢复件缺席 ⇒ 标注 `REHEARSAL_ON_BASELINE`）**
+
+| 负例 | 扰动 | 设计可观测量 | 实测 | 判定 |
+|---|---|---|---|---|
+| `N1` | 注入伪造 `DETECTOR_ID` | `M1b` | `ABSENT → PRESENT` | **fired ∧ hit** |
+| `N2` | 双侧注入相交 `RD_CD` | `M2` | `BLOCKED → EVALUABLE` | **fired ∧ hit** |
+| `N3` | 删除 `RD_CD` 列 | `M1a` | `PRESENT → ABSENT` | **fired ∧ hit** |
+| `N4` | schema 源退化为 `FGDC only` | `official_n` | `24 → 23` | **fired ∧ hit** |
+| `N5` | 注入伪造 `LANE_NUM` | `M3` | `ABSENT → PRESENT` | **fired ∧ hit** |
+| `N6` | `RD_CD` 填充率压 0 | `M1a` | `PRESENT → ABSENT` | **fired ∧ hit** |
+
+**★缺陷登记 `R1`（仪器实现缺陷 —— 门禁判定分辨率）**：`G-O3R-3` 原用**全文件级** token 共现（同一文件出现 `REMARKS` 即视为未更正）⇒ 无法区分「`REMARKS` 被列为臆造」与「`REMARKS` 已被更正说明」。改为**行级**判定（同一行同时出现 `REMARKS` 与该臆造登记表的名称才判为未更正）。**门禁语义 / 阈值 / 判决空间一律未改**，属**仪器层修正**。
+
+**★边界保持冻结**：`B = BINDING_UNDECIDABLE` **不升级**（须真正拿到属性连接链才允许升级为 `EVALUABLE`/`CONFIRMED`/`REJECTED`）· ⛔ 不改 v1.0 · ⛔ 不改 `TrafficFlow` 原始值 · ⛔ 不改 crosswalk · ⛔ 不改评价器阈值 · ⛔ 不跑 MATSim · ⛔ 不碰 `signals`/`trafficDynamics`/`speedFactor` · ⛔ 不产生 v1.1。
+
+**★读法纪律（承 O3-METADATA，逐字沿用）**：`BLOCKED` **只读「上游依赖未满足」**，⛔ **不读「不可连接」**；`ABSENT` **只读「本批无此字段」**，⛔ **不读「LTA 无检测器身份」**；`M2 = BLOCKED` **只读「本批无法建立该跳」**。
+
+**★下一步（等用户放入恢复件，⛔ 本节点不擅自启动）**：
+①**第一优先** 属性完整版 `DetectorLoop` + `RoadSectionLine`（**两个都要**，单取 `DetectorLoop` 连不上）⇒ 到手后仍**不跑 MATSim**，先做 `LinkID ↓ RoadName/RoadCat ↓ RD_CD ↓ RoadSectionLine ↓ DetectorLoop` 逐层统计；
+②**第二优先** On-Request `Indicative Traffic Counts at Junctions by Loop Detectors`（`Detector ID` 的**唯一来源**）⇒ ⛔ **不得预设一定能连上**。
+最终目标：回答 **那 `20,141 veh/h` 的「异常」对应哪个现实检测对象** —— 这才是决定是否修改 MATSim 路网 / 动力学的真正入口。
+
+---
+
+### 2.75 Step 7.9I-O3-R1 —— 「观测域重建（Observation-Domain Reconstruction）」（**零仿真 / 只读**；判 `FACILITY_IDENTITY_UNAVAILABLE_BUT_OBSERVATION_DOMAIN_RECOVERABLE`）
+
+> 预注册 `PREREG_7_9I_O3R1.md`（运行前冻结，含 **§11 运行后正式更正**）· 引擎 `scripts/od/audit_o3_r1_odrecon.py` · 报告 `STEP7_9I_O3R1_REPORT.md` · 产物 **15 项 `o3r1_*`**
+> 用户裁定（2026-10-01 18:00）：**放弃「必须恢复 `DetectorLoop → Detector ID → Junction ID`」这条链**，把 O3 研究对象重定义为「**LTA 道路观测段（`TrafficFlow` Link）— `RoadSectionLine` — MATSim 道路对象**」的**空间观测单元**（`DetectorLoop` 退为辅助空间证据）。
+> ⛔ **不碰 v1.0** · ⛔ **不重跑仿真** · ⛔ 不改 `TrafficFlow` 原始值 / crosswalk / 评价器阈值 / `signals` / `trafficDynamics` / `speedFactor` · ⛔ 不产生 v1.1 —— 纯**诊断 / 映射审计**。
+
+**§0 ★研究对象重定义（先读）**
+
+```text
+旧：observation → DetectorID → DetectorLoop → RD_CD        （⛔ 公开数据无法闭合）
+新：observation → road section → MATSim links               （O3-R1 生效）
+```
+
+⇒ **主键链降级为「可选辅助实现方式」**；本步证明**不需要设施身份即可重建观测域**。
+**输入（Sep2026 双件，逐字解析）**：`RoadSectionLine` **15,354** 条 / **11 字段** / `RD_CD` **1.0000**（distinct **3,825**）/ 段 **236,677**；`DetectorLoop` **16,275** 条 / **1 字段**（`OBJECTID`，**换月份无用**，Mar/Sep 双月一致）。
+**★三处新观测**：① **`RD_NAM` 仍被剥**（新文件「保代码、掉路名」，与旧文件「保文本、掉代码」**正好相反**）⇒ ②→③ 只能用 `RD_CD`；② `RD_CD` 含占位值 —— `NONAME` **355**、长度 `{6: 15,351, 5: 3}`；③ `section_geography.csv` **574** vs `crosswalk` **576**（差 2，本步以 crosswalk 为准）。
+
+**§0.2 ★两条正式更正（由引擎自身诊断触发，非事后调参；两轴并报，原轴保留为审计轨迹）**
+
+| # | 判据缺陷 | 实测证据 | 更正 | 生效后 |
+|---|---|---|---|---|
+| **§0 方向轴** | `RoadSectionLine` **无方向语义**，有向 `circ_diff` 把反向绘制误判为不匹配 | `≤25 m` 的 **1,234** 条中 **730** 条有向差 **>30°**；最近距 **p50 6.4 m** | `TF→RSL` 改**轴向** `min(d,180−d)`；`TF→MATSim` 保有向 | `TierX 537→64`；`①命中 741→1,214` |
+| **§0.2 唯一性轴** | 「唯一」误实现为「次近候选 ≥10 m」= **并列测试**，把同一道路相邻分段判为歧义 | `unique_gap→0` 时 `TierA 19→709` | 「唯一」= 命中候选 **`RD_CD` 去重 = 1**；`tie` 轴并报 | `TierA 19→795` |
+
+门数 **12 → 14**（新增 `G-O3R1-13`/`-14`，均为**更正可复现性**门）。**未受影响**：几何阈值 `25/30` · `TIER_A_SCORE_MIN 0.70` · `TIER_B_LOOP_MAX_M 50` · `LOOP_BANDS` · Tier 优先级 · 判决阈值 `0.50/0.10` · 负例集合 · 边界。**判决稳健**（`TierA`）：`rsl50/ang45/rsl50∧ang45/score0.50/matsim50` = **818/802/805/920/909**（基线 795）。
+
+**★三层可信度 Tier（互斥，优先级 `X→A→B→C`；分母 = TF 全集 1,278）**
+
+| Tier | 标签 | 计数 | 占比 | 定义 |
+|---|---|---|---|---|
+| **A** | `DIRECT_ROAD_SECTION_OBSERVATION` | **795** | **62.21%** | 唯一 ∧ `d≤25` ∧ `ang(轴向)≤30` ∧ 合法 `RD_CD` ∧ `score≥0.70` ∧ MATSim 集非空 |
+| **B** | `LOOP_SPATIALLY_ASSOCIATED` | **67** | 5.24% | 非 A，RSL 命中且 `d_loop ≤ 50`（**仅空间邻近**，⛔ 不声称 `Detector ID` 恢复） |
+| **C** | `FACILITY_LINKAGE_UNRESOLVED` | **352** | 27.54% | 非 A 非 B，RSL 命中但 `d_loop > 50` 或无 loop |
+| **X** | `OBS_DOMAIN_UNMAPPED`（★引擎新增，须披露） | **64** | 5.01% | 无 RSL 满足 `d≤25 ∧ ang≤30` |
+
+**对照（审计轨迹）**：预注册原文（有向 + `tie`）= `A 25 / B 151 / C 565 / X 537`；`§0` 已生效 = `A 19 / B 246 / C 949 / X 64`。
+`match_score = 0.5·d_term + 0.3·a_term + 0.2·code_term`；⛔ **无「路名一致加分」项**（`RD_NAM` 被剥，结构性不可用）。
+
+**★逐跳统计（右键覆盖率分母 = 右键全域基数）**
+
+| 跳 | 左→右 | `n_matched_left` | `coverage_left` | `n_matched_right` | 右键全域 | `coverage_right` | `K_pooled` | `1:1`/`1:N`/`N:1`/`N:M` |
+|---|---|---|---|---|---|---|---|---|
+| **① TF→RSL** | LinkID → `RD_CD` | **1,214** | **0.9499** | **134** | 3,825 | 0.0350 | **1.0000** | 19/**1,195**/0/0 |
+| **② TF→MATSim** | LinkID → 有向边 | **1,104** | **0.8639** | **1,931** | 693,575 | 0.0028 | **1.8687** | **515**/47/**427**/115 |
+| **③ TF→LOOP** | LinkID → 检测器（≤50 m） | **252** | **0.1972** | **1,680** | 16,275 | 0.1032 | **8.4444** | 8/4/132/**108** |
+
+⚠️ **覆盖率陷阱仍在**：`1,931/693,575 = 0.28%` ⇒ ⛔ **不得外推全网**。
+
+**★观测尺度（用户 §13 指标表）**
+
+| Tier | n | `TF_LENGTH` 中位 | `N_MATSIM` 中位 | `MATSIM_LENGTH` 中位 | `LOOP_DISTANCE` 中位 |
+|---|---|---|---|---|---|
+| A | 795 | 121.77 m | 1.0 | 72.74 m | 139.95 m |
+| B | 67 | 135.50 m | 1.0 | 54.41 m | **13.85 m** |
+| C | 352 | 140.36 m | 1.0 | 43.55 m | 248.95 m |
+| X | 64 | 136.32 m | 1.5 | 50.13 m | 346.92 m |
+| **全域** | **1,278** | **128.20 m** | **1.0** | **66.66 m** | — |
+
+⇒ `TF_LENGTH / MATSIM_LENGTH` ≈ **1.9×**，`N_MATSIM` 中位 **1** ⇒ **LTA 观测尺度 ≈ 2× MATSim 边尺度，非一对一 link matching**。
+
+**★锚点（本步最重要一条）：`F_LOW 9` 中 8/9 节落在同一条走廊**
+
+> **`AYER RAJAH EXPRESSWAY`（AYE）** —— `RD_CD` = **`AYE00N`（5 节：48461/49054/48586/48708/48337）** + **`AHI00U`（3 节：49104/47163/49027，AYE 的 SLIP_ROAD 匝道段）**；余 **1** 节 = `EAST COAST PARK SERVICE ROAD`（172382，**无 RSL 匹配 ⇒ Tier X**）。
+> ⇒ 那 **`20,141 veh/h`** 的「异常」**不是全岛弥散的统计效应，而是集中在单一高速走廊上的 8 个具体观测段**。
+> **同时实测**：`F_LOW 9` 的 `LOOP_DISTANCE` 全为 **328–644 m**（全部 `LOOP_UNRESOLVED`）⇒ **这些观测段在空间上远离 loop detector**（⛔ 不得据此断言「它们不是 loop 观测」）。
+> **`B_SET 3`**：`48461 → C/AYE00N` · `49054 → A/AYE00N` · `47189 → A/PAE02K` ⇒ **`B` 状态保持 `UNCHANGED`**。
+
+**★576 靶场：`Σ` 与 `median` 口径差（诊断口径，⛔ 不替换 canonical）**
+
+| 量 | `median`（**canonical，未被覆盖**） | `Σ`（本步诊断口径） |
+|---|---|---|
+| `R` 中位数 | **0.959004** | **3.462132** |
+| `R < 1` 的节数 | **294** | **139** |
+
+**★关键数**：**`n(R_sum ≥ 1 ∧ R_median < 1) = 155`** ⇒ **155/576（26.9%）节的残差符号在两种聚合口径下相反**。
+⇒ **「`Sim/Obs` 系统性偏低」在相当程度上是聚合口径（`median` vs `Σ`）的产物，而非单纯需求不足。**
+⛔ `median` canonical **一字未改、未被覆盖**（`G-O3R1-11`：`section_scale_v10/A1`、`corridor_scale_v10/A1` 四件产物 `mtime` 运行前后未变）。
+
+**★硬门（14/14 PASS）**：输入解析（8 逻辑输入）· 新 RSL 身份 · **`DetectorLoop` 未恢复显式记录（不静默跳过）** · 官方 schema 自证可复现 · **坐标同源（EPSG:3414）** · `RD_CD` 占位码已识别（`NONAME=355`）· 逐跳命中非零（`1,214/1,104/252`）· Tier 互斥完备（`795+67+352+64=1,278`）· **AST 自检零仿真可证**（`banned_hits=[]`）· v1.0 未被触碰（`changed=[]`）· canonical 未被覆盖 · 收口一致 · **双轴更正可复现**（`-13`/`-14`）。
+
+**★负例（`N1–N6`，6/6 `fired ∧ hit`；全部与主路径共用同一 `compute(p)`）**：`N1 rsl_max 25→5`（`①1,214→405`）· `N2 rsl_max 25→200`（`①1,214→1,270`）· `N3 PLACEHOLDER 置空`（`n_placeholder 90→0`；`TierA 795→799`）· `N4` 向 `DetectorLoop` 注入伪 `RD_CD`（`det_has_rdcd False→True`）· `N5 msim_max 25→1`（`②1,104→27`；`TierA 795→23`）· `N6` 关闭 `DetectorLoop`（`Tier B 67→0`）⇒ `Tier A/B/C/X` 是**数据状态的结论**，**不是判据失效的伪影**。
+
+**★缺陷登记（接续 §3 `R1–R5`）**
+
+| 编号 | 项 | 内容 |
+|---|---|---|
+| **`R1`** | **判据规范缺陷（方向轴）** | `RoadSectionLine` 无方向语义，有向判据把反向绘制误判为不匹配（730/1,234）⇒ 改轴向；**新增 `G-O3R1-13`** |
+| **`R2`** | **判据规范缺陷（唯一性轴）** | 「唯一」误实现为并列测试 ⇒ 细化为 `RD_CD` 去重 = 1；**新增 `G-O3R1-14`**；`tie` 轴并报 |
+| **`R3`** | **负例空扰动** | `N3` 首版完全静默（`n_placeholder` 误用模块常量 + `sig` 未纳入该观测量）⇒ 已修；**判据/阈值/门定义未改** |
+| **`R4`** | **产物非确定性** | `summary.json` 含 `elapsed_s` ⇒ 哈希不稳定；已移出（计时仅入日志） |
+| **`D1`** | 靶场集计数不一致 | `section_geography.csv` **574** vs `crosswalk` **576** ⇒ 以 crosswalk 为准，⛔ 不擅自补 2 节 |
+| **`D2`** | `RD_NAM` 不可得 | 官方并集有、交付无 ⇒ `match_score` 结构性缺失路名项（⛔ 不以任何代理替代） |
+
+**★判读纪律（硬约束）**：⛔ **Tier B 只读「设施空间邻近」**，**绝不读作「`Detector ID` 已恢复」**；⛔ **不得**因 RSL `RD_CD` 100% 就宣布「观测对象已是检测器级」（本步只到**道路段级**）；⛔ **不得**说「`DetectorLoop` 已与 `TrafficFlow` 完全绑定」；⛔ `NONAME` / 5 字符 `RD_CD` **不得**当作合法道路码；⛔ **`B = BINDING_UNDECIDABLE` 保持**（本步结论不得用于升级 `B`）；⛔ **`median` canonical 不得被 `Σ` 替换**；本步**不产生** `F_LOW` 成因的新结论，`F_LOW` **仍不是「需求不足」**。
+
+**★本步结论（正式）**：**检测器业务身份不可由公开数据恢复，但交通观测空间域可通过 `TrafficFlow Link` 与 `RoadSectionLine` 的几何对应关系重建** —— `FACILITY_IDENTITY_UNAVAILABLE_BUT_OBSERVATION_DOMAIN_RECOVERABLE`。
+**方法学答辩口径**：**本研究不依赖 detector-level identity，而是以 LTA `TrafficFlow` Link 作为观测单元，通过其与 `RoadSectionLine` 的空间对应关系建立道路观测域；`DetectorLoop` 仅作为独立的设施空间证据，不将公开数据中无法获得的 `Detector ID` 作为必要关联键。**
+
+**★下一步（⛔ 本节点不擅自启动）**：① **可选** —— 把 Tier A 观测域（795 节）与 576 靶场残差联结，做**观测尺度 × 残差**诊断（`Σ`/`median` 双口径）；② ⛔ **仍不**修改 MATSim 路网/动力学，⛔ **观测尺度 / 路网对象 / 交通动力学三者主因的讨论须待用户裁定后**方可开启（**顺序不得倒置**）；③ ⛔ **不再**下载新月份 `DetectorLoop`（双月实测一致，已定位为公开导出剥离，非月份问题）。
+
+**★`O3-R1：CLOSED`（用户 2026-10-01 18:33 正式冻结，本节点关闭）**：`Observation domain RECOVERED · Facility identity UNDECIDABLE · Detector ID dependency DROPPED · v1.0 / TrafficFlow / Crosswalk / Evaluator UNCHANGED · New simulation NONE`。⇒ **不再为补 `DetectorLoop` 业务身份继续消耗时间**；本节点**零仿真、零新实验**。
+**★下一步 = 机制层裁定（不跑实验）**：唯一待裁定问题 —— **观测尺度只是「比较口径问题」，还是残差形成机制的一部分？** ⛔ 裁定前**不得**先跑「尺度 × 残差」（易把统计口径差误当真实交通机制）。若开启，**六项前置约束**：① `median`/`Σ` **双口径**；② **576 完整分母**；③ A/B/C/X 观测域等级；④ `128 m ↔ 67 m` 尺度比；⑤ ⛔ 不得用尺度指标反定义样本；⑥ ⛔ 不得把「尺度相关」解释成「交通动力学机制」。
 
 ---
 
@@ -4900,6 +5402,14 @@ REM 注意：不改 λ / crosswalk；不重跑 MATSim；7.3.6A Final Crosswalk �
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-01 | **★Step 7.9I-O3-R1 —— 「观测域重建（Observation-Domain Reconstruction）」（零仿真只读；⛔ 不改 v1.0、不重跑 MATSim、不产生 v1.1）→ 判 `RECOVERED` / `FACILITY_IDENTITY_UNAVAILABLE_BUT_OBSERVATION_DOMAIN_RECOVERABLE`（硬门 **14/14**；负例 **6/6** `fired ∧ hit`；15 项产物两次重跑 SHA256 逐位一致；`EXIT=0`）** —— **用户裁定放弃 `DetectorLoop → Detector ID → Junction ID` 主键链**，把 O3 研究对象重定义为「`TrafficFlow Link` — `RoadSectionLine` — MATSim 道路对象」的**空间观测单元**（`DetectorLoop` 退为辅助空间证据）。**★两条判据更正（引擎自证）**：① **方向轴** = `RoadSectionLine` 无方向语义 ⇒ `TF→RSL` 改**轴向**（`TierX 537→64`）；② **唯一性轴** = 「唯一」误实现为并列测试 ⇒ 改 **`RD_CD` 去重 = 1**（`TierA 19→795`）；门数 **12→14**；判决稳健 818/802/805/920/909。**★主结果**：`Tier A 795 (62.21%) / B 67 / C 352 / X 64`；①`TF→RSL 1,214 (0.9499)·K=1.0000`｜②`TF→MATSim 1,104 (0.8639)·K=1.8687`｜③`TF→LOOP 252 (0.1972)·K=8.4444`。**★锚点**：**`F_LOW` 8/9 节同属 `AYER RAJAH EXPRESSWAY`（`AYE00N`×5 + `AHI00U`×3）**，余 1 节为服务道路（Tier X）。**★观测尺度**：`TF_LENGTH` 中位 **128.20 m** vs `MATSIM_LENGTH` **66.66 m**（≈**1.9×**）⇒ 非一对一 link matching。**★口径诊断**：576 靶场 `R` 中位 **`median` 0.959 → `Σ` 3.462**，**155/576 符号相反**（⛔ canonical `median` 未覆盖）。⛔ `B = BINDING_UNDECIDABLE` **保持**。新增 `PREREG_7_9I_O3R1.md` + `scripts/od/audit_o3_r1_odrecon.py` + `STEP7_9I_O3R1_REPORT.md` + 15 项 `o3r1_*` 产物 |
+| 2026-10-01 | **★Step 7.9I-O3-DATA-RECOVERY —— 「恢复 `TrafficFlow` → `Detector` / 道路设施 可连接身份链」（零仿真只读）→ 判 `O3_RECOVERY_AWAITING_INPUT`（`status=BLOCKED`；硬门 **12/12**；负例 **6/6** `fired ∧ hit`；全部产物齐备、`EXIT=0`、⛔ 不 Traceback）** —— 用户裁定：**继续 O3-METADATA，优先走「本地重新获取完整属性数据」路线**，同时申请 On-Request 作为**第二证据层**；**⛔ 不得在对话里传 `AccountKey`**（用户本地自取，Agent 只等文件）。**★★ §0 正式自查更正**：官方 schema 自证源**不止 FGDC 映射串一种写法**，还有源库变更日志里的 **`AddField` 语句**（源库 `Database Connections\gdm@pdn4.sde\GDM.LTALayers\GDM.<Layer>` / ArcSDE Oracle `gispprod` / `User=GDM` / `Version=SDE.DEFAULT`）⇒ **权威 schema = FGDC ∪ `AddField`**；实测 **29 图层仅 6 个含 FGDC 映射串、22 个含 `AddField`** ⇒ 仅用 FGDC 正则会**漏字段**。**`RoadSectionLine` 有 `AddField … REMARKS TEXT # # 200 …`（Date=20140801）⇒ `REMARKS` 是真实源字段、从「臆造」移出改入 `SOURCE_ONLY_STRIPPED`、官方并集 11→12；`DetectorLoop` 无 `AddField` ⇒ 降级 `UNCONFIRMED_IN_SOURCE`（⛔ 不得再称「臆造」）**；**未受影响** `DETECTOR_ID`/`LANE_NUM`（官方 FGDC 12 ∪ ∅ = 12）。**★纠正后的五跳恢复链**（逐跳独立判定、不得跳级）：`① TrafficFlow LinkID ─(RoadName/RoadCat)→ ② RD_CD → ③ RoadSectionLine(RD_CD/RD_NAM) → ④ DetectorLoop(RD_CD/JOB_NUM/几何) → ⑤ Junction/Detector ID（仅 On-Request）`；⛔ 旧链 `DetectorLoop → DETECTOR_ID → TrafficFlow` **已被 O3-METADATA 正式证伪**。**★运行前否定性先验 P1/P2/P3**：**P1** `RD_CD` 在**三个独立图层**近全空（`RoadSectionLine` 0/15,329 · `CyclingPath` 0/4,830 · `LampPost` **61/126,916 = 0.048%**）⇒ 疑**源库未赋值**而非交付剥离；**P2** `LampPost` 61 条非空 **全部 6 字符**、去重仅 **6 个**（`ZZ190A` 46 / `ZZ202A` 11 / `ZZ161A` 7 / `ZZZ43A` 4 / `ZZ203A` 3 / `PUP06M` 4）⇒ 格式吻合官方 `RD_CD(Road Code,6)` 但形如**内部占位码**；**P3** 29 层**全量普查** = **A 完全剥空 14**（含 `DetectorLoop`）· **B 保文本清代码 3**（`RoadSectionLine`/`LampPost`/`CyclingPath`）· **C 字段完整 12**（★**测量更正**：预注册 §2 P3 记「7 层」为侦察期部分计数 14+3+7=24≠29）。**★五个能力门（冻结常量 `MIN_FILL=0.01`、`M4_CLOSE_MIN=0.50`）**：`M1a=ABSENT` · `M1b=ABSENT` · **`M2=BLOCKED`（最重要）** · `M3=ABSENT` · `M4=BLOCKED`（`m4_closed=0/9`）。**★逐跳统计**（用户点名 1:1/1:N/N:1/N:M + 覆盖率 + `K_pooled`）：`①→②` `n_left=1,278 / n_right=0`、`②→③`、`④→⑤` 均 **`BLOCKED_EMPTY_SIDE`**（无恢复件）。**★`F_LOW` 逐节闭环**：9 节四条件（`c1_link_to_road`/`c2_road_to_det`/`c3_unique_facility`/`c4_direction`）**全 False** ⇒ `0/9`。**★负例 `N1–N6`**（全部共用同一 `compute(p)`；恢复件缺席 ⇒ 标注 **`REHEARSAL_ON_BASELINE`**）：`N1` 伪 `DETECTOR_ID` ⇒ `M1b ABSENT→PRESENT`；`N2` 双侧注入相交 `RD_CD` ⇒ `M2 BLOCKED→EVALUABLE`；`N3` 删 `RD_CD` 列 ⇒ `M1a PRESENT→ABSENT`；`N4` schema 源退化 `FGDC only` ⇒ `official_n 24→23`；`N5` 伪 `LANE_NUM` ⇒ `M3 ABSENT→PRESENT`；`N6` 填充率压 0 ⇒ `M1a PRESENT→ABSENT`。**★缺陷登记 `R1`（仪器实现缺陷 —— 门禁判定分辨率）**：`G-O3R-3` 原为**全文件级** token 共现 ⇒ 无法区分「`REMARKS` 被列为臆造」与「已被更正说明」⇒ 改**行级**判定；**门禁语义/阈值/判决空间一律未改**。**★同步更正下游 4 处**：`CLOSURE_7_9I.md` §14.0/§14.2、本文件 §2.72/§2.73/§2.74、`PREREG_7_9I_O3.md` §2.1、`PREREG_7_9I_O3METADATA.md` §3.3。**★边界保持冻结**：`B = BINDING_UNDECIDABLE` **不升级** · ⛔ 不改 v1.0 · ⛔ 不改 `TrafficFlow` 原始值 · ⛔ 不改 crosswalk · ⛔ 不改评价器阈值 · ⛔ 不跑 MATSim · ⛔ 不碰 `signals`/`trafficDynamics`/`speedFactor` · ⛔ 不产生 v1.1（v1.0 快照 84 文件 `changed = []`）。**★下一步（等用户放入恢复件）**： ①**第一优先** 属性完整版 `DetectorLoop` **+** `RoadSectionLine`（**两个都要**，单取 `DetectorLoop` 连不上）⇒ 到手后仍**不跑 MATSim**，先做逐层统计；②**第二优先** On-Request Junction Loop Counts（`Detector ID` 的**唯一来源**）⇒ ⛔ 不得预设一定能连上。**最终目标 = 回答那 `20,141 veh/h` 的「异常」对应哪个现实检测对象**。新增 `PREREG_7_9I_O3RECOVERY.md` / `STEP7_9I_O3RECOVERY_REPORT.md` / `ACQUISITION_MANIFEST_7_9I_O3RECOVERY.md` / `o3r_local_inventory.csv` / `o3r_official_schema.csv` / `o3r_rdcd_format_evidence.csv` / `o3r_input_resolution.json` / `o3r_m_gates.json` / `o3r_recovery_layers.csv` / `o3r_floow_closure.csv` / `o3r_checks.csv` / `o3r_summary.json` / `o3r_manifest.json` / `o3r_closure.csv`；`audit_o3_recovery_7_9io3r.py`；CLOSURE §15；readme §2.74。**⛔ 未改 v1.0 / 未跑 MATSim / 未碰 signals / 未产生 v1.1** |
+| 2026-10-01 | **★Step 7.9I-O3-METADATA —— 「恢复 TrafficFlow → Detector / 道路设施 可连接身份链」（零仿真只读）→ 判 `O3_METADATA_AUDIT_CLOSED`（9/9 门；负例 5/5 fired ∧ 5/5 命中设计可观测量；三产物 SHA256 两次跑逐位一致 `e50738292de820ee`/`ac7eb1743ca870e2`/`533846204afc3623`）** —— 用户裁定 **①补齐 LTA 设施级标识字段**（不走②；**不把 TrafficFlow 从硬校准域剔除**），目标 = 恢复可连接身份链，纪律 = **先补元数据，不改模型、不改评价器、不跑仿真**。**★方法学关键**：LTA 交付 shapefile **自带 `*.shp.xml` FGDC 元数据**，其字段映射串**逐字记录源库（`GDM.LTALayers`）schema** ⇒ 本批内部唯一的「官方 schema 自证」来源（⛔ 非第三方推断）⇒ 做**官方 × 交付 × 文档三方对账**。**★官方 GDM schema**：**`DetectorLoop`（12）** = `JOB_NUM TYP_CD LVL_NUM EXCEPTION_IND LAST_UPD_* CRT_* RD_CD(6) PKG_REF SHAPE_Length SHAPE_Area`；**`RoadSectionLine`（11）** = `JOB_NUM **RD_CD**(Road Code,6) **RD_NAM**(150) RD_CATG_NAM EXCEPTION_IND LAST_UPD_* CRT_* PKG_REF SHAPE_LEN`。**★★三方对账**：`DetectorLoop` 交付**仅 `{OBJECTID}`**、官方独有 **10**、**文档独有 3（`DETECTOR_ID`/`LANE_NUM`/`REMARKS`）**〔⚠ **`REMARKS` 已由 7.9I-O3-DATA-RECOVERY §0 正式更正**：`RoadSectionLine` 含源库 `AddField` 语句（Date=20140801）⇒ 判为**真实源字段**、改入 **`SOURCE_ONLY_STRIPPED`**；`DetectorLoop` 侧降级 **`UNCONFIRMED_IN_SOURCE`** ⇒ ⛔ **不得再称「臆造」**；**更正后文档独有 = 2**〕；`RoadSectionLine` 交付 `RD_CD`(**0%/15,329**) `RD_CATG_NA`(0%) `RD_CATG__1`(100%) `RD_CD_DESC`(100%)、文档独有 1（`REMARKS`）〔⚠ 同上更正 ⇒ **0**〕；`TrafficFlow_Data` 实际 10 字段、**缺 `VehicleType`/`Timestamp`**。**★★精确化 O3 的 `DATA_ACQUISITION_GAP`**：`DETECTOR_ID`/`LANE_NUM` **从来不在 LTA 公开 geospatial schema 里**（文档臆造）⇒ 真正被剥掉的是 **10 个非几何字段**。**★连接键**：代码级 `RD_CD` **双侧不可用**（`DetectorLoop` 侧字段被删 + `RoadSectionLine` 侧填充率 0）⇒ **即便拿到属性完整版也只能到道路名/道路码级，不是检测器级更不是链路级**；道路名级 `RD_CD_DESC ↔ RD_NAM` 可用。**★剥空模式**：`RoadSectionLine` **保文本、清代码**；`DetectorLoop` **全清（含 `SHAPE_Length`）** ⇒ 两图层剥离强度不同、非同一规则（只陈述观测）。**★双路径一致**：`Static` 原件 vs `Dynamic` 重下 zip **字段集全等 = `{OBJECTID}`** ⇒ 缺口非单次下载失误。**★On-Request 逐字（2026-10-01 抓取）**：`Indicative Traffic Counts at Junctions by Loop Detectors` = *"…loop detector installed at **signalised intersections**, **without vehicle classification counts**"*，字段 `Junction ID`/`Detector ID`/`Date and time`/`Indicative traffic counts`，**Daily**，`XLS/CSV/TXT` ⇒ **与 `DetectorLoop` 同要素域**（几何 vs 计数两视角）⇒ **`Detector ID` 的唯一来源 = On-Request，不是公开 geospatial 层**。**★四门（用户裁定 M1–M4；M1 运行前拆两支并冻结）**：`M1a=ABSENT` · `M1b=ABSENT` · `M2=BLOCKED` · `M3=BLOCKED` · `M4=BLOCKED`；⛔ **`BLOCKED` 只读「上游依赖未满足」，不得读作「不可连接」**。**★负例**：`N1` 伪造 `DETECTOR_ID` ⇒ `M1b ABSENT→PRESENT`；`N2` 双侧注入 ⇒ `M2 BLOCKED→EVALUABLE`；`N3` 键层级切换 ⇒ `key_available 0→1`；`N4` schema 源退化 ⇒ `official_n 23→5`；`N5` 伪造 `LANE_NUM` ⇒ `M3 BLOCKED→PRESENT`；`sig_base=(23,5,3.0,3,0)`。**★缺陷 `R1`（仪器实现缺陷 → 负例契约可实施性）**：首跑 `N3 fired=False`/`N2 hit=False`（`RD_CATG__1` 在 `DetectorLoop` 侧不存在 ⇒ 空扰动）⇒ 改为**键层级切换 + 双侧注入**；**主路径判据/阈值/M 门/采集目标/门数/冻结边界一律未改**。**★边界保持冻结**：`B=BINDING_UNDECIDABLE` **不升级** · `TWIN_GEOMETRIC_SUBSTITUTE` **仅几何** · `F_LOW` **≠ 需求不足** · v1.0 冻结 · `signals`/`trafficDynamics`/`speedFactor` **不碰**。**★下一步（待裁定）**：① 属性完整版 `DetectorLoop`（⛔ 即使成功也不含 `DETECTOR_ID`）；② On-Request Junction Loop Counts（**唯一来源**；⛔ 不得先假定能与 `LinkID` 一一连接）⇒ 到手后按 `M1a→M1b→M2→M3→M4` 重评。新增 `PREREG_7_9I_O3METADATA.md` / `STEP7_9I_O3METADATA_REPORT.md` / `o3m_schema_reconciliation.csv` / `o3m_field_fill.csv` / `o3m_m_gates.json`；`audit_o3_metadata_7_9io3m.py`；CLOSURE §14；readme §2.73。**⛔ 未改 v1.0 / 未跑 MATSim / 未碰 signals / 未产生 v1.1** |
+| 2026-09-30 | **★Step 7.9I-O3 —— 「LTA 观测对象语义审计」（OBS-DOMAIN）（`F_LOW` 9 节主 + `F_ADQ` 5 参照 + 全域 1,311 基线；零仿真只读；35.0 s）→ 判 `OBS_DOMAIN_AUDIT_READY`（10/10 门；负例 6/6；Card SHA256 `32daf852192a0c1d` 逐位可复现）** —— 用户裁定**换问题**：⛔ 不再问「哪条 MATSim edge 该承接」，✅ 改问 **「LTA 这个数到底测量了什么」**。**四事实**：① 观测对象 = **有向路段**（1,278/1,278 全 2 顶点、p50 128 m、同路名 obs 唯一率 **p50 1.0000**），但**设施归属层 `OBS_OBJECT_UNRESOLVED`**；② LTA 侧**非聚合**，**跨层 1:K**（`K` 1–14）；③ `Volume` = **该有向路段工作日 08 时中位机动车流量**（整数计数、无车型字段）；④ 回到 MATSim **本刀不做**。**A–E**：`A=0 · C=0 · D=11 · B=3 · E=0`。**★最关键可操作发现 `DATA_ACQUISITION_GAP`**：本地文档声称的 `VehicleType`/`Timestamp`/`DETECTOR_ID`/`RD_CD`/`LANE_NUM`/`LinkID` **六项在实际下载文件中均不存在** ⇒ 语义不可闭合**不是「LTA 没有元数据」而是「本批未取得」**。预注册 `PREREG_7_9I_O3.md`；报告 `STEP7_9I_O3_REPORT.md`；引擎 `audit_obs_domain_7_9io3.py`。**改动**：`docs/readme_technical_v1.md §2.72`、`CLOSURE_7_9I.md §13`、`scripts/od/readme.md`。**⛔ 未改 v1.0 / 未跑 MATSim / 未碰 signals / 未产生 v1.1** |
+| 2026-09-30 | **★Step 7.9I-D2-review —— 「供流对象检索敏感性实验」（D 类 14 节 · 重点原 D2 六节；零仿真只读；1.8 s）→ 判 `D2REVIEW_READY`（11/11 门；负例 6/6；Card SHA256 `bc323212de2f4d5a` 连续 3 次跑逐位一致）** —— **正式问题**：**是否因为当前候选域过窄，把「同向供流对象」人为排除掉了？** **★设计（唯一自由度 = 候选域）**：**R0**（基准，= D-path 冻结口径，`MAX_ACTIVE=0`）与 **R1**（实验，**仅**放宽为「反向游走允许跨越至多 1 条活边」，`MAX_ACTIVE=1`）**并列**；⛔ `obs`/`SCALE`/`capacity`/链定义/`D1/D3/D4` 判据**五个不动** ⇒ R1 不改变任何 `final_class`（`G-D2R-3`：`r0_class` 与 `e_near_id` 与 D-path 卡片**逐节一致**，`{D2:6, D3:5, D4:3}`）。**★★核心裁定**：**原 D2 六节中能拿到「同向、量级合理」（`carry_scaled ≥ 0.50`）供流对象的节数 = `0/6`**（六节 `same_dir_carry_max` = 0.058/0.068/0.099/0.107/0.120/**0.141**，离阈值差 ≥3.5×）。**★三条防退化轴（因预期结果 = 判据命中 100%，按 `readme §4` 纪律预注册即并列）**：**A1 下界轴** `same_dir_carry_max ∈ [0.058, 0.452]`、**14/14 < 0.50**；**A2 对照轴** R0 选中对象 `r0_carry_scaled` 最高 **11.894**、**5/14 节 ≥0.50**（域内**确有**高承载对象，只是**方向不对** ⇒ 检索器正常）；**A3 反证轴** 负例 `NF1`（方位 +180°）⇒ **`F_ADQ = 11/14`**（判据**能**产出 `F_ADQ`，主路径 0/14 是**真实空缺**）。**★★「域过窄」被双重排除**：**R0 冻结域自身已含同向活跃候选 14/14 节（每节 2–37 个，`carry_max ∈ [0.028, 0.407]`，0 节 ≥0.50）**；R1 扩展域 **14/14 节**、`carry_max ∈ [0.058, 0.452]`、仍 **0 节 ≥0.50**。**R1 杠杆确实生效**：域 64,888 → 67,606 节点（+2,718）、候选 4,105 → 5,081（+976）、**14/14 节**均新增（`G-D2R-5`）。**★几何面**：同向候选到**本链**最小距离**下界 407.9 m**（`same_dir_within_60m_of_chain = 0`）、`same_dir_fl_max ≤ 109 veh/h`；hop 序 vs 欧氏序 **9/14** 一致（5 节不一致，已同报）。**★判读（严格）**：**答 = 不是候选域过窄**；三条独立口径（对象存在性 / 量级合理性 / 几何距离）一致 ⇒ 偏向 **「本方向交通没有沿该 MATSim 车行道进入，而是在更上游发生路径分配差异」**，⛔ **不是**「零流链内部存在路径/连接断点」（该支要求同向合理供流对象**大量存在**）；⛔ `D1 = 0` **未重解释**；⛔ 只称「**承载对象替代 / 路径重分配**」；⛔ `F_LOW`（71.02% Σobs）**未与 D2 混解**。**★缺陷登记 `R1`（实现缺陷 + 门禁缺口）**：`same_dir_euc_dist` 误把**候选数组序号**当**全局边索引**（`G.ex[i_e]`）⇒ 首跑出现 1.5e4–2.4e4 m 的物理不可能值 ⇒ 改为 `dd_sd.min()`，**并新增硬门 `G-D2R-10`**（由 card 内边 id 反算距离，`|Δ| < 0.06 m` ∧ ≤ 全网坐标跨度 55,773 m），该门在缺陷版下必 FAIL；**主判据/阈值全部未变**。**★下一步（建议，待裁定）**：D2 裁决已收敛 ⇒ 若继续只剩两条须**先补外部语义**的路线（① LTA detector / 设施级元数据；② 观测域归属核验），⛔ 缺元数据时**不得**以几何邻近替代。新增 `PREREG_7_9I_D2REVIEW.md` / `STEP7_9I_D2REVIEW_REPORT.md` / `o1e_d2rev_cards_7_9id2.csv`（14×33）/ `o1e_d2rev_summary_7_9id2.json`；`audit_d2review_7_9id2.py`；CLOSURE §12；readme §2.71 |
+| 2026-09-30 | **★Step 7.9I-D-path —— D 类零流链「上游有向路径追踪」（零仿真只读；1.9 s）→ 判 `DPATH_TRACE_READY`（10/10 门；负例 6/6 ＋1 项空扰动披露；Card SHA256 `866023f85b504655` 逐位可复现）** —— 范围：**只追 D 类 14 节（Σobs 28,361.0）**。**★口径**：上游零流域 `hr`（只经 `flow==0` 边反向 BFS，`HOP_MAX=120`）→ `C_in` → `e_near = argmin(hop, −flow, e)` → 承载链 `A*`（单度活链）→ **流量守恒证据** `R_cons/Rn/Rd`。**★D1–D5**：**D2 对向/对层 6 节 / 16,075.0 / 56.68%**、**D3 同走廊更远处汇入 5 节 / 6,535.0 / 23.04%**、**D4 拓扑替代 3 节 / 5,751.0 / 20.28%**、**D1 = 0（★结构性退化，三处强制披露）**、**D5 = 0**。**★第二轴（承载充分性）**：`carry_scaled = flA_in×SCALE/obs` ⇒ **`F_ADQ`（≥0.50）5 节 / 8,220.0 / 28.98%**；**`F_LOW` 9 节 / 20,141.0 / 71.02%**（仅 **0.043–0.407**）⇒ **多数断面在上游找不到量级合理的承载链**。**★流量守恒**：`R_cons` 0.041 / p50 0.4375 / 13.364（14/14 可检验）、`Rn` 13/14 ≈ 1.000、**`Rd = 0` 3 节**（流量在链头全部终止）。**★14 节只对应 6 条上游承载链（1.18–3.67 km）⇒ 残块对象层面高度集中**。**★独立诊断**：欧氏最近活边 **13/14 为对向**（0.929）；拓扑最近与欧氏最近仅 **2/14** 一致（零流团惰性遍历风险，强制同报）；`ms_same > 0` 12/14 节（近旁有同向对象但**全部零流**）。**★判读纪律**：D1–D4 一律写作「**承载对象替代 / 路径重分配**」，⛔ 不得写作「映射错误」；**D1=0 只可读作「本层不可检出」**；**D2 不得读作「对向车行道在承载」**（对向不可供流）⇒ 证据**偏向**「车没有进入这条路（本方向）」。修订 `R1`（负例 N5 空扰动 ⇒ 改 `max_steps=1` ＋ 新增 `N6`；原扰动降级为披露项）；**`D6` ★单位口径更正：`LENGTH` 实测为 m**（比值 p50 = 1.0000；全网 15,126.5 km），固化为 `G-DP-1`。新增 `PREREG_7_9I_DPATH.md` / `STEP7_9I_DPATH_REPORT.md` / `o1d_trace_cards_7_9id1.csv`（14×35）/ `o1d_trace_summary_7_9id1.json`；`audit_dpath_7_9id1.py`；CLOSURE §11；readme §2.70 |
+| 2026-09-30 | **★Step 7.9I-O1-续② —— 死管链「接入（access）审计」（零仿真只读；69.7 s）→ 判 `DEAD_TUBE_ACCESS_AUDIT_READY`（10/10 门；负例 5/5）** —— 范围用户收紧：**只推 `ISO_DEAD_TUBE` 18 节（Σobs 36,150.5）**；`ISO_TWIN_EXISTS` 仅证据（`TWIN_GEOMETRIC_SUBSTITUTE`）。**★A/B/C 三支全为 0**：A 源头接入 0/18（`OSM_access_n` 1–10）、**B 转换丢失 0/18（OSM link way 24/24 全转换，`cov_frac` min 0.654 / p50 1.000）**、C 无入口边 0/18（`MATSim_access_n` 1 条 13 节 / 2 条 5 节）⇒ **问题不在路网构建链**；细化 **D 14 节 / Σobs 28,361.0（78.45%）**、**E 4 节 / Σobs 7,789.5（21.55%）**；`first_nonzero_dist` p50 37.5 m；`route_accessible` 18/18 True（不区分量）。修订 `R1`（单点→覆盖率判据）、`R2`（负例 N3 空扰动）；缺陷 `D1–D6`。新增 `PREREG_7_9I_O1CONT2.md` / `STEP7_9I_O1CONT2_REPORT.md` / `o1c2_access_cards_7_9io1c2.csv` / `o1c2_access_summary_7_9io1c2.json`；`audit_access_dead_tube_7_9io1c2.py`；CLOSURE §10 |
+| 2026-09-30 | **★Step 7.9I-O1-续 —— 车行道建造核验 + OSM way-level 结构 + `U_UNIT_MISMATCH` 求交（零仿真只读；23.2 s + 26.3 s）→ 判 `CARRIAGEWAY_BUILD_AUDIT_READY` + `UINT_MISMATCH_INTERSECT_READY`（两引擎 `n_fail = 0`；12/12 + 7/7 = **19 门**；负例 4/4 + 3/3；两卡片重跑**逐位相同**）** —— 用户裁定「① 是否真的只建了一条车行道（最重要的一刀）→ ② OSM `oneway` / way-level 结构（源头证据）→ ③ 与 `7.9I-A2` 的 `U_UNIT_MISMATCH` 求交」，并强调「把**少建一条车行道**与**两条都建了、其中一条没被路由使用**严格分开」，⛔ 不得因「MATSim 出现两条独立 node-string」就推断「OSM 本来就是双 way」。**★口径（唯一关键区分）**：本侧对象 = **交叉表 primary matched 边**；对向对象 = 100 m 内 `MAJOR` + 方位差 `~(bear_s+180°) < 30°`；**几何同向池仅作披露/双胞胎搜索**（100 m 内会混入邻近**其它道路/匝道**的同向有流边）。**★死管诊断（新增）**：沿 `入度=1` 反向链上溯至端点（`max_steps=2000`），`head_inflow(e) = Σ_{j∈in-edges(端点)} flow_j`。**★结果**：**① 本侧车行道都已建**（matched 对象缺失 **0/38**；`build_class = S2_MS_SELF_BUILT_UNLOADED` **38/38**）⇒ **无「少建本侧」**；**② 对向亦已建 36/38**（33 节有流），缺失 **2 节 = `{172382, 45187}`**（均 `EAST COAST PARK SERVICE ROAD`），且 `G-O1C-7` 证明 **`{MATSim 无对向} ≡ {OSM `O_SELF_ONLY`}`，对称差 = ∅** ⇒ **源头同缺，非转换丢边**；**③ OSM 源头 = 每方向一条独立 `oneway=yes` way**（MAJOR way **6,694**、`oneway=yes` **92.83%**、`no` 仅 1；L1 15 节 OSM 同向 way **48**（47 yes）/ 对向 way **40**（39 yes））⇒ **「伪双 way」被源头排除**；**★零流的两种形式**：**`ISO_DEAD_TUBE` 18 节 / Σobs 36,150.5 / 58.26%**（**18/18 上游 `head_inflow = 0`** ⇒ 结构性无接入，零流链长 p50 **6.5** / p90 **15.8** / **max 36 边**）· **`ISO_TWIN_EXISTS` 18 节 / 25,537.0 / 41.15%**（300 m 内同向有流对象，中位 **35.54 m**）· `ISO_BYPASS_NO_TWIN` 2 节 / 363.0 / 0.59%；`B2` 22 节内部：`DEAD_TUBE` **14 节 / 25,638.0（66.94%）**、`TWIN_EXISTS` 7 节 / 12,395.0、`BYPASS` 1 节 / 266.5。**★③ 与 `U_UNIT_MISMATCH` 完全不相交**：38 节 `vc_max` p10 **0.065** / p50 **0.339** / p90 **0.513** / **max 0.597** ⇒ **0/38 U**；字面交集 **3 节**（ECP：`S_SLIP_GEOM` 1 / `P_PARALLEL` 2，`vc_max` 0.266–0.435，`G-O1I-2` 与 A2 卡片 `cap_edge_max`/`vc_max` **逐位一致 = True**）；对照 A2 范围 69 节 U = **17**（KPE 隧道 16/19，最高 `3.569×`）⇒ **`U_UNIT_MISMATCH`（容量层的「观测单元≠仿真单元」）与 `B2 零流`（拓扑层的「已建但未接入/被平行对象替代」）是两组不相交现象**。**★★D6 裁定：「少建一条车行道」在本数据集上不成立；唯一成立的分类 = 「两条都建了，本侧没有被路由使用」（38/38）。机制细化为：「不是少建，也不是容量/单元错配，而是已建成的本侧车行道在拓扑上没有被接入（58.26% Σobs），或被更近的平行同向对象替代（41.15% Σobs，中位 35.5 m）」——对用户正式裁定构成「机制细化」，不构成否证。** **★缺陷登记**：`D-1/D-2` `build_class` 与 `G-O1C-5/6/7` v1 用「几何同向池」代理「本侧对象」⇒ 首跑 FAIL 3 + v2 残留 FAIL 1 ⇒ **判据设计缺陷（非实现缺陷、非科学结论）**，改 **matched 边** 口径（阈值**未改**）；`D-3` `G-O1I-3` 首版「U 与非 U 均出现」实测 `U = 0/38` ⇒ **命中 0% 的退化门** ⇒ 拆为「交集 = ∅」＋「`vc_max` 非退化（`p90/p10 = 7.94`）」；`D-4` 四常量未做敏感性扫描；`D-5/D-6` 2 节来自**服务道**（⛔ 不与主线混算）、「双胞胎」⛔ ≠「同一物理车行道」。**★下一步（待裁定）**：**`O1-续②` 接入（access）审计** —— 对 `ISO_DEAD_TUBE` 18 节沿零流链找「本应有接入、实际没有」的节点，比对 OSM 连接 way ⇒ 区分**转换丢边** vs **源头无接入**；对 `ISO_TWIN_EXISTS` 18 节核验「替代对象」是否**同一物理车行道**（仍零仿真）。⛔ `signals` / `trafficDynamics` / `speedFactor` 须用户显式裁定解除底线；不改 v1.0、不重跑 MATSim、`changed = 0`、**不产生 v1.1**。 |
 | 2026-09-30 | **★Step 7.9I-O1 —— B2 车行道对（carriageway pair）层（恢复入口 O1；零仿真只读；20.7 s + 14.1 s + 13.2 s）→ 判 `CARRIAGEWAY_PAIR_AUDIT_READY` + `PAIR_CANDIDATE_PROBE_READY` + `OPPOSITE_LABEL_CONTROL_READY`（三脚本 `n_fail = 0`；9/9 + 5/5 + 8/8 = **22 门**；负例 4/4）** —— 用户裁定「**暂停推进，先冻结收口**」并把阶段标记为 **`7.9I_FROZEN_CLOSED → READY(O1)`**，同时给出 **7 条跨阶段锚点 A1–A7**（已录入 `CLOSURE_7_9I.md §7`；核心 = ① `0.434977` **不进 v1.1**；② `Sim/Obs≈0.766` **只在靶场观测域解释**，不再读作全网需求不足；③ **1:K 尺度错配已实证**，⛔ 不得用 `sum/median/K` 偷换物理测量单元；④ 剩余低载 = **映射链 + 对象定义 + 平行/对层结构**，非单纯「没车」；⑤ KPE/ECP 极端数字已回收，**`r_mixed` 才是设施对象比较依据**；⑥ **方向映射错误已被 `152/152 同向` 排除**，`B2` 改从「对层建模」查；⑦ **v1.0 全程冻结，未产生 v1.1**）。**问题**：**LTA 观测的「一个方向断面」与 MATSim 中由独立节点串表达的另一方向车行道，是什么对应关系？** 预注册 `PREREG_7_9I_O1.md`（运行前冻结；**`G-O1-5` 运行前修订**：原「链内每步方位一致」因 `E_opp` 已筛方位而**恒真** ⇒ 退化判据，改为**拓扑有向路径**判据，实测 `directed_path` **46** / `sum` **11**）。**方法**：`E_opp(s)` = 100 m 内 `MAJOR` + 方位差 `~(bear_s+180°) < 30°` + 排除匹配边，**与 B(b) 的唯一差别 = 去掉 `flow > 0`**（刻意口径扩展）；链分量按 A1 规则取代表值（有向路径 `median` / 否则 `sum`）。**★主引擎**：`Q0_TWIN_PAIR` **10 节/Σobs 18,531.5**、**`Q1_SEPARATE_CARRIAGEWAY` **26 节/43,303.5****、`Q2_NO_OPPOSITE_OBJECT` 2 节/215.5 ⇒ **`B2` 22 节 = Q1 **19** / Q0 3 / Q2 0 = **86.4% 对向车行道为「独立节点串」****（`B(b)-P` 机制被**拓扑证实**）；靶场 576 普查 `PAIR_CONSISTENT` **32.03%**；门 9/9（`G-O1-2` 逐位全等 **Σ139=139**；`G-O1-7` `Σ|E_opp|=159` = 有流 139 + 无流 20）。**★后验 ①**：`r_pair` 中位 **R-sum 2.1512 / R-max **1.8677（带内 [0.5,2]）** / R-med 1.2183**；带内 Σobs 占比 0.3353 / **0.3963** / 0.3494；**`ΣK_pair=57`**；`Σflow_same **47,745.0**` vs `Σflow_opp **254,771.9**`（**5.34×**）；`corr(log obs, log r_pair)=0.0535` ⇒ 尾部**非**低 obs 分母伪影。**★★后验 ②（决定性）**：`B2` 中 **`L1_OPP_LOADED_OK` 15 节 / Σobs 28,918.5 / **75.51%**** —— **对向断面在冻结 canonical 下令 `ratio_median ∈ [0.5,2]`，本侧 `sim_median_xS` 精确为 0**（典型 **46894 → 对向 46009 距 26.4 m、`ratio_median` 1.3168、本侧 0**）；`L2_OPP_ALSO_LOW` 6 节/9,297.0/**24.27%**；`L3` 1 节/84.0/0.22%；全 38 节 `L1` 18/32,181/**51.86%**（严格 `R≤100` 仅 **10 节/30.77%**）；`G-O1Q-5` 双向观测对称中位 **1.371**。**★裁定：`B2` 的 75.51% 属「路网建模对象层面」（一侧被加载、另一侧对象全零），24.27% 才回到需求/路径域。** **★暴露面**：`L1` 的 51.86% 依赖 **300 m** 搜索半径，保守读法 **30.77%**；`E_opp` 非真值对应表。**★缺陷登记**：`G-O1-5` 运行前修订；**`G-O1Q-4` v1 实现与判据文字不符（`0/19`）⇒ 实现缺陷非科学结论，v2 `25/33`**；`G-O1Q-7` 量词过强 ⇒ 改构造性恒等核验；`r_pair` 与 `r_par_sum_opp` 口径不同源。**★下一步（待裁定）**：**`O1-续`** 对 `L1` 15 节做「车行道对账卡」（单侧 way 数量与标签 / OSM `oneway` / 与 `U_UNIT_MISMATCH` 求交），**仍零仿真**；O2 须用户显式裁定解除底线。⛔ 不改 v1.0、不重跑 MATSim、不产生 v1.1；`changed = 0`。 |
 | 2026-09-29 | **★Step 7.9I 阶段冻结收口（CLOSURE）→ 判 `7.9I_FROZEN_CLOSED`** —— 用户裁定「**暂停推进，先冻结收口**」；新建档案 `reports/corridor_scale_audit_7_9i/CLOSURE_7_9I.md`（6 节：冻结声明 / 交付清单 / C1–C9 / R1–R5 / O1–O5 / 复现与恢复入口）。**全链完整性审计：7 脚本 × 6 判决 × 70/70 门 / `n_fail=0`**（20+12+18+8+6+6）。**补齐 `_run_7_9ibbp.log`（原 5/6 → 6/6，全链日志完整）**。**★复现性校验**：重跑 `audit_bb_direction_probe_7_9ibbp.py` ⇒ summary JSON 除 `elapsed_s`（25.5 s→11.0 s 热缓存）外**逐位相同 = True**、CSV **逐位相同 OK**。**良性重复登记（不修改）**：A2/A1/Bb 的 `*_summary_*.json` 与 `_*_audit_*.json` **md5 全等**（`6f357f49…`/`6b65888e…`/`86e21605…`）⇒ 同一 dict 双命名落盘。**★冻结结论 C1–C9**：①「sim 大 5 倍」= 计数基数错配（`ratio_simobs` **5.2818** / `K_pooled` **5.5434** ⇒ 归一 **0.953**）；②覆盖率不得外推（匹配边担全网高峰 **6.64%**、严格 1:1 **10.42%**）；③真缺载收敛 **3 条走廊**（`norm<0.5` 19 条 / obs **23.08%**，前 3 担 **22.42%**）；④A2：KPE/ECP「8 倍缺载」**不成立** ⇒ `r_mixed` **0.385/0.388/0.465**；⑤`U_UNIT_MISMATCH`：KPE 隧道 **16/19 节 `vc_max>1`**（最高 **3.569×**，剩余偏差 **92.6%** 归此项）；⑥A1 杠杆 = **候选对象选取**（`r_chain(P1)` **0.5556**，8.4×→**1.8×**）；⑦M1 主因 = **链缺陷**（`X1` **60 节 / obs 69.16%**）；⑧B(b) 主项 = `B2` **22 节 / 61.72%**，**非**平行边竞争；⑨B(b)-P **152/152 同向、0 反向** ⇒ **方向性对象不一致**。**未解项 O1–O5**（O1 `B2` 车行道对层 / O2 `SIGNAL_MECHANISM_ABSENT` / O3 LTA 分车型·HTS / O4 `B3` 6 节 / O5 `X0` 2 节）。**★恢复入口**：尺度已理清 ⇒ 优先序 **O1 → O3 → O2**（O2 须用户显式裁定解除底线）。⛔ 不改 v1.0、不重跑 MATSim、不产生 v1.1；`changed = 0`。 |
 | 2026-09-29 | **★Step 7.9I-A2 / A1 / B(b) 「观测对象 ↔ MATSim 对象」三刀闭环（Dynamic Realism Audit ⑤⑥⑦；零仿真只读；41.6 s + 20.3 s + 19.7 s + 25.5 s；⛔ 不改 v1.0、不重跑 MATSim、不产生 v1.1）→ 判 `KPE_ECP_OBJECT_AUDIT_READY` + `CHAIN_REAGGREGATION_READY` + `ZERO_FLOW_PARALLEL_LEDGER_READY` + `BB_DIRECTION_PROBE_READY`（四脚本 `n_fail = 0`；18/18 + 8/8 + 6/6 + 6/6 门；负例 4/4 × 4）** —— 用户裁定**把「模型不堵」与「评价不对」拆开**，按 **(1) KPE/ECP 实体核验 → (2) 60 节链重聚合 → (3) 38 节零流量平行边记账** 顺序在**零仿真域**收干净证据链；**★底线：A1/A2/B 未把「观测对象 ↔ MATSim 对象」尺度关系理清前，⛔ 不再调整 v1.0 交通动力学参数**。预注册运行前冻结（`PREREG_7_9I_{A2,A1,Bb}.md`）；脚本 `audit_kpe_ecp_object_7_9ia2.py` / `audit_chain_reaggregation_7_9ia1.py` / `audit_zero_flow_ledger_7_9ibb.py` / `audit_bb_direction_probe_7_9ibbp.py`。**★A2（69 张实体卡）**：`norm = ratio_simobs/K_c` 的**隐含前提「K 条边承载同一股车流」被证伪**；**核心判据 `vc_max = obs_8_9 / max_e cap_eff(e)`** ⇒ **KPE 隧道 16/19 节 `vc_max > 1`**（obs 中位 **12,119** > 最大单边容量 **9,500**；最高 `20,342/5,700 = 3.569×`）⇒ **观测单元 ≠ 仿真单元**；**半径设施重建** matched-only **0.417** → 50 m **0.657** → 100 m **1.439** → 150 m **2.897** ⇒ **crosswalk 只选中低流量子集**；分类（按 Σobs）：KPE 隧道 `U_UNIT_MISMATCH` **92.64%** / ECP `C_CHAIN` **49.88%** + `P_PARALLEL` 38.37% + `S_SLIP_GEOM` 11.74%（**无** `U_UNIT_MISMATCH`，78% 匹配链落 `motorway_link`）/ KPE `U_UNIT_MISMATCH` 58.91% ⇒ **★7.9I-A 缺载倍数必须修正**：`norm` 与设施级口径差 **253%/500%/434%**（远超 15% 门槛）⇒ KPE隧道/ECP/KPE 从 8.5×/7.6×/8.4× 收敛到 **`r_mixed` 2.6×/2.6×/2.2×**；**★口径记法披露**：`n_edge_sec`（逐断面求和，ECP **289**）vs `n_edge_dedup`（去重，ECP **283**，15 行 `shared_section_count=2`）两者都正确 ⇒ 门**同时断言两者并携带实测值**（阈值未改）。**★A1（60 张链卡）**：口径 = 候选集内**弱连通分量划分**，有向**路径** ⇒ `median`/`min(cap)`，**非路径** ⇒ `sum`/`sum(cap)`，`sim_chain = SCALE × Σ_C rep(C)`（链内不重复计数、跨链可加）；四口径 pooled `r_med` **0.1187**（8.4×）/ `r_sum` **0.2871**（3.5×）/ **`r_chain(P0)` 0.1881**（5.3×）/ **`r_chain(P1)` 0.5556**（**1.8×**，重建候选池）；分类 P0 `C_LOW` **100%** → P1 `C_OK` **17.82%** + `C_HIGH` 10.00% + `C_LOW` **72.18%**；**★结论 = 链重聚合本身价值有限，真正的杠杆是「候选对象选取」不是统计量**；走廊：KPE 隧道 17 节/200,410（61.8%）、**AYE 10 节 `r_chain` 中位 0.000**、**TPE 3 节 `r_chain_p1` 中位 5.305 ⇒ P1 是上界非无偏估计**；**★判据退化披露**：原 `G-A1-7` 实测 median rel diff **0.0056**（冻结匹配集内路径分量代表值 ≡ canonical `median`，**构造性恒等** ⇒ 无信息量）⇒ ⛔ 不静默改阈值，记入 `degenerate_criteria`，有效对比改为 **`G-A1-7'`（P1 口径，实测 1.070，标签 `EXPLORATORY_POST_HOC`）**。**★B(b)（38 张记账卡 + 38 张方向卡）**：目标 38 节 / Σobs **62,050.5**（`RoadCat` = `CATA` 22 / **`SLIP_ROAD` 16 = 42%**；`n_matched` min 1 / 中位 3 / max 16 ⇒ **全部匹配成功但匹配边流量精确为 0**）；分类 **`B2_OPPOSITE_ONLY` 22 节 / Σobs 61.72%**、`B1_SAME_DIR_PARALLEL` 10 / 20.73%、`B3_NO_PARALLEL_FLOW` 6 / 17.55%；**★★38 节共 152 条匹配边方向一致性 = 152/152 同向、0 反向**（`d_match_max` 中位 1.8°/5.1°/2.9°）⇒ **「映射选错方向」假设被否定**；**`B2` 同向有流边合计仅 7 条**（`B1` 41 条）而**反向 83 条** ⇒ **`B2` 不是「同向平行边抢流量」**；**`B2` 反向有流边仅 1/22 节存在同节点对反向孪生** ⇒ 该设施被建模为**单向 way**（对向车行道以**独立节点串**另建）⇒ **流量确在「对向车行道」上，但那是网络的另一个对象** ⇒ **观测对象与仿真对象在「方向」维度上不一致**；走廊集中度 **AYE 16 节/37,520.0 + PIE 7 节/15,014.5 = 23 节/52,534.5（84.7% Σobs）**，两走廊 `r_par_same` 中位 **0.000**；**★口径陷阱（新纪律）**：`lta_section_geometry()` 的 `mx/my` 是**局部等距平面米**（`lon×111320·cos(lat0)`，≈1.15e7），**与全网图 SVY21 不同源** ⇒ ⛔ 绝不能与 `Graph.ex/ey` 或 `SEC_GEO_7_6C.mid_x/mid_y` 做距离运算（首版探针混用 ⇒ 距离恒 ≈1.15e7 m ⇒ `n_same = n_opp = 0` **全零伪影**）；A2/A1/Bb 三引擎**均正确使用 `SEC_GEO_7_6C`**，已加防御性文档字符串 + 新增 `G-P0` 坐标同源门。**★阶段判决（本轮冻结）**：**当前主要问题不能继续归因于采样容量折减（7.9A-1 已否定为主因），也不能直接归因于 MATSim 全网需求不足（7.9H：缺口是「改道」非「少跑」，全网 `Σflow` −4.69% vs 匹配边 −24.05%，差 7.2×）。现有证据表明，评价域存在显著的 1:K 映射尺度错配；在消除该尺度效应后，仍存在少数高影响快速路断面的真实低载问题，其主要表现为映射链断裂、平行替代路径及特殊道路设施对象不一致。** **★下一步（待裁定）**：`B2` 需「**车行道对（carriageway pair）**」层（区分「同节点对双向 way」与「独立节点串单向 way」），**仍属零仿真域**；其后才重谈 **7.9J / signals / trafficDynamics**。 |
