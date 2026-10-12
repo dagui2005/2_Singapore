@@ -107,6 +107,8 @@ scripts/tests/__pycache__/
 *.orig
 *.rej
 *.gz
+*.pkl        # Python pickle 缓存（路径选择缓存、agent 缓存等，体量易破 GB）
+*.npz        # numpy 压缩缓存
 
 # 临时 / 未命名文件
 无标题.mxd
@@ -245,3 +247,27 @@ _run*.txt
 /scripts/od/_*/
 /reports/*/_*/
 /reports/*/_*.tsv
+
+# =============================================================================
+# experiments/ 仿真实验专属过滤
+#   实验根目录 E-SB-XX_*/、E-CAP-01_*/ 内：
+#   - _cache/          路径/agent 缓存（pkl/npz 已被全局规则过滤，此处再锁目录）
+#   - populations/     matsim 人口 XML（数十 MB）
+#   - matsim_*/        matlab 命名空间下的中间产物目录（agent assignment CSV）
+#   - audit/_exec_cache/   SB-05 特有的 exec 事件缓存
+#   - audit/_cycle_linkstats/   收敛用 linkstats 压缩缓存
+#   仅保留 README.md / PROTOCOL*.md / VERDICT*.md / configs/*.xml / audit/*.csv/*.json/*.md
+# =============================================================================
+/experiments/**/_cache/
+/experiments/**/populations/
+/experiments/**/matsim_*/
+/experiments/**/audit/_exec_cache/
+/experiments/**/audit/_cycle_linkstats/
+/experiments/**/audit/_revision_history/
+
+# 但保留 audit 下的报告文件 + 实验根目录的说明文档
+!/experiments/**/*.md
+!/experiments/**/configs/*.xml
+!/experiments/**/audit/*.csv
+!/experiments/**/audit/*.json
+!/experiments/**/audit/*.md
