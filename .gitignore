@@ -107,8 +107,8 @@ scripts/tests/__pycache__/
 *.orig
 *.rej
 *.gz
-*.pkl        # Python pickle 缓存（路径选择缓存、agent 缓存等，体量易破 GB）
-*.npz        # numpy 压缩缓存
+*.pkl
+*.npz
 
 # 临时 / 未命名文件
 无标题.mxd
@@ -130,9 +130,9 @@ tools/matsim-*/
 *.docx
 *.doc
 *.xls
-*.xlsx       # GHS 2025 等数据集：本仓库不推大文件
+*.xlsx
 *.pptx
-*.png        # 报告中的大图，README 引用即可
+*.png
 *.jpg
 *.jpeg
 *.gif
