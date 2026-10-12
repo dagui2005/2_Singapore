@@ -1,0 +1,84 @@
+{
+  "new": {
+    "tag": "NEW",
+    "label": "SB-A5_EVT19_CHECK（执行级）",
+    "events": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-05_exec_level_events\\outputs\\SB-A5_EVT19_CHECK\\ITERS\\it.19\\SB-A5_EVT19_CHECK.19.events.xml.gz",
+    "plans": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-05_exec_level_events\\outputs\\SB-A5_EVT19_CHECK\\SB-A5_EVT19_CHECK.output_plans.xml.gz",
+    "n_persons_in_events": 236039,
+    "event_types": {
+      "actend": 236044,
+      "departure": 236044,
+      "PersonEntersVehicle": 236044,
+      "vehicle enters traffic": 236044,
+      "left link": 80286900,
+      "entered link": 80286900,
+      "vehicle leaves traffic": 236044,
+      "PersonLeavesVehicle": 236044,
+      "arrival": 236044,
+      "actstart": 236044
+    },
+    "plan_stats": {
+      "n_persons": 236044,
+      "n_plan_total": 747008,
+      "n_selected": 236044,
+      "n_routes": 236044
+    },
+    "fidelity": {
+      "drop_start_link": 236039
+    },
+    "scan_info": {
+      "decompressed_bytes": 14673967715,
+      "elapsed_sec": 1003.2,
+      "n_person_enter_events": 236044,
+      "n_legs_finalized": 236039,
+      "n_unfinished_excluded": 0
+    },
+    "max_bytes": 0,
+    "scan_elapsed_sec": 1127.7
+  },
+  "v10": {
+    "tag": "V10",
+    "label": "v1.0（执行级基线）",
+    "events": "D:\\Luan\\2026-05\\2_Singapore\\matsim_viz_7_8\\outputs\\W01_events\\W01_events.output_events.xml.gz",
+    "plans": "D:\\Luan\\2026-05\\2_Singapore\\matsim_viz_7_8\\outputs\\W01_events\\W01_events.output_plans.xml.gz",
+    "n_persons_in_events": 236039,
+    "event_types": {
+      "actend": 236044,
+      "departure": 236044,
+      "PersonEntersVehicle": 236044,
+      "vehicle enters traffic": 236044,
+      "left link": 80708818,
+      "entered link": 80708818,
+      "vehicle leaves traffic": 236044,
+      "PersonLeavesVehicle": 236044,
+      "arrival": 236044,
+      "actstart": 236044
+    },
+    "plan_stats": {
+      "n_persons": 236044,
+      "n_plan_total": 746908,
+      "n_selected": 236044,
+      "n_routes": 236044
+    },
+    "fidelity": {
+      "drop_start_link": 236039
+    },
+    "scan_info": {
+      "decompressed_bytes": 14752696065,
+      "elapsed_sec": 633.4,
+      "n_person_enter_events": 236044,
+      "n_legs_finalized": 236039,
+      "n_unfinished_excluded": 0
+    },
+    "max_bytes": 0,
+    "scan_elapsed_sec": 722.0
+  },
+  "recon_fidelity": {
+    "rate_pct": 100.0,
+    "drop_start_link": 236039
+  },
+  "v10_recon_fidelity": {
+    "rate_pct": 100.0,
+    "drop_start_link": 236039
+  }
+}

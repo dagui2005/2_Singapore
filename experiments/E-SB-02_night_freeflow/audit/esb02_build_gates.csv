@@ -1,0 +1,9 @@
+﻿check,name,pass,detail
+N1,源网络链路数 == 693575,True,n=693575
+N2a,"在网目标链数 == 既有已证事实 91,956",True,in_network=91956
+N2b,不在网链数 == 既有已证事实 193（非映射错误）,True,missing=193
+N3,输出网络链路数 == 源,True,n=693575
+N4,逐行差异集合恰等于目标变化集合（无越界/无遗漏）,True,diff=91532 mod=91532
+N5,"freespeed 全部落入 [5 km/h, 90 km/h]",True,min=5.00 max=90.00 km/h
+C-SB-A5,SB-A5 配置 diff == 预期白名单 3 项,True,"diff=['controller.outputDirectory', 'controller.runId', 'network.inputNetworkFile']"
+C-SB-A5ind,SB-A5ind 配置 diff == 预期白名单 4 项,True,"diff=['controller.outputDirectory', 'controller.runId', 'network.inputNetworkFile', 'plans.inputPlansFile']"

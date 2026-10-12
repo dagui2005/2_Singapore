@@ -1,0 +1,308 @@
+{
+  "experiment": "E-CAP-01",
+  "generated_at": "2026-10-02 02:17:44",
+  "source_note": "E-CAP-01 = 7.9A-1/A1_capf0p435 的干净重跑（模型层 0 差异）",
+  "frozen_targets": {
+    "v10_sim_obs_cycle": 0.9993347696792919,
+    "v10_sim_obs_it19": 1.0014525031000747,
+    "a1_sim_obs_cycle": 0.7664760994478101,
+    "a1_sim_obs_it19": 0.7725115296237909
+  },
+  "capacity_semantics": {
+    "mode": "BASE_CAPACITY",
+    "n_common": 693575,
+    "n_identical": 693575,
+    "n_ratio_match": 0,
+    "cap_mul_v10": 1.0,
+    "cap_mul_a1": 0.434977
+  },
+  "cap_mul_ecap": 0.434977,
+  "leg_hist": {
+    "dep": 236044,
+    "arr": 236044,
+    "never_arrived": 0,
+    "max_stuck": 0
+  },
+  "face_metrics_v10": {
+    "n_links": 693575,
+    "n_loaded": 224432,
+    "net_km": 15126.514665000152,
+    "loaded_km": 5185.70419700011,
+    "n_cong_cut0": 7985,
+    "km_cong_cut0": 163.96672000000024,
+    "n_slow_cut0": 117168,
+    "km_slow_cut0": 1427.0523289999733,
+    "n_cong_cut50": 721,
+    "km_cong_cut50": 60.452757000000055,
+    "n_slow_cut50": 1174,
+    "km_slow_cut50": 68.25988199999992,
+    "n_cong_cut100": 144,
+    "km_cong_cut100": 20.726144,
+    "n_slow_cut100": 17,
+    "km_slow_cut100": 2.3477809999999995,
+    "n_cong_cut200": 9,
+    "km_cong_cut200": 2.948201,
+    "n_slow_cut200": 2,
+    "km_slow_cut200": 0.440428,
+    "n_cong_ge1s": 1308,
+    "n_vc_ge_05": 2813,
+    "n_vc_ge_09": 220,
+    "n_vc_ge_10": 82,
+    "n_vc_ge_15": 0,
+    "n_vc_ge_20": 0,
+    "sat_km": 1.15142,
+    "flow_on_sat": 90400.0,
+    "max_vc": 1.0,
+    "max_vol": 9034.0,
+    "peak_agg_vc": 0.09332258166096544,
+    "delay_h": 4778.773666111114,
+    "total_flow": 40008184.0,
+    "share_len_saturated": 7.611939311803789e-05,
+    "share_flow_on_saturated_vs_maxvol": 10.006641576267434,
+    "share_flow_on_saturated_vs_total": 0.002259537698586869,
+    "share_flow_on_saturated": 0.002259537698586869
+  },
+  "face_metrics_ecap": {
+    "n_links": 693575,
+    "n_loaded": 235612,
+    "net_km": 15126.514665000152,
+    "loaded_km": 5419.751516000163,
+    "n_cong_cut0": 15083,
+    "km_cong_cut0": 368.80053300000014,
+    "n_slow_cut0": 124736,
+    "km_slow_cut0": 1587.279064999968,
+    "n_cong_cut50": 1805,
+    "km_cong_cut50": 158.5125160000002,
+    "n_slow_cut50": 1839,
+    "km_slow_cut50": 125.28609500000003,
+    "n_cong_cut100": 435,
+    "km_cong_cut100": 65.34450800000003,
+    "n_slow_cut100": 163,
+    "km_slow_cut100": 24.214887000000015,
+    "n_cong_cut200": 58,
+    "km_cong_cut200": 15.515858000000001,
+    "n_slow_cut200": 23,
+    "km_slow_cut200": 5.825311000000001,
+    "n_cong_ge1s": 6138,
+    "n_vc_ge_05": 15104,
+    "n_vc_ge_09": 1484,
+    "n_vc_ge_10": 501,
+    "n_vc_ge_15": 0,
+    "n_vc_ge_20": 0,
+    "sat_km": 7.337939000000003,
+    "flow_on_sat": 148389.0,
+    "max_vc": 1.0016949993086661,
+    "max_vol": 3982.0,
+    "peak_agg_vc": 0.19786690254810824,
+    "delay_h": 21850.325022777768,
+    "total_flow": 38130232.0,
+    "share_len_saturated": 0.0004851048821604471,
+    "share_flow_on_saturated_vs_maxvol": 37.26494224008036,
+    "share_flow_on_saturated_vs_total": 0.0038916364316902135,
+    "share_flow_on_saturated": 0.0038916364316902135
+  },
+  "comparison": [
+    {
+      "key": "n_loaded",
+      "label": "载流链数",
+      "v10": 224432.0,
+      "ecap": 235612.0,
+      "ratio_ecap_over_v10": 1.0498146431881372
+    },
+    {
+      "key": "n_cong_cut0",
+      "label": "拥堵链数 N_cong(cut0, excess>0)",
+      "v10": 7985.0,
+      "ecap": 15083.0,
+      "ratio_ecap_over_v10": 1.8889167188478397
+    },
+    {
+      "key": "n_cong_cut50",
+      "label": "拥堵链数 N_cong(cut50)",
+      "v10": 721.0,
+      "ecap": 1805.0,
+      "ratio_ecap_over_v10": 2.503467406380028
+    },
+    {
+      "key": "n_cong_ge1s",
+      "label": "拥堵链数 N_cong(excess≥1.0s)",
+      "v10": 1308.0,
+      "ecap": 6138.0,
+      "ratio_ecap_over_v10": 4.692660550458716
+    },
+    {
+      "key": "n_vc_ge_05",
+      "label": "n(v/c≥0.5)",
+      "v10": 2813.0,
+      "ecap": 15104.0,
+      "ratio_ecap_over_v10": 5.369356558833985
+    },
+    {
+      "key": "n_vc_ge_09",
+      "label": "n(v/c≥0.9)",
+      "v10": 220.0,
+      "ecap": 1484.0,
+      "ratio_ecap_over_v10": 6.745454545454545
+    },
+    {
+      "key": "n_vc_ge_10",
+      "label": "n(v/c≥1.0)",
+      "v10": 82.0,
+      "ecap": 501.0,
+      "ratio_ecap_over_v10": 6.109756097560975
+    },
+    {
+      "key": "sat_km",
+      "label": "饱和里程 (km)",
+      "v10": 1.15142,
+      "ecap": 7.337939000000003,
+      "ratio_ecap_over_v10": 6.372947317225688
+    },
+    {
+      "key": "share_len_saturated",
+      "label": "饱和里程占比",
+      "v10": 7.611939311803789e-05,
+      "ecap": 0.0004851048821604471,
+      "ratio_ecap_over_v10": 6.372947317225689
+    },
+    {
+      "key": "max_vc",
+      "label": "max v/c",
+      "v10": 1.0,
+      "ecap": 1.0016949993086661,
+      "ratio_ecap_over_v10": 1.0016949993086661
+    },
+    {
+      "key": "peak_agg_vc",
+      "label": "Σ流量/Σ容量",
+      "v10": 0.09332258166096544,
+      "ecap": 0.19786690254810824,
+      "ratio_ecap_over_v10": 2.1202467722865315
+    },
+    {
+      "key": "delay_h",
+      "label": "总延误 (veh·h)",
+      "v10": 4778.773666111114,
+      "ecap": 21850.325022777768,
+      "ratio_ecap_over_v10": 4.572370769038576
+    },
+    {
+      "key": "total_flow",
+      "label": "Σ HRS8-9avg（全网）",
+      "v10": 40008184.0,
+      "ecap": 38130232.0,
+      "ratio_ecap_over_v10": 0.9530608037595508
+    }
+  ],
+  "network_flow": {
+    "sum_h89_v10": 40008184.0,
+    "sum_h89_ecap": 38130232.0,
+    "rel": -0.04693919624044918
+  },
+  "guardrail": {
+    "V1": {
+      "q_FROZEN": 0.9993347696792919,
+      "q_19_FROZEN": 1.0014525031000747,
+      "n_sections": 576,
+      "flow_quality": {
+        "n_used": 576,
+        "pearson_r": 0.3452229341869945,
+        "wmape": 0.7175706050665775,
+        "geh_median": 26.0884178651379,
+        "geh_mean": 34.966137245568305,
+        "geh_lt5": 49,
+        "geh_5to10": 46,
+        "geh_ge10": 481,
+        "share_geh_lt5": 0.08506944444444445
+      }
+    },
+    "ECAP": {
+      "q_FROZEN": 0.7664760994478101,
+      "q_19_FROZEN": 0.7725115296237909,
+      "n_sections": 576,
+      "flow_quality": {
+        "n_used": 576,
+        "pearson_r": 0.4277869591911868,
+        "wmape": 0.4774346454164238,
+        "geh_median": 15.886928953891989,
+        "geh_mean": 25.634487324062107,
+        "geh_lt5": 88,
+        "geh_5to10": 92,
+        "geh_ge10": 396,
+        "share_geh_lt5": 0.1527777777777778
+      }
+    }
+  },
+  "gates": [
+    {
+      "check": "P-01",
+      "name": "v1.0 冻结目录 mtime 未变（0 漂移）",
+      "pass": true,
+      "detail": "drift=NONE"
+    },
+    {
+      "check": "P-02",
+      "name": "输出目录为实验专属且不在 v1.0 内",
+      "pass": true,
+      "detail": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-CAP-01_scale_capacity\\outputs\\E-CAP-01"
+    },
+    {
+      "check": "E01",
+      "name": "v1.0 it.19 linkstats 载入",
+      "pass": true,
+      "detail": "n_links=693575"
+    },
+    {
+      "check": "E01b",
+      "name": "E-CAP-01 it.19 linkstats 载入（同一网络 ⇒ 同链数）",
+      "pass": true,
+      "detail": "n_links=693575"
+    },
+    {
+      "check": "P-03",
+      "name": "never_arrived == 0（legHistogram 全天口径）",
+      "pass": true,
+      "detail": "dep=236,044 arr=236,044 未到达=0 (0.0000%)"
+    },
+    {
+      "check": "P-04",
+      "name": "max stuck_car == 0（legHistogram 逐 bin 峰值）",
+      "pass": true,
+      "detail": "max stuck_car=0"
+    },
+    {
+      "check": "P-05",
+      "name": "CAPACITY 语义消解成功（BASE_CAPACITY ⇒ E-CAP-01 用 cap_mul=1/SCALE）",
+      "pass": true,
+      "detail": "mode=BASE_CAPACITY n_common=693575 同值=693575 比值命中=0"
+    },
+    {
+      "check": "P-06",
+      "name": "v1.0 face_metrics 复现基线（82 / 1.1514 km / 2813 / 220 / 7985）",
+      "pass": true,
+      "detail": "n_ge1=82 sat_km=1.1514 n_ge0.5=2813 n_ge0.9=220 n_cong0=7985"
+    },
+    {
+      "check": "P-07",
+      "name": "冻结模块复算 v1.0 Sim/Obs == 0.9993347696792919（±1e-9，cycle）",
+      "pass": true,
+      "detail": "recomputed=0.9993347696793 n_sections=576"
+    },
+    {
+      "check": "P-08a",
+      "name": "E-CAP-01 Sim/Obs(cycle) == A-1 0.7664760994478101（±1e-6，逐位复现）",
+      "pass": true,
+      "detail": "E-CAP=0.7664760994478  Δ=+0.000e+00"
+    },
+    {
+      "check": "P-08b",
+      "name": "E-CAP-01 Sim/Obs(it.19) == A-1 0.7725115296237909（±1e-6）",
+      "pass": true,
+      "detail": "E-CAP=0.7725115296238  Δ=+0.000e+00"
+    }
+  ],
+  "notes": [
+    "全网 ΣHRS8-9avg：v1.0=40,008,184 → E-CAP-01=38,130,232（-4.6939%）；7.9A-1 记录 −23.30% ⇒ 用此核对复现。",
+    "护栏断面数：v1.0=576 / E-CAP-01=576 （冻结靶场 576 断面；K 基数并报见 crosswalk）。"
+  ]
+}

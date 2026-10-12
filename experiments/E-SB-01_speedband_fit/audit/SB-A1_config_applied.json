@@ -1,0 +1,59 @@
+{
+  "arm": "SB-A1",
+  "applied": [
+    {
+      "module": "controller",
+      "param": "outputDirectory",
+      "old": "D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min",
+      "new": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\outputs\\SB-A1"
+    },
+    {
+      "module": "controller",
+      "param": "runId",
+      "old": "W01_rc_min",
+      "new": "SB-A1"
+    },
+    {
+      "module": "controller",
+      "param": "writeEventsInterval",
+      "old": "0",
+      "new": "19"
+    },
+    {
+      "module": "qsim",
+      "param": "trafficDynamics",
+      "old": "queue",
+      "new": "kinematicWaves"
+    }
+  ],
+  "diff": [
+    {
+      "key": "controller.outputDirectory",
+      "src": "D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min",
+      "new": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\outputs\\SB-A1"
+    },
+    {
+      "key": "controller.runId",
+      "src": "W01_rc_min",
+      "new": "SB-A1"
+    },
+    {
+      "key": "controller.writeEventsInterval",
+      "src": "0",
+      "new": "19"
+    },
+    {
+      "key": "qsim.trafficDynamics",
+      "src": "queue",
+      "new": "kinematicWaves"
+    }
+  ],
+  "whitelist": {
+    "outputDirectory": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\outputs\\SB-A1",
+    "runId": "SB-A1",
+    "writeEventsInterval": "19",
+    "trafficDynamics": "kinematicWaves"
+  },
+  "n_params_src": 209,
+  "n_params_new": 209
+}

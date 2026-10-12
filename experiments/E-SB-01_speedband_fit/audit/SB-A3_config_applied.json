@@ -1,0 +1,59 @@
+{
+  "arm": "SB-A3",
+  "applied": [
+    {
+      "module": "controller",
+      "param": "outputDirectory",
+      "old": "D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min",
+      "new": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\outputs\\SB-A3"
+    },
+    {
+      "module": "controller",
+      "param": "runId",
+      "old": "W01_rc_min",
+      "new": "SB-A3"
+    },
+    {
+      "module": "controller",
+      "param": "writeEventsInterval",
+      "old": "0",
+      "new": "19"
+    },
+    {
+      "module": "network",
+      "param": "inputNetworkFile",
+      "old": "D:\\Luan\\2026-05\\2_Singapore\\reports\\matsim_network\\network_cleaned.xml.gz",
+      "new": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\networks\\network_SB-A3.xml.gz"
+    }
+  ],
+  "diff": [
+    {
+      "key": "controller.outputDirectory",
+      "src": "D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min",
+      "new": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\outputs\\SB-A3"
+    },
+    {
+      "key": "controller.runId",
+      "src": "W01_rc_min",
+      "new": "SB-A3"
+    },
+    {
+      "key": "controller.writeEventsInterval",
+      "src": "0",
+      "new": "19"
+    },
+    {
+      "key": "network.inputNetworkFile",
+      "src": "D:\\Luan\\2026-05\\2_Singapore\\reports\\matsim_network\\network_cleaned.xml.gz",
+      "new": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\networks\\network_SB-A3.xml.gz"
+    }
+  ],
+  "whitelist": {
+    "outputDirectory": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\outputs\\SB-A3",
+    "runId": "SB-A3",
+    "writeEventsInterval": "19",
+    "inputNetworkFile": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\networks\\network_SB-A3.xml.gz"
+  },
+  "n_params_src": 209,
+  "n_params_new": 209
+}

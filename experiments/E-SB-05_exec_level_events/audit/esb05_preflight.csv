@@ -1,0 +1,17 @@
+﻿id,gate,pass,detail
+G00,源配置 / 派生配置 / 源输出目录均存在,True,src_cfg=True new_cfg=True src_out=True
+G01,原 SB-A5 配置 sha256 == 冻结值（未被改动）,True,d560bd89c27068c12b5ebbe82255f3e9…
+G02,派生配置参数 diff == 白名单 3 项,True,"diff=['controller.outputDirectory', 'controller.runId', 'controller.writeEventsInterval']"
+G02b,负例：writeEventsInterval 未改时该门禁必须 FAIL（非恒真）,True,"diff_bad=['controller.outputDirectory', 'controller.runId']"
+G03,controller.writeEventsInterval == 19（仅第 19 迭代及第 0 迭代写事件）,True,value=19
+G04,controller.runId == SB-A5_EVT19_CHECK 且 != 原 SB-A5,True,runId=SB-A5_EVT19_CHECK
+G05,outputDirectory 位于 E-SB-05 目录内且不与原 SB-A5 / v1.0 输出重叠,True,D:\Luan\2026-05\2_Singapore\experiments\E-SB-05_exec_level_events\outputs\SB-A5_EVT19_CHECK
+G06,输出目录尚不存在或为空（绝不覆盖原 SB-A5 输出）,True,exists=False n_items=0
+G07,网络文件 sha256 == 原 SB-A5 所用（内容逐位一致）,True,network_SB-A5.xml.gz sha256=7978681b2a4ab54d1c14890943bf3701…
+G07b,网络内容 sha16 == 派生门禁记录 7a2a81f925c5c560,True,sha16=7a2a81f925c5c560
+G08,"人口文件 sha256 == 原 SB-A5 所用（需求 236,044 未改）",True,population_lambda_0p075.xml.gz sha256=e96ed83ff59c0f5ecb50c9d9ff2d42a4…
+G09,核心模型指纹逐项相同（seed/线程/容量因子/评课/routing/qsim…）,True,missing=[] changed=[]
+G10,磁盘余量 ≥ 12.4 GiB（预估 events 5.4 GiB ×2.0 安全系数）,True,free=56.2 GiB need=12.4 GiB
+G11,eventsFileFormat==xml 且 compressionType==gzip（决定体积与解析方式）,True,fmt=xml comp=gzip
+G12,MATSim 运行时（本地 JDK25 + matsim-2026.0.jar + libs）可用,True,java=java.exe jar=matsim-2026.0.jar libs=164
+G13,原 SB-A5 it.19 linkstats.gz sha256 == 冻结参照（一致性检查基准在册）,True,ddc879a07dfedb429367e90b8f880afc…

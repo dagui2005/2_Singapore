@@ -1,0 +1,14 @@
+﻿id,gate,pass,status,detail
+C00,文件比对**非空**（≥10 项确定性产物参与；防空表假门禁）,True,effective,n_deterministic=79 n_same=79
+C01,it.19 linkstats.gz 存在且可读,True,effective,"new=23,055,353 B"
+C02,it.19 linkstats.gz 容器 sha256 == 参照哈希在册,True,effective,ddc879a07dfedb429367e90b…
+C03,it.19 linkstats.gz 体积逐字节相同,True,effective,"ref=23,055,353 new=23,055,353"
+C03b,it.19 linkstats.gz 容器 sha256 逐位相同,True,effective,ref=ddc879a07dfedb429367e90b… new=ddc879a07dfedb429367e90b…
+C03c,★it.19 linkstats 解压内容 sha256 逐位相同（全 154 列，含 HRS8-9avg）,True,effective,content=fdc6ff5cd7e40000ad673f20… ref=fdc6ff5cd7e40000ad673f20…
+C07,"crosswalk 归一化 = 3,193 匹配边 / 576 断面",True,effective,edges=3193 sections=576
+C08,复算 v1.0 FROZEN(08-09) == 0.9993348（±1e-6）,True,effective,got=0.9993348
+C09,复算原 SB-A5 cycle(08-09) == 1.0600691（±1e-6）,True,effective,got=1.0600691
+C10,★新 run cycle(08-09) Sim/Obs == 原 SB-A5 1.0600691（±1e-6）,True,effective,got=1.0600691
+C11,★新 run 匹配边 ΣQ(raw) == 原 SB-A5（±1e-9 相对）,True,effective,"new=2,944,517.8000 ref=2,944,517.8000"
+C12,★新 run 断面 ΣQ(scaled) == 原 SB-A5（±1e-9 相对）,True,effective,"new=1,605,179.8215 ref=1,605,179.8215"
+C13,负例：新 run 的 Sim/Obs ≠ v1.0 的 0.9993348（检查有分辨力）,True,effective,new=1.0600691 vs v1.0=0.9993348

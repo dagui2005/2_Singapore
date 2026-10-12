@@ -1,0 +1,68 @@
+{
+  "audit": "D5 修订时间线客观核实",
+  "built": "2026-10-12T07:07:40",
+  "evidence_channels": {
+    "git": {
+      "available": false,
+      "tracked": {
+        "protocol": false,
+        "cmp_script": false,
+        "render_script": false,
+        "readme": false,
+        "data_v10_exec": false,
+        "data_new_exec": false,
+        "run_events": false,
+        "run_stamp": false
+      },
+      "commits": {
+        "protocol": [],
+        "cmp_script": [],
+        "render_script": [],
+        "readme": [],
+        "data_v10_exec": [],
+        "data_new_exec": [],
+        "run_events": [],
+        "run_stamp": []
+      }
+    },
+    "mtime": {
+      "protocol": "2026-10-11 23:06:25",
+      "cmp_script": "2026-10-12 07:06:48",
+      "render_script": "2026-10-12 01:21:56",
+      "readme": "2026-10-12 01:22:22",
+      "data_v10_exec": "2026-10-11 23:11:19",
+      "data_new_exec": "2026-10-12 01:20:38",
+      "run_events": "2026-10-12 00:51:29",
+      "run_stamp": "2026-10-12 00:54:39"
+    }
+  },
+  "key_points": {
+    "t_d5_impl_script_mtime": "2026-10-12 07:06:48",
+    "t_protocol_mtime": "2026-10-11 23:06:25",
+    "t_sba5_exec_data_mtime": "2026-10-12 01:20:38",
+    "t_sba5_events_mtime": "2026-10-12 00:51:29",
+    "t_v10_exec_data_mtime": "2026-10-11 23:11:19",
+    "mtime_supports_revision_before_data": false,
+    "protocol_mtime_before_data": true,
+    "gap_script_to_data_min": null
+  },
+  "pre_revision_mtime_snapshot": {
+    "esb05_exec_compare.py": "2026-10-11 23:11:42",
+    "PROTOCOL_E-SB-05.md": "2026-10-11 23:06:25",
+    "_exec_cache/exec_V10.pkl": "2026-10-11 23:11:19",
+    "note": "采集于本轮 D5 修正**之前**的同一会话工具输出；修正后 cmp_script 的 mtime 已被覆盖（见 key_points.t_d5_impl_script_mtime），⛔ 脚本层的「修订写入时刻」已不可独立复核。"
+  },
+  "verdict": "EVIDENCE_CHANNELS_EXHAUSTED__REVISION_TIMING_UNVERIFIABLE",
+  "verdict_short": "MTIME_FAVORABLE_BUT_NOT_SELF_PROVING_AND_NOW_DESTROYED",
+  "disposition": {
+    "d5_original": "RETAINED_AS_HARD_GATE",
+    "d5_revision": "DEMOTED_TO_SUPPLEMENTARY_A5",
+    "claim_original_17of17": "RETRACTED",
+    "rationale": "无独立可验证通道（Git 不可用；mtime 不记录决策时刻）⇒ 不主张修订先于数据。"
+  },
+  "notes": [
+    "Git：`esb05_*` 脚本与协议**均未被 git 跟踪** ⇒ 无提交历史可供回放 ⇒ Git 通道**不可用**。",
+    "⚠️ 观察者破坏性：本轮为**恢复原始 D5** 而编辑 `esb05_exec_compare.py`，其 mtime 已被覆盖 ⇒ 脚本层「修订写入时刻」**已不可独立复核**；目前仅 `PROTOCOL`（23:06:25）与数据点（events 00:51:29 / exec_NEW 01:20:38）的 mtime 仍未被本轮动作改写。",
+    "结论：mtime 证据**方向有利但不足以自证**「修订先于数据」（协议 mtime 早于数据，且脚本层 mtime 已毁）⇒ 本审计**不主张**该结论；D5 一律按**原始预注册判据**处置（保留 FAIL），修订版降为补充分析。"
+  ]
+}

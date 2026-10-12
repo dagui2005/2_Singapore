@@ -1,0 +1,274 @@
+{
+  "built": "2026-10-12T07:23:48",
+  "checks": [
+    {
+      "id": "R1a",
+      "claim": "参照 it.19 linkstats 存在",
+      "method": "os.path.exists",
+      "got": "23,055,353 B",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R1b",
+      "claim": "it.19 linkstats 容器 sha256 逐位相同",
+      "method": "sha256(容器字节)",
+      "got": "ddc879a07dfedb42… == ddc879a07dfedb42… ⇒ True",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R1c",
+      "claim": "it.19 linkstats 解压内容 sha256 逐位相同（权威）",
+      "method": "sha256(gzip解压)",
+      "got": "fdc6ff5cd7e40000… == fdc6ff5cd7e40000… ⇒ True",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R1d",
+      "claim": "两侧 it.19 linkstats 行数/列数相同",
+      "method": "pandas.read_csv",
+      "got": "ref=(693575, 154) new=(693575, 154)",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R1e",
+      "claim": "linkstats 含 HRS8-9avg 列",
+      "method": "列名检索",
+      "got": "HRS8-9avg",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R1f",
+      "claim": "★HRS8-9avg 逐链逐位相同（max abs diff）",
+      "method": "numpy 逐元素差",
+      "got": "max|Δ|=0",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2a",
+      "claim": "共享 person 集合 = 236,039",
+      "method": "merge on person",
+      "got": "236,039（声称 236,039）",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2b",
+      "claim": "执行路线改变率 = 66.0603%",
+      "method": "逐人 exec_hash 比对",
+      "got": "155,928 / 236,039 = 66.060270%（声称 66.060270%）",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2c",
+      "claim": "v1.0 执行级快速路里程份额 = 50.9497%",
+      "method": "Σlen_express / Σtotal_len",
+      "got": "50.949743%（声称 50.949743%）",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2d",
+      "claim": "SB-A5 执行级快速路里程份额 = 54.5310%",
+      "method": "Σlen_express / Σtotal_len",
+      "got": "54.531004%（声称 54.531004%）",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2e",
+      "claim": "执行级 Δ = +3.5813 pp",
+      "method": "Δ = SB-A5 − v1.0",
+      "got": "+3.581262 pp（声称 +3.581262）",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2f",
+      "claim": "执行级 Δ − 计划级 Δ = +0.0070 pp（同号同量级）",
+      "method": "Δexec − Δplans",
+      "got": "Δplans=+3.574235  差=+0.007027 pp",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2g-PIE",
+      "claim": "PIE 里程份额 Δ = +0.8474 pp",
+      "method": "Σlen_corr / Σtotal_len",
+      "got": "+0.8474 pp",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2g-TPE",
+      "claim": "TPE 里程份额 Δ = +0.2222 pp",
+      "method": "Σlen_corr / Σtotal_len",
+      "got": "+0.2222 pp",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2g-MCE",
+      "claim": "MCE 里程份额 Δ = +0.4972 pp",
+      "method": "Σlen_corr / Σtotal_len",
+      "got": "+0.4972 pp",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2h",
+      "claim": "人均执行里程 v1.0 = 14.0443 km / SB-A5 = 14.2613 km",
+      "method": "mean(total_len)/1000",
+      "got": "v1.0=14.0443  SB-A5=14.2613",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2i",
+      "claim": "人均执行链数 v1.0 = 341.93 / SB-A5 = 340.14",
+      "method": "mean(n_links)",
+      "got": "v1.0=341.93  SB-A5=340.14",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2j",
+      "claim": "执行级改变率 ≈ 计划级 66.0589%（同量级）",
+      "method": "对照 E-SB-04 route_change_summary",
+      "got": "exec=66.0603%  plans=66.0589%  差=+0.0014 pp",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R3a",
+      "claim": "有效门禁 = 16/17 PASS",
+      "method": "CSV 重算（status=effective）",
+      "got": "16/17",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R3b",
+      "claim": "原始 D5 = FAIL（硬门禁）",
+      "method": "读 D5 行",
+      "got": "pass=False  实测 Top-2 = ['PIE', 'MCE']；排序 PIE > MCE > CTE > TPE > AYE ⇒ 不",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R3c",
+      "claim": "「PIE/TPE Δ 均 > 0」= 补充分析（不进判决）",
+      "method": "读 A5 行",
+      "got": "pass=True  status=supplementary",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R3d",
+      "claim": "D1–D4 全 PASS（核心执行级判据）",
+      "method": "筛 D 组",
+      "got": "4/5  [D5]",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R3e",
+      "claim": "协议对「D1–D4 PASS + D5 FAIL」组合无定义（真空）",
+      "method": "两预注册分支逻辑",
+      "got": "分支1需D5 PASS（否）；分支2需D1–D4部分FAIL（否）⇒ 均不覆盖=True",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4a",
+      "claim": "核心 jar **无可用信号实现类**（可经 config 启用者）",
+      "method": "zipfile 精确类名检索",
+      "got": "核心 2,539 项；config 可启用实现类=（无）",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4b",
+      "claim": "核心 jar 仅存骨架（接口/桩/状态/DTD）",
+      "method": "zipfile 骨架检索",
+      "got": "骨架=['DefaultSignalizeableItem', 'SignalGroupState', 'SignalizeableItem', 'VisSignal', 'lightSignalSystems']",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4c",
+      "claim": "（负例）朴素子串「Signalize」会误判接口/桩为实现",
+      "method": "对照检索",
+      "got": "朴素命中=['DefaultSignalizeableItem.class', 'SignalizeableItem.class']",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4d",
+      "claim": "libs 无 signals contrib（classpath 无实现）",
+      "method": "libs 目录检索",
+      "got": "libs=164 jar；matsim/signal 关键字=（无）",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4e",
+      "claim": "LTA TrafficSignalAspect 记录数 = 45,076",
+      "method": "dbf 头解析",
+      "got": "45,076",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4f",
+      "claim": "LTA 信号数据**无配时字段**",
+      "method": "字段名正则 TIM/CYCLE/PHASE/…",
+      "got": "字段=['TYP_CD', 'BEARG_NUM', 'LVL_NUM', 'TYP_CD_DES', 'BEARG_NUM_', 'LVL_NUM_DE']；配时命中=（无）",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4g",
+      "claim": "LTA 信号数据**无 node/link 关联 ID**",
+      "method": "字段名正则 LINK/NODE/…",
+      "got": "关联命中=（无）",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4h",
+      "claim": "网络 421,407 节点无 `type` 属性",
+      "method": "流式扫描 <node>",
+      "got": "nodes=421,407  含 type=0",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4i",
+      "claim": "网络无 `<signalSystems>` / `<signalGroup>`",
+      "method": "关键字扫描",
+      "got": "命中=0",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4j",
+      "claim": "配置 25 模块**无 signals** & `useLanes=false`",
+      "method": "XML 模块名检索",
+      "got": "modules=25  signal 模块=（无）  useLanes=false",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R5a",
+      "claim": "esb05 脚本/协议未被 Git 跟踪（历史通道不可用）",
+      "method": "git ls-files --error-unmatch",
+      "got": "tracked=False",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R5b",
+      "claim": "协议 mtime 早于 SB-A5 执行级数据",
+      "method": "读时间线审计",
+      "got": "protocol=2026-10-11 23:06:25  data=2026-10-12 01:20:38",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R5c",
+      "claim": "脚本层 mtime 已被本轮覆盖（观察者破坏性）",
+      "method": "读时间线审计",
+      "got": "cmp_script=2026-10-12 07:06:48（原 2026-10-11 23:11:42 已丢失）",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R5d",
+      "claim": "「修订先于数据」不可自证 ⇒ 不主张该结论",
+      "method": "综合判定",
+      "got": "EVIDENCE_CHANNELS_EXHAUSTED__REVISION_TIMING_UNVERIFIABLE",
+      "status": "VERIFIED"
+    }
+  ],
+  "r2_derived": {
+    "n_changed_recomputed": 155928,
+    "plans_vs_exec_gap_pp": 0.0013993210948228807
+  },
+  "summary": {
+    "VERIFIED": 37,
+    "MISMATCH": 0,
+    "UNVERIFIABLE": 0
+  },
+  "verdict": "ALL_CLAIMS_INDEPENDENTLY_VERIFIED"
+}

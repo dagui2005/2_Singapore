@@ -1,0 +1,20 @@
+﻿id,gate,pass,status,detail
+A1,总判决 = CONSISTENT_*,True,effective,verdict=CONSISTENT_STRICT
+A2,it.19 linkstats.gz 逐位相同,True,effective,identical=True
+A3,观测域 Sim/Obs(08-09) == 原 SB-A5 1.0600691（±1e-6）,True,effective,new=1.0600691 ref=1.0600691
+B1,文件可完整解压且事件类型与 v1.0 同构,True,effective,n_types=10 missing=[]
+B2,两边事件类型集合一致（同一 MATSim 版本/配置）,True,effective,diff=[]
+B3,"PersonEntersVehicle 关联到的 person 数 == 236,044",True,effective,"n=236,044"
+B4,"★重建出执行路线的 person 数 ≥ 236,000（覆盖率 ≥ 99.98%）且无「未完成」被排除",True,effective,"n=236,039 unfinished_excluded=0"
+B4b,两侧「有执行路线」的 person 集合一致（≤10 人结构性零里程 leg 差异）,True,effective,"symmetric_diff=0  NEW=236,039 v1.0=236,039"
+B5,每人恰好 1 条 leg（与 selected plan 结构一致）,True,effective,实测：两侧 n_legs 众数均 = 1
+C1,obs == plan[1:]（drop_start_link 语义）占比 ≥ 99%,True,effective,"rate=100.0000% (236,039/236,039)；direct=0 drop_start=236039 drop_last=0 mismatch=0"
+C2,drop_start_link 是优势语义（严格高于 direct 与 drop_last_link）,True,effective,drop_start=236039 direct=0 drop_last=0
+C3,"该语义在 v1.0 侧亦成立（与 E-SB-04 抽样 8,000/8,000 独立一致）",True,effective,"v1.0 rate=100.0000% (236,039/236,039)"
+D3,"共享 person 集合 ≥ 236,000（可比性）",True,effective,"∩=236,039  NEW=236,039  v1.0=236,039"
+D1,执行路线改变率 > 0（且与计划级 66.06% 同量级）,True,effective,exec_change=66.0603%  plans_change=66.0589%
+D2,执行路线快速路里程份额：SB-A5 > v1.0（Δ > 0）,True,effective,v1.0=50.9497%  SB-A5=54.5310%  Δ=+3.5813 pp
+D4,执行级 Δ 与计划级 Δ 同号且 |Δ_exec − Δ_plans| ≤ 2 pp,True,effective,Δexec=+3.5813 pp  Δplans=+3.5742 pp  差=+0.0070 pp
+D5,★【原始预注册判据】执行级里程份额 Δ Top-2 走廊 恰为 PIE/TPE,False,effective,"实测 Top-2 = ['PIE', 'MCE']；排序 PIE > MCE > CTE > TPE > AYE ⇒ 不满足"
+A5,（补充分析）执行级 PIE 与 TPE 的里程份额 Δ 均为正（与 E-SB-03 观测域净增同向）,True,supplementary,PIE:+0.8474 pp | TPE:+0.2222 pp
+I1,（参考）执行级里程份额 Δ Top-2 走廊 合计,True,informative,"top2=['PIE', 'MCE'] 合计 +1.3446 pp"

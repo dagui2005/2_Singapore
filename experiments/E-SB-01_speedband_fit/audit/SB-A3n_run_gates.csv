@@ -1,0 +1,10 @@
+﻿check,name,pass,detail
+R-00,SB-A3n 配置存在,True,config_SB-A3n.xml
+R-01,源配置 sha16 == 冻结,True,
+R-02,源网络 sha16 == 冻结,True,
+R-03,plans sha16 == 冻结,True,
+R-04,SB-A3n 配置 diff == 白名单,True,diff=4 wl=4 非白名单=[]
+R-05,输出目录为实验专属且不在 v1.0 内,True,D:\Luan\2026-05\2_Singapore\experiments\E-SB-01_speedband_fit\outputs\SB-A3n
+R-06,SB-A3n 网络存在且为实验专属,True,network_SB-A3n.xml.gz
+R-07,linkStats.writeLinkStatsInterval == 1,True,
+R-08,randomSeed == 4711 且迭代 == 19,True,seed=4711 it=19

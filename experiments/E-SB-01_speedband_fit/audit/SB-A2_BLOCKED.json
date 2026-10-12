@@ -1,0 +1,18 @@
+{
+  "arm": "SB-A2",
+  "status": "BLOCKED_BY_FRAMEWORK",
+  "substatus": "PARAM_NOT_REGISTERED_IN_GLOBAL_MODULE",
+  "attempted_change": "qsim.storageCapacityFactor: 1.0 -> 0.434977 (仅动存储，flowCapFactor 保持 1.0)",
+  "failure_stage": "Config.checkConsistency (GlobalConfigGroup.java:158)",
+  "error": "RuntimeException: your storageCapFactor=0.434977 is more than the relativeTolerance=0.0 different from the flowCapFactor=1.0",
+  "root_cause": [
+    "GlobalConfigGroup.checkConsistency 用 |flowCapFactor-storageCapFactor|<=relativeTolerance 硬校验，默认 relTol=0.0（要求严格相等）",
+    "放宽需设 global.relativeToleranceForSampleSizeFactors，但该字段在 GlobalConfigGroup.java:141-142 无 @Parameter 注解且 @StringSetter 被注释",
+    "ReflectiveConfigGroup.getParamFields() 仅注册带 @Parameter 的字段（第208-219行）=> 该参数未注册",
+    "GlobalConfigGroup 构造 super(GROUP_NAME) -> storeUnknownParameters=false => 未知参数直接崩"
+  ],
+  "empirical_proof": "jshell 解析配置：'Parameter relativeToleranceForSampleSizeFactors is not part of the valid parameters: [defaultDelimiter, randomSeed, numberOfThreads, insistingOnDeprecatedConfigVersion, coordinateSystem]'",
+  "conclusion": "MATSim 2026 强制 storageCapacityFactor 与 flowCapacityFactor 耦合；'仅动存储'的隔离臂在配置层不可表达。E-CAP-01 能跑是因两者同时=0.434977。",
+  "workaround_unused": "薄 Java 入口调用公开 API config.global().setRelativeToleranceForSampleSizeFactors(0.6) —— 会打破'一臂一配置'统一协议，未擅自采用",
+  "generated": "2026-10-08"
+}

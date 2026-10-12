@@ -1,0 +1,59 @@
+{
+  "arm": "SB-A2",
+  "applied": [
+    {
+      "module": "controller",
+      "param": "outputDirectory",
+      "old": "D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min",
+      "new": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\outputs\\SB-A2"
+    },
+    {
+      "module": "controller",
+      "param": "runId",
+      "old": "W01_rc_min",
+      "new": "SB-A2"
+    },
+    {
+      "module": "controller",
+      "param": "writeEventsInterval",
+      "old": "0",
+      "new": "19"
+    },
+    {
+      "module": "qsim",
+      "param": "storageCapacityFactor",
+      "old": "1.0",
+      "new": "0.434977"
+    }
+  ],
+  "diff": [
+    {
+      "key": "controller.outputDirectory",
+      "src": "D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min",
+      "new": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\outputs\\SB-A2"
+    },
+    {
+      "key": "controller.runId",
+      "src": "W01_rc_min",
+      "new": "SB-A2"
+    },
+    {
+      "key": "controller.writeEventsInterval",
+      "src": "0",
+      "new": "19"
+    },
+    {
+      "key": "qsim.storageCapacityFactor",
+      "src": "1.0",
+      "new": "0.434977"
+    }
+  ],
+  "whitelist": {
+    "outputDirectory": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-01_speedband_fit\\outputs\\SB-A2",
+    "runId": "SB-A2",
+    "writeEventsInterval": "19",
+    "storageCapacityFactor": "0.434977"
+  },
+  "n_params_src": 209,
+  "n_params_new": 209
+}

@@ -1,0 +1,104 @@
+{
+  "generated": "2026-10-09T13:26:45",
+  "builder": "esb02_build_ind_demand.py v2（全链：6.2 → 6.2B → repair → 6.3.3A → dup）",
+  "nature": "DEMAND-SIDE change（仅先验 OD：5C.1→5B）；网络/SCALE/seed/迭代 均不变",
+  "prior_dir": "reports\\od_prior_5b",
+  "lambda": 0.075,
+  "n_base": 200000,
+  "n_sim": 236044,
+  "final_population": "experiments\\E-SB-02_night_freeflow\\populations\\population_SB-A5ind_lambda_0p075.xml.gz",
+  "final_sha256_content": "22f3b89b0b6a2011e7de1a864029c2ea7399f8f6eeb7c2873002432241c2c7d6",
+  "checks": [
+    {
+      "check": "D1",
+      "name": "Step5B（零 SpeedBand）先验 OD 存在",
+      "pass": true,
+      "detail": "reports\\od_prior_5b/prior_od_5b_lambda_0p075.parquet"
+    },
+    {
+      "check": "D2",
+      "name": "Step 6.2 返回 0 且先验 OD parquet 已生成",
+      "pass": true,
+      "detail": "rc=None car_prior_od_lambda_0p075.parquet"
+    },
+    {
+      "check": "D3",
+      "name": "车行 OD 层 TV(5C.1, 5B) == 冻结 0.0346",
+      "pass": true,
+      "detail": "TV=0.0346"
+    },
+    {
+      "check": "D4",
+      "name": "Step 6.2B 产物存在",
+      "pass": true,
+      "detail": "population_lambda_0p075.xml.gz"
+    },
+    {
+      "check": "D5",
+      "name": "6.2B 人口 persons == 200,000",
+      "pass": true,
+      "detail": "persons=200000"
+    },
+    {
+      "check": "D6",
+      "name": "6.2B 人口为 MATSim 原生格式（含 DOCTYPE）",
+      "pass": true,
+      "detail": "<!DOCTYPE population SYSTEM \"http://www.matsim.org/files/dtd/population_v6.dtd\">"
+    },
+    {
+      "check": "D7",
+      "name": "连通性修复产物存在",
+      "pass": true,
+      "detail": "population_lambda_0p075.xml.gz"
+    },
+    {
+      "check": "D8",
+      "name": "修复人口 persons == 200,000 且 desc 含 (connectivity-repaired)",
+      "pass": true,
+      "detail": "persons=200000"
+    },
+    {
+      "check": "D9",
+      "name": "修复确实发生（affected > 0）",
+      "pass": true,
+      "detail": "home=2657 work=2535"
+    },
+    {
+      "check": "D10",
+      "name": "6.3.3A 产物存在",
+      "pass": true,
+      "detail": "population_lambda_0p075.xml.gz"
+    },
+    {
+      "check": "D11",
+      "name": "6.3.3A 人口 persons == 200,000",
+      "pass": true,
+      "detail": "persons=200000"
+    },
+    {
+      "check": "D12",
+      "name": "出发时刻已打散（08:00:00 占比 < 0.1%）",
+      "pass": true,
+      "detail": "08:00:00=33/200000 (0.0165%)；冻结 5C.1 同类产物=33"
+    },
+    {
+      "check": "D13",
+      "name": "最终人口 persons == 236,044",
+      "pass": true,
+      "detail": "persons=236044 n_dup=36044"
+    },
+    {
+      "check": "D14",
+      "name": "真解析门通过：persons==236,044 且 attribute 全为正文形式",
+      "pass": true,
+      "detail": "persons=236044 sumEF=542679.8 withEF=236044 missingEF=0"
+    },
+    {
+      "check": "D15",
+      "name": "SB-A5ind 人口内容 ≠ v1.0 pop_W01（5B vs 5C.1，必须不同）",
+      "pass": true,
+      "detail": "sha256=22f3b89b0b6a2011 vs 01d50a6432f78ebb"
+    }
+  ],
+  "verdict": "READY"
+}

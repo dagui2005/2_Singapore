@@ -1,0 +1,16 @@
+﻿check,name,pass,detail
+D1,Step5B（零 SpeedBand）先验 OD 存在,True,reports\od_prior_5b/prior_od_5b_lambda_0p075.parquet
+D2,Step 6.2 返回 0 且先验 OD parquet 已生成,True,rc=None car_prior_od_lambda_0p075.parquet
+D3,"车行 OD 层 TV(5C.1, 5B) == 冻结 0.0346",True,TV=0.0346
+D4,Step 6.2B 产物存在,True,population_lambda_0p075.xml.gz
+D5,"6.2B 人口 persons == 200,000",True,persons=200000
+D6,6.2B 人口为 MATSim 原生格式（含 DOCTYPE）,True,"<!DOCTYPE population SYSTEM ""http://www.matsim.org/files/dtd/population_v6.dtd"">"
+D7,连通性修复产物存在,True,population_lambda_0p075.xml.gz
+D8,"修复人口 persons == 200,000 且 desc 含 (connectivity-repaired)",True,persons=200000
+D9,修复确实发生（affected > 0）,True,home=2657 work=2535
+D10,6.3.3A 产物存在,True,population_lambda_0p075.xml.gz
+D11,"6.3.3A 人口 persons == 200,000",True,persons=200000
+D12,出发时刻已打散（08:00:00 占比 < 0.1%）,True,08:00:00=33/200000 (0.0165%)；冻结 5C.1 同类产物=33
+D13,"最终人口 persons == 236,044",True,persons=236044 n_dup=36044
+D14,"真解析门通过：persons==236,044 且 attribute 全为正文形式",True,persons=236044 sumEF=542679.8 withEF=236044 missingEF=0
+D15,SB-A5ind 人口内容 ≠ v1.0 pop_W01（5B vs 5C.1，必须不同）,True,sha256=22f3b89b0b6a2011 vs 01d50a6432f78ebb

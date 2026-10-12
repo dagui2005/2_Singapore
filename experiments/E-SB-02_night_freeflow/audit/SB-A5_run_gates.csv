@@ -1,0 +1,12 @@
+﻿check,name,pass,detail
+R-00,SB-A5 配置存在,True,config_SB-A5.xml
+R-01,源配置 sha16 == 冻结,True,8f44fb349bff9cf1
+R-02,源网络内容 sha16 == 派生记录（v1.0 未被改）,True,40cdffc340fee130
+R-03,使用 SB-A5 网络且内容 sha16 == 派生记录（可复现）,True,network_SB-A5.xml.gz sha16=7a2a81f925c5c560
+R-04,SB-A5 配置 diff == 白名单,True,"diff=['controller.outputDirectory', 'controller.runId', 'network.inputNetworkFile']"
+R-04b,SB-A5 controller.runId == 臂名（输出文件命名正确）,True,runId=SB-A5
+R-05,输出目录为实验专属且不在 v1.0 内,True,D:\Luan\2026-05\2_Singapore\experiments\E-SB-02_night_freeflow\outputs\SB-A5
+R-06,需求 = v1.0 pop_W01（未改需求）,True,population_lambda_0p075.xml.gz
+R-07,linkStats.writeLinkStatsInterval == 1,True,
+R-08,randomSeed == 4711 且 lastIteration == 19,True,seed=4711 it=19
+R-09,SB-A5 需求可被 MATSim PopulationReader 真解析（真门禁）,True,persons=236044 sumEF=542628.83717 withEF=236044 missingEF=0

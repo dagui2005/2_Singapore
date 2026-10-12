@@ -1,0 +1,9 @@
+{
+  "run_id": "SB-A5_EVT19_CHECK",
+  "started_finished_at": "2026-10-12T00:54:39",
+  "duration_sec": 7541.0,
+  "duration_min": 125.7,
+  "returncode": 0,
+  "heap": "24g",
+  "log": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-05_exec_level_events\\logs\\SB-A5_EVT19_CHECK_run.log"
+}

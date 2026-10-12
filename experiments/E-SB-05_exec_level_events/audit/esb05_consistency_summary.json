@@ -1,0 +1,121 @@
+{
+  "built": "2026-10-12T01:00:38",
+  "elapsed_sec": 155.2,
+  "ref_run": "SB-A5",
+  "new_run": "SB-A5_EVT19_CHECK",
+  "files_same": 79,
+  "files_deterministic": 79,
+  "linkstats_identical": true,
+  "linkstats_ref_sha256": "ddc879a07dfedb429367e90b8f880afc6ee630886d1d0bfc1129297bd43f9d3e",
+  "linkstats_new_sha256": "ddc879a07dfedb429367e90b8f880afc6ee630886d1d0bfc1129297bd43f9d3e",
+  "numeric_verdict": "NOT_NEEDED",
+  "observation_domain": {
+    "SimObs_v1.0": 0.9993347696792919,
+    "SimObs_SB-A5": 1.0600690898462568,
+    "SimObs_NEW": 1.0600690898462568,
+    "cycle_iters_used": 10,
+    "totals": {
+      "observed_total_obs_8_9": 1514221.8907395,
+      "v1.0_matched_edges_raw": 2741071.9000000004,
+      "SB-A5_matched_edges_raw": 2944517.8,
+      "NEW_matched_edges_raw": 2944517.8,
+      "SB-A5_section_scaled_total": 1605179.8215415,
+      "NEW_section_scaled_total": 1605179.8215415,
+      "v1.0_section_scaled_total": 1513214.5844255001
+    }
+  },
+  "gates": [
+    {
+      "id": "C00",
+      "gate": "文件比对**非空**（≥10 项确定性产物参与；防空表假门禁）",
+      "pass": true,
+      "status": "effective",
+      "detail": "n_deterministic=79 n_same=79"
+    },
+    {
+      "id": "C01",
+      "gate": "it.19 linkstats.gz 存在且可读",
+      "pass": true,
+      "status": "effective",
+      "detail": "new=23,055,353 B"
+    },
+    {
+      "id": "C02",
+      "gate": "it.19 linkstats.gz 容器 sha256 == 参照哈希在册",
+      "pass": true,
+      "status": "effective",
+      "detail": "ddc879a07dfedb429367e90b…"
+    },
+    {
+      "id": "C03",
+      "gate": "it.19 linkstats.gz 体积逐字节相同",
+      "pass": true,
+      "status": "effective",
+      "detail": "ref=23,055,353 new=23,055,353"
+    },
+    {
+      "id": "C03b",
+      "gate": "it.19 linkstats.gz 容器 sha256 逐位相同",
+      "pass": true,
+      "status": "effective",
+      "detail": "ref=ddc879a07dfedb429367e90b… new=ddc879a07dfedb429367e90b…"
+    },
+    {
+      "id": "C03c",
+      "gate": "★it.19 linkstats 解压内容 sha256 逐位相同（全 154 列，含 HRS8-9avg）",
+      "pass": true,
+      "status": "effective",
+      "detail": "content=fdc6ff5cd7e40000ad673f20… ref=fdc6ff5cd7e40000ad673f20…"
+    },
+    {
+      "id": "C07",
+      "gate": "crosswalk 归一化 = 3,193 匹配边 / 576 断面",
+      "pass": true,
+      "status": "effective",
+      "detail": "edges=3193 sections=576"
+    },
+    {
+      "id": "C08",
+      "gate": "复算 v1.0 FROZEN(08-09) == 0.9993348（±1e-6）",
+      "pass": true,
+      "status": "effective",
+      "detail": "got=0.9993348"
+    },
+    {
+      "id": "C09",
+      "gate": "复算原 SB-A5 cycle(08-09) == 1.0600691（±1e-6）",
+      "pass": true,
+      "status": "effective",
+      "detail": "got=1.0600691"
+    },
+    {
+      "id": "C10",
+      "gate": "★新 run cycle(08-09) Sim/Obs == 原 SB-A5 1.0600691（±1e-6）",
+      "pass": true,
+      "status": "effective",
+      "detail": "got=1.0600691"
+    },
+    {
+      "id": "C11",
+      "gate": "★新 run 匹配边 ΣQ(raw) == 原 SB-A5（±1e-9 相对）",
+      "pass": true,
+      "status": "effective",
+      "detail": "new=2,944,517.8000 ref=2,944,517.8000"
+    },
+    {
+      "id": "C12",
+      "gate": "★新 run 断面 ΣQ(scaled) == 原 SB-A5（±1e-9 相对）",
+      "pass": true,
+      "status": "effective",
+      "detail": "new=1,605,179.8215 ref=1,605,179.8215"
+    },
+    {
+      "id": "C13",
+      "gate": "负例：新 run 的 Sim/Obs ≠ v1.0 的 0.9993348（检查有分辨力）",
+      "pass": true,
+      "status": "effective",
+      "detail": "new=1.0600691 vs v1.0=0.9993348"
+    }
+  ],
+  "verdict": "CONSISTENT_STRICT"
+}

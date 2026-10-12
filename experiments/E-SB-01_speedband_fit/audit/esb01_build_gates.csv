@@ -1,0 +1,45 @@
+﻿check,name,pass,detail
+F1,源配置 sha16 == 冻结登记,True,8f44fb349bff9cf1
+F2,源网络 sha16 == 冻结登记,True,f55795995b87d330
+F3,plans sha16 == 冻结登记,True,e96ed83ff59c0f5e
+SB-A1-C-outputDirectory,SB-A1 controller.outputDirectory 唯一命中,True,old='D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min'
+SB-A1-C-runId,SB-A1 controller.runId 唯一命中,True,old='W01_rc_min'
+SB-A1-C-writeEventsInterval,SB-A1 controller.writeEventsInterval 唯一命中,True,old='0'
+SB-A1-C-chk,SB-A1 param 总数不变,True,
+SB-A1-C-dyn,SB-A1 qsim.trafficDynamics 唯一命中且旧值=queue,True,old='queue' n=1
+SB-A1-M1,SB-A1 配置 diff == 白名单（4 项）,True,diff=4 非白名单=[]
+SB-A1-M2,SB-A1 继承断言（seed/线程/迭代/人口/未触碰参数逐位不变）,True,drift=NONE
+SB-A2-C-outputDirectory,SB-A2 controller.outputDirectory 唯一命中,True,old='D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min'
+SB-A2-C-runId,SB-A2 controller.runId 唯一命中,True,old='W01_rc_min'
+SB-A2-C-writeEventsInterval,SB-A2 controller.writeEventsInterval 唯一命中,True,old='0'
+SB-A2-C-chk,SB-A2 param 总数不变,True,
+SB-A2-C-sto,SB-A2 qsim.storageCapacityFactor 唯一命中且旧值=1.0,True,old='1.0' n=1
+SB-A2-M1,SB-A2 配置 diff == 白名单（4 项）,True,diff=4 非白名单=[]
+SB-A2-M2,SB-A2 继承断言（seed/线程/迭代/人口/未触碰参数逐位不变）,True,drift=NONE
+SB-A3-N1,SB-A3 网络链路数 == 693575,True,n=693575
+SB-A3-N2,SB-A3 实际改动链路数 == 目标数（无越界）,True,touched=91938 target=91938
+SB-A3-C-outputDirectory,SB-A3 controller.outputDirectory 唯一命中,True,old='D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min'
+SB-A3-C-runId,SB-A3 controller.runId 唯一命中,True,old='W01_rc_min'
+SB-A3-C-writeEventsInterval,SB-A3 controller.writeEventsInterval 唯一命中,True,old='0'
+SB-A3-C-chk,SB-A3 param 总数不变,True,
+SB-A3-C-net,SB-A3 network.inputNetworkFile 唯一命中,True,old=network_cleaned.xml.gz
+SB-A3-M1,SB-A3 配置 diff == 白名单（4 项）,True,diff=4 非白名单=[]
+SB-A3-M2,SB-A3 继承断言（seed/线程/迭代/人口/未触碰参数逐位不变）,True,drift=NONE
+SB-A3n-N1,SB-A3n 网络链路数 == 693575,True,n=693575
+SB-A3n-N2,SB-A3n 实际改动链路数 == 目标数（无越界）,True,touched=91938 target=91938
+SB-A3n-C-outputDirectory,SB-A3n controller.outputDirectory 唯一命中,True,old='D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min'
+SB-A3n-C-runId,SB-A3n controller.runId 唯一命中,True,old='W01_rc_min'
+SB-A3n-C-writeEventsInterval,SB-A3n controller.writeEventsInterval 唯一命中,True,old='0'
+SB-A3n-C-chk,SB-A3n param 总数不变,True,
+SB-A3n-C-net,SB-A3n network.inputNetworkFile 唯一命中,True,old=network_cleaned.xml.gz
+SB-A3n-M1,SB-A3n 配置 diff == 白名单（4 项）,True,diff=4 非白名单=[]
+SB-A3n-M2,SB-A3n 继承断言（seed/线程/迭代/人口/未触碰参数逐位不变）,True,drift=NONE
+SB-A4-N1,SB-A4 网络链路数 == 693575,True,n=693575
+SB-A4-N2,SB-A4 实际改动链路数 == 目标数（无越界）,True,touched=91955 target=91955
+SB-A4-C-outputDirectory,SB-A4 controller.outputDirectory 唯一命中,True,old='D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min'
+SB-A4-C-runId,SB-A4 controller.runId 唯一命中,True,old='W01_rc_min'
+SB-A4-C-writeEventsInterval,SB-A4 controller.writeEventsInterval 唯一命中,True,old='0'
+SB-A4-C-chk,SB-A4 param 总数不变,True,
+SB-A4-C-net,SB-A4 network.inputNetworkFile 唯一命中,True,old=network_cleaned.xml.gz
+SB-A4-M1,SB-A4 配置 diff == 白名单（4 项）,True,diff=4 非白名单=[]
+SB-A4-M2,SB-A4 继承断言（seed/线程/迭代/人口/未触碰参数逐位不变）,True,drift=NONE

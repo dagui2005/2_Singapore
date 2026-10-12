@@ -1,0 +1,82 @@
+{
+  "generated": "2026-10-09T10:42:28",
+  "decisions": {
+    "nights": "N_adjacent{2026-05-06,2026-05-07}",
+    "quantile": "p75",
+    "band8_rule": "max(75, v1.0 freespeed) for SB8 only",
+    "arms": [
+      "SB-A5",
+      "SB-A5ind"
+    ]
+  },
+  "source_network": {
+    "path": "reports\\matsim_network\\network_cleaned.xml.gz",
+    "sha16": "40cdffc340fee130"
+  },
+  "new_network": {
+    "path": "experiments\\E-SB-02_night_freeflow\\networks\\network_SB-A5.xml.gz",
+    "sha16": "7a2a81f925c5c560",
+    "n_target_links": 92149,
+    "n_changed_links": 91532
+  },
+  "source_config": {
+    "path": "matsim_final_7_6h\\configs\\config_W01_rc_min.xml",
+    "sha16": "8f44fb349bff9cf1"
+  },
+  "configs": {
+    "SB-A5": "experiments\\E-SB-02_night_freeflow\\configs\\config_SB-A5.xml",
+    "SB-A5ind": "experiments\\E-SB-02_night_freeflow\\configs\\config_SB-A5ind.xml"
+  },
+  "ind_population_expected": "experiments\\E-SB-02_night_freeflow\\populations\\population_SB-A5ind_lambda_0p075.xml.gz",
+  "checks": [
+    {
+      "check": "N1",
+      "name": "源网络链路数 == 693575",
+      "pass": true,
+      "detail": "n=693575"
+    },
+    {
+      "check": "N2a",
+      "name": "在网目标链数 == 既有已证事实 91,956",
+      "pass": true,
+      "detail": "in_network=91956"
+    },
+    {
+      "check": "N2b",
+      "name": "不在网链数 == 既有已证事实 193（非映射错误）",
+      "pass": true,
+      "detail": "missing=193"
+    },
+    {
+      "check": "N3",
+      "name": "输出网络链路数 == 源",
+      "pass": true,
+      "detail": "n=693575"
+    },
+    {
+      "check": "N4",
+      "name": "逐行差异集合恰等于目标变化集合（无越界/无遗漏）",
+      "pass": true,
+      "detail": "diff=91532 mod=91532"
+    },
+    {
+      "check": "N5",
+      "name": "freespeed 全部落入 [5 km/h, 90 km/h]",
+      "pass": true,
+      "detail": "min=5.00 max=90.00 km/h"
+    },
+    {
+      "check": "C-SB-A5",
+      "name": "SB-A5 配置 diff == 预期白名单 3 项",
+      "pass": true,
+      "detail": "diff=['controller.outputDirectory', 'controller.runId', 'network.inputNetworkFile']"
+    },
+    {
+      "check": "C-SB-A5ind",
+      "name": "SB-A5ind 配置 diff == 预期白名单 4 项",
+      "pass": true,
+      "detail": "diff=['controller.outputDirectory', 'controller.runId', 'network.inputNetworkFile', 'plans.inputPlansFile']"
+    }
+  ],
+  "verdict": "READY"
+}

@@ -1,0 +1,21 @@
+{
+  "n_matched_links": 91956,
+  "km_matched": 2812.133826,
+  "n_with_flow": 59721,
+  "A3_feasible_n": 4838,
+  "A3_feasible_pct": 5.261211883944495,
+  "A3_feasible_km": 236.546051,
+  "A3_infeasible_demand_too_low_n": 87100,
+  "A3_infeasible_pct": 94.71921353690895,
+  "A3_infeasible_km": 2574.88253,
+  "vc_ge_1_pct": 0.004349906477010744,
+  "vc_median": 0.00625,
+  "vc_mean": 0.04570983950466452,
+  "m_median": 0.15,
+  "m_min": 0.15,
+  "M_FLOOR": 0.15,
+  "V_FLOOR_KMH": 5.0,
+  "A3_ndiff": 91938,
+  "A4_ndiff": 91956,
+  "A4_changed_pct": 100.0
+}

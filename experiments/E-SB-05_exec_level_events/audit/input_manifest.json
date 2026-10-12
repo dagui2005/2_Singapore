@@ -1,0 +1,38 @@
+{
+  "built": "2026-10-11T22:48:58",
+  "network": {
+    "path": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-02_night_freeflow\\networks\\network_SB-A5.xml.gz",
+    "exists": true,
+    "size_bytes": 14061792,
+    "mtime": "2026-10-09T10:42:11",
+    "sha256": "7978681b2a4ab54d1c14890943bf37012d51a003dd14c10dcfd447776eca6dab"
+  },
+  "population": {
+    "path": "D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\populations\\pop_W01\\population_lambda_0p075.xml.gz",
+    "exists": true,
+    "size_bytes": 8930574,
+    "mtime": "2026-09-18T21:08:59",
+    "sha256": "e96ed83ff59c0f5ecb50c9d9ff2d42a4b4bdbebf2bbfe81a1e0604fb94921fbd"
+  },
+  "src_config": {
+    "path": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-02_night_freeflow\\configs\\config_SB-A5.xml",
+    "exists": true,
+    "size_bytes": 22124,
+    "mtime": "2026-10-09T10:42:28",
+    "sha256": "d560bd89c27068c12b5ebbe82255f3e90a99c1b9a314a5f9861f5885e2a2c088"
+  },
+  "new_config": {
+    "path": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-05_exec_level_events\\configs\\config_SB-A5_EVT19_CHECK.xml",
+    "exists": true,
+    "size_bytes": 22152,
+    "mtime": "2026-10-11T22:48:05",
+    "sha256": "43d45072a698502748e9fe348c46fc8e286251b1648c2568e78724ee8eab4d96"
+  },
+  "src_sba5_it19_linkstats": {
+    "path": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-SB-02_night_freeflow\\outputs\\SB-A5\\ITERS\\it.19\\SB-A5.19.linkstats.txt.gz",
+    "exists": true,
+    "size_bytes": 23055353,
+    "mtime": "2026-10-09T13:09:36",
+    "sha256": "ddc879a07dfedb429367e90b8f880afc6ee630886d1d0bfc1129297bd43f9d3e"
+  }
+}

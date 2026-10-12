@@ -1,0 +1,68 @@
+{
+  "applied": [
+    {
+      "module": "qsim",
+      "param": "flowCapacityFactor",
+      "old": "1.0",
+      "new": "0.434977"
+    },
+    {
+      "module": "qsim",
+      "param": "storageCapacityFactor",
+      "old": "1.0",
+      "new": "0.434977"
+    },
+    {
+      "module": "controller",
+      "param": "outputDirectory",
+      "old": "D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min",
+      "new": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-CAP-01_scale_capacity\\outputs\\E-CAP-01"
+    },
+    {
+      "module": "controller",
+      "param": "runId",
+      "old": "W01_rc_min",
+      "new": "E-CAP-01"
+    },
+    {
+      "module": "controller",
+      "param": "writeEventsInterval",
+      "old": "0",
+      "new": "19"
+    }
+  ],
+  "diff": [
+    {
+      "key": "controller.outputDirectory",
+      "src": "D:\\Luan\\2026-05\\2_Singapore\\matsim_final_7_6h\\outputs\\W01_rc_min",
+      "new": "D:\\Luan\\2026-05\\2_Singapore\\experiments\\E-CAP-01_scale_capacity\\outputs\\E-CAP-01",
+      "whitelisted": true
+    },
+    {
+      "key": "controller.runId",
+      "src": "W01_rc_min",
+      "new": "E-CAP-01",
+      "whitelisted": true
+    },
+    {
+      "key": "controller.writeEventsInterval",
+      "src": "0",
+      "new": "19",
+      "whitelisted": true
+    },
+    {
+      "key": "qsim.flowCapacityFactor",
+      "src": "1.0",
+      "new": "0.434977",
+      "whitelisted": true
+    },
+    {
+      "key": "qsim.storageCapacityFactor",
+      "src": "1.0",
+      "new": "0.434977",
+      "whitelisted": true
+    }
+  ],
+  "n_params_src": 209,
+  "n_params_new": 209
+}

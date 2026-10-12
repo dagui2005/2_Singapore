@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "http://www.matsim.org/files/dtd/config_v2.dtd">
+<config>
+	<module name="controller" >
+		<!-- Compression algorithm to use when writing out data to files. Possible values: [none, gzip, lz4, zst] -->
+		<param name="compressionType" value="gzip" />
+		<!-- Sets the interval in which graphs are generated. Default is 1. If set to 0, no graphs are generated. The generation of graphs usually takes a small amount of time that does not have any weight in big simulations, but add a significant overhead in smaller runs or in test cases where the graphical output is not even requested. -->
+		<param name="createGraphsInterval" value="0" />
+		<!-- Default=1000. Last Iteration of a simulation. -->
+		<param name="lastIteration" value="19" />
+		<param name="outputDirectory" value="D:\Luan\2026-05\2_Singapore\experiments\E-SB-05_exec_level_events\outputs\SB-A5_EVT19_CHECK" />
+		<!-- Possible values: failIfDirectoryExists,overwriteExistingFiles,deleteDirectoryIfExists -->
+		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
+		<!-- An identifier for the current run which is used as prefix for output files and mentioned in output xml files etc. -->
+		<param name="runId" value="SB-A5_EVT19_CHECK" />
+		<!-- iterationNumber % writeEventsInterval == 0 defines in which iterations events are written to a file. `0' disables events writing completely. -->
+		<param name="writeEventsInterval" value="19" />
+		<!-- iterationNumber % writePlansInterval == 0 defines (hopefully) in which iterations plans are written to a file. `0' disables plans writing completely.  Some plans in early iterations are always written -->
+		<param name="writePlansInterval" value="0" />
+		<!-- iterationNumber % writeSnapshotsInterval == 0 defines in which iterations snapshots are written to a file. `0' disables snapshots writing completely -->
+		<param name="writeSnapshotsInterval" value="0" />
+		<!-- iterationNumber % writeEventsInterval == 0 defines in which iterations trips CSV are written to a file. `0' disables trips writing completely. -->
+		<param name="writeTripsInterval" value="0" />
+	</module>
+	<module name="global" >
+		<param name="coordinateSystem" value="EPSG:3414" />
+		<!-- "global" number of threads.  This number is used, e.g., for replanning, but NOT in QSim.  This can typically be set to as many cores as you have available, or possibly even slightly more. -->
+		<param name="numberOfThreads" value="8" />
+	</module>
+	<module name="linkStats" >
+		<!-- Specifies over how many iterations the link volumes should be averaged that are used for the link statistics. Use 1 or 0 to only use the link volumes of a single iteration. This values cannot be larger than the value specified for writeLinkStatsInterval -->
+		<param name="averageLinkStatsOverIterations" value="1" />
+		<!-- Specifies how often the link stats should be calculated and written. Use 0 to disable the generation of link stats. -->
+		<param name="writeLinkStatsInterval" value="1" />
+	</module>
+	<module name="network" >
+		<param name="inputNetworkFile" value="D:\Luan\2026-05\2_Singapore\experiments\E-SB-02_night_freeflow\networks\network_SB-A5.xml.gz" />
+	</module>
+	<module name="plans" >
+		<param name="inputPlansFile" value="D:\Luan\2026-05\2_Singapore\matsim_final_7_6h\populations\pop_W01\population_lambda_0p075.xml.gz" />
+	</module>
+	<module name="qsim" >
+		<!-- Number of threads used for the QSim.  Note that this setting is independent from the "global" threads setting.  In contrast to earlier versions, the non-parallel special version is no longer there. -->
+		<param name="numberOfThreads" value="8" />
+		<!-- If a route does not reference a vehicle, agents will use the vehicle with the same id as their own. -->
+		<param name="usePersonIdForMissingVehicleId" value="false" />
+	</module>
+	<module name="replanning" >
+		<!-- fraction of iterations where innovative strategies are switched off.  Something like 0.8 should be good.  E.g. if you run from iteration 400 to iteration 500, innovation is switched off at iteration 480. If the ReplanningAnnealer is used, it will also be switched off. -->
+		<param name="fractionOfIterationsToDisableInnovation" value="0.8" />
+		<parameterset type="strategysettings" >
+			<!-- strategyName of strategy.  Possible default names: SelectRandom BestScore KeepLastSelected ChangeExpBeta SelectExpBeta SelectPathSizeLogit      (selectors), ReRouteTimeAllocationMutatorTimeAllocationMutator_ReRouteChangeSingleTripModeChangeTripModeSubtourModeChoice (innovative strategies). -->
+			<param name="strategyName" value="ReRoute" />
+			<!-- weight of a strategy: for each agent, a strategy will be selected with a probability proportional to its weight -->
+			<param name="weight" value="0.15" />
+		</parameterset>
+		<parameterset type="strategysettings" >
+			<param name="strategyName" value="ChangeExpBeta" />
+			<param name="weight" value="0.85" />
+		</parameterset>
+	</module>
+	<module name="routing" >
+		<!-- strength of the randomness for the utility of money in routing under toll.  Leads to Pareto-optimal route with randomly drawn money-vs-other-attributes tradeoff. Technically the width parameter of a log-normal distribution. 3.0 seems to be a good value.  -->
+		<param name="routingRandomness" value="0.0" />
+		<parameterset type="teleportedModeParameters" >
+			<param name="mode" value="bike" />
+		</parameterset>
+		<parameterset type="teleportedModeParameters" >
+			<param name="mode" value="walk" />
+		</parameterset>
+		<parameterset type="teleportedModeParameters" >
+			<param name="mode" value="non_network_walk" />
+		</parameterset>
+		<parameterset type="teleportedModeParameters" >
+			<param name="mode" value="ride" />
+		</parameterset>
+		<parameterset type="teleportedModeParameters" >
+			<param name="mode" value="pt" />
+		</parameterset>
+	</module>
+	<module name="scoring" >
+		<!-- new_score = (1-learningRate)*old_score + learningRate * score_from_mobsim.  learning rates close to zero emulate score averaging, but slow down initial convergence -->
+		<param name="learningRate" value="0.5" />
+		<parameterset type="scoringParameters" >
+			<parameterset type="activityParams" >
+				<param name="activityType" value="dummy" />
+				<!-- typical duration of activity.  needs to be defined and non-zero.  in sec. -->
+				<param name="typicalDuration" value="02:00:00" />
+			</parameterset>
+			<parameterset type="activityParams" >
+				<param name="activityType" value="car interaction" />
+				<param name="typicalDuration" value="undefined" />
+			</parameterset>
+			<parameterset type="activityParams" >
+				<param name="activityType" value="pt interaction" />
+				<param name="typicalDuration" value="undefined" />
+			</parameterset>
+			<parameterset type="activityParams" >
+				<param name="activityType" value="bike interaction" />
+				<param name="typicalDuration" value="undefined" />
+			</parameterset>
+			<parameterset type="activityParams" >
+				<param name="activityType" value="drt interaction" />
+				<param name="typicalDuration" value="undefined" />
+			</parameterset>
+			<parameterset type="activityParams" >
+				<param name="activityType" value="taxi interaction" />
+				<param name="typicalDuration" value="undefined" />
+			</parameterset>
+			<parameterset type="activityParams" >
+				<param name="activityType" value="other interaction" />
+				<param name="typicalDuration" value="undefined" />
+			</parameterset>
+			<parameterset type="activityParams" >
+				<param name="activityType" value="walk interaction" />
+				<param name="typicalDuration" value="undefined" />
+			</parameterset>
+			<parameterset type="activityParams" >
+				<param name="activityType" value="home" />
+				<param name="minimalDuration" value="08:00:00" />
+				<param name="typicalDuration" value="12:00:00" />
+			</parameterset>
+			<parameterset type="activityParams" >
+				<param name="activityType" value="work" />
+				<param name="minimalDuration" value="06:00:00" />
+				<param name="typicalDuration" value="09:00:00" />
+			</parameterset>
+			<parameterset type="activityParams" >
+				<param name="activityType" value="ride interaction" />
+				<param name="scoringThisActivityAtAll" value="false" />
+				<param name="typicalDuration" value="undefined" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="mode" value="car" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="mode" value="pt" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="mode" value="walk" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="mode" value="bike" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="mode" value="ride" />
+			</parameterset>
+			<parameterset type="modeParams" >
+				<param name="mode" value="other" />
+			</parameterset>
+		</parameterset>
+	</module>
+
+</config>

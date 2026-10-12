@@ -1,0 +1,344 @@
+{
+  "built": "2026-10-12T07:11:34",
+  "verdict": "SIGNAL_CONTROL_NOT_FEASIBLE__DATA_AND_IMPLEMENTATION_GAP",
+  "lta_signal": {
+    "exists": true,
+    "members": [
+      [
+        "TrafficLight_Mar2026/",
+        0
+      ],
+      [
+        "TrafficLight_Mar2026/TrafficSignalAspect.cpg",
+        5
+      ],
+      [
+        "TrafficLight_Mar2026/TrafficSignalAspect.dbf",
+        35655342
+      ],
+      [
+        "TrafficLight_Mar2026/TrafficSignalAspect.lyr",
+        7168
+      ],
+      [
+        "TrafficLight_Mar2026/TrafficSignalAspect.prj",
+        416
+      ],
+      [
+        "TrafficLight_Mar2026/TrafficSignalAspect.sbn",
+        440660
+      ],
+      [
+        "TrafficLight_Mar2026/TrafficSignalAspect.sbx",
+        14564
+      ],
+      [
+        "TrafficLight_Mar2026/TrafficSignalAspect.shp",
+        1262148
+      ],
+      [
+        "TrafficLight_Mar2026/TrafficSignalAspect.shp.xml",
+        14054
+      ],
+      [
+        "TrafficLight_Mar2026/TrafficSignalAspect.shx",
+        360708
+      ]
+    ],
+    "fields": [
+      {
+        "name": "TYP_CD",
+        "type": "C",
+        "len": 4,
+        "dec": 0
+      },
+      {
+        "name": "BEARG_NUM",
+        "type": "N",
+        "len": 19,
+        "dec": 8
+      },
+      {
+        "name": "LVL_NUM",
+        "type": "N",
+        "len": 5,
+        "dec": 0
+      },
+      {
+        "name": "TYP_CD_DES",
+        "type": "C",
+        "len": 254,
+        "dec": 0
+      },
+      {
+        "name": "BEARG_NUM_",
+        "type": "C",
+        "len": 254,
+        "dec": 0
+      },
+      {
+        "name": "LVL_NUM_DE",
+        "type": "C",
+        "len": 254,
+        "dec": 0
+      }
+    ],
+    "n_records": 45076,
+    "timing_hits": [],
+    "linkage_hits": [],
+    "shp_xml_status": {
+      "size": 14054,
+      "required_placeholders": 23,
+      "non_placeholder_attrlabl": 0,
+      "is_template": true
+    },
+    "dbf_sample": {
+      "TYP_CD": "",
+      "BEARG_NUM": "339.53064241",
+      "LVL_NUM": "0",
+      "TYP_CD_DES": "Ground Signal",
+      "BEARG_NUM_": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "LVL_NUM_DE": "At-grade"
+    },
+    "has_shp": true
+  },
+  "network": {
+    "nodes": 421407,
+    "links": 693576,
+    "node_attrs": {
+      "id": 421406,
+      "x": 421406,
+      "y": 421406
+    },
+    "link_attrs": {
+      "capperiod": 1,
+      "effectivecellsize": 1,
+      "effectivelanewidth": 1,
+      "id": 693575,
+      "from": 693575,
+      "to": 693575,
+      "length": 693575,
+      "freespeed": 693575,
+      "capacity": 693575,
+      "permlanes": 693575,
+      "oneway": 693575,
+      "modes": 693575
+    },
+    "signal_tokens": {},
+    "n_node_type_attr": 0
+  },
+  "config": {
+    "modules": [
+      "changeMode",
+      "controller",
+      "counts",
+      "dsim",
+      "eventsManager",
+      "facilities",
+      "global",
+      "hermes",
+      "households",
+      "linkStats",
+      "network",
+      "planInheritance",
+      "plans",
+      "qsim",
+      "replanning",
+      "replanningAnnealer",
+      "routing",
+      "scoring",
+      "subtourModeChoice",
+      "timeAllocationMutator",
+      "transit",
+      "transitRouter",
+      "travelTimeCalculator",
+      "vehicles",
+      "vspExperimental"
+    ],
+    "n_modules": 25,
+    "signal_modules": [],
+    "useLanes": "false",
+    "flowCapacityFactor": "1.0",
+    "storageCapacityFactor": "1.0",
+    "trafficDynamics": [
+      "kinematicWaves",
+      "queue"
+    ],
+    "vehicleBehavior": [
+      "teleport",
+      "teleport"
+    ]
+  },
+  "impl": {
+    "core_entries": 2539,
+    "config_impl_hits": {
+      "SignalSystemsConfigGroup": [],
+      "SignalSystemsModule": [],
+      "SignalsConfigGroup": [],
+      "SignalsModule": [],
+      "SignalPlan": [],
+      "TrafficSignal": [],
+      "FixedTimeSignal": [],
+      "SignalController": [],
+      "SignalScheme": []
+    },
+    "config_impl_present": [],
+    "skeleton_hits": {
+      "SignalizeableItem": [
+        "org/matsim/core/mobsim/qsim/qnetsimengine/DefaultSignalizeableItem.class",
+        "org/matsim/core/mobsim/qsim/interfaces/SignalizeableItem.class"
+      ],
+      "DefaultSignalizeableItem": [
+        "org/matsim/core/mobsim/qsim/qnetsimengine/DefaultSignalizeableItem.class"
+      ],
+      "SignalGroupState": [
+        "org/matsim/core/mobsim/qsim/interfaces/SignalGroupState.class"
+      ],
+      "VisSignal": [
+        "org/matsim/lanes/VisSignal.class"
+      ],
+      "lightSignalSystems": [
+        "dtd/lightSignalSystemsBindings.jxb",
+        "dtd/lightSignalSystems_v1.0.xsd",
+        "dtd/lightSignalSystemsConfigBindings.jxb",
+        "dtd/lightSignalSystemsConfig_v1.0.xsd"
+      ]
+    },
+    "skeleton_present": [
+      "DefaultSignalizeableItem",
+      "SignalGroupState",
+      "SignalizeableItem",
+      "VisSignal",
+      "lightSignalSystems"
+    ],
+    "naive_signalize_hits": [
+      "org/matsim/core/mobsim/qsim/qnetsimengine/DefaultSignalizeableItem.class",
+      "org/matsim/core/mobsim/qsim/interfaces/SignalizeableItem.class"
+    ],
+    "naive_signalize_names": [
+      "DefaultSignalizeableItem.class",
+      "SignalizeableItem.class"
+    ],
+    "positive_hits": {
+      "QSim": 49,
+      "Mobsim": 49,
+      "RunMatsim": 1,
+      "Population": 62,
+      "Network": 145,
+      "Link": 121
+    },
+    "libs_count": 164,
+    "libs_signal": []
+  },
+  "prior_7_9d0": {
+    "verdict": "SIGNAL_MECHANISM_ABSENT",
+    "path": "D:\\Luan\\2026-05\\2_Singapore\\reports\\dynamic_realism_audit_7_9\\_signal_mechanism_audit.json"
+  },
+  "gates": [
+    {
+      "id": "A1",
+      "gate": "LTA 信号灯资料存在且可解析（shp + dbf）",
+      "pass": true,
+      "status": "effective",
+      "detail": "records=45,076 fields=6 has_shp=True"
+    },
+    {
+      "id": "A2",
+      "gate": "字段非空且记录数 > 0",
+      "pass": true,
+      "status": "effective",
+      "detail": "fields=['TYP_CD', 'BEARG_NUM', 'LVL_NUM', 'TYP_CD_DES', 'BEARG_NUM_', 'LVL_NUM_DE']"
+    },
+    {
+      "id": "A3",
+      "gate": "★资料含**信号配时**字段（cycle/green/phase/split/offset…）",
+      "pass": false,
+      "status": "effective",
+      "detail": "命中=（无） ⇒ 仅有 类型/方位角/层号，**无配时**"
+    },
+    {
+      "id": "A4",
+      "gate": "★资料含**节点/链路关联 ID**（可与网络对接）",
+      "pass": false,
+      "status": "effective",
+      "detail": "命中=（无） ⇒ 无法直接映射到 MATSim node/link"
+    },
+    {
+      "id": "A5",
+      "gate": "★官方自证元数据（`*.shp.xml`）完备",
+      "pass": false,
+      "status": "effective",
+      "detail": "size=14054 REQUIRED占位=23 真实attrlabl=0 ⇒ 模板占位，不可作字段自证"
+    },
+    {
+      "id": "B1",
+      "gate": "★网络节点含 `type` 属性（可标记 signal/priority 交叉口）",
+      "pass": false,
+      "status": "effective",
+      "detail": "节点 421,407 / 含 type 者 **0** ⇒ 节点属性仅 ['id', 'x', 'y']"
+    },
+    {
+      "id": "B2",
+      "gate": "★网络含信号定义（`<signalSystems>`/`SignalGroup`）",
+      "pass": false,
+      "status": "effective",
+      "detail": "信号令牌命中=（全 0）"
+    },
+    {
+      "id": "B3",
+      "gate": "★配置含信号模块（`signals`/`trafficSignals`）",
+      "pass": false,
+      "status": "effective",
+      "detail": "命中=（无）；模块数=25"
+    },
+    {
+      "id": "B4",
+      "gate": "配置启用车道级模型（`useLanes`）",
+      "pass": false,
+      "status": "effective",
+      "detail": "useLanes=false  trafficDynamics=['kinematicWaves', 'queue']"
+    },
+    {
+      "id": "C1",
+      "gate": "★核心 jar 含**可经 config 启用**的信号实现类（ConfigGroup/Module/Plan）",
+      "pass": false,
+      "status": "effective",
+      "detail": "核心 jar 2,539 项；可用实现类命中=（无）"
+    },
+    {
+      "id": "C1b",
+      "gate": "（对照）核心 jar 仅存**接口/桩/DTD 骨架**（存在 ≠ 可用）",
+      "pass": true,
+      "status": "informative",
+      "detail": "骨架命中=['DefaultSignalizeableItem', 'SignalGroupState', 'SignalizeableItem', 'VisSignal', 'lightSignalSystems'] ⇒ 有接口无实现"
+    },
+    {
+      "id": "C2",
+      "gate": "classpath（libs）含 signals contrib",
+      "pass": false,
+      "status": "effective",
+      "detail": "libs 164 个 jar；matsim/signal 关键字=（无）"
+    },
+    {
+      "id": "N1",
+      "gate": "（负例）类名检测器对**已知存在**的核心类应命中 ⇒ C1 有分辨力",
+      "pass": true,
+      "status": "effective",
+      "detail": "正例命中={'QSim': 49, 'Mobsim': 49, 'RunMatsim': 1, 'Population': 62, 'Network': 145, 'Link': 121}"
+    },
+    {
+      "id": "N2",
+      "gate": "（负例）配时检测器对**构造的配时字段**应命中 ⇒ A3 有分辨力",
+      "pass": true,
+      "status": "effective",
+      "detail": "构造字段命中=['SIGNAL_CYCLE', 'GREEN_SPLIT', 'OFFSET']"
+    },
+    {
+      "id": "N3",
+      "gate": "（负例）朴素子串检 `Signalize` 会命中接口/桩 ⇒ 证明必须区分「实现 vs 骨架」",
+      "pass": true,
+      "status": "effective",
+      "detail": "朴素检命中 2 项=['DefaultSignalizeableItem.class', 'SignalizeableItem.class'] ⇒ 若直接采信将**误判为「有实现」**"
+    }
+  ]
+}
