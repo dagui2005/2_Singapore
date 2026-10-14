@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>新加坡 MATSim 仿真成果 · 交通专业看板 · 2026-10-12</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --panel:#ffffff; --ink:#16202b; --ink2:#3a4652; --ink3:#66717e;
+    --line:#dde3e9; --line2:#eef1f4; --acc:#0f7b6c; --acc2:#0b5f54;
+    --inc:#c0392b; --dec:#1f6fb4; --warn:#b8860b; --ok:#0f7b6c;
+    --mono:ui-monospace,SFMono-Regular,"Cascadia Mono",Consolas,"Courier New",monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#12171d; --panel:#1a212a; --ink:#eef2f6; --ink2:#c6cfd8; --ink3:#8f9aa6;
+      --line:#2c3641; --line2:#232c35; --acc:#4fd1bd; --acc2:#7fe0d0;
+      --inc:#f0705f; --dec:#5fa8e8; --warn:#e0b64a; --ok:#4fd1bd;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:14px/1.62 "Microsoft YaHei","Segoe UI",system-ui,-apple-system,sans-serif;}
+  .wrap{max-width:1240px;margin:0 auto;padding:26px 22px 70px}
+  header.top{background:linear-gradient(135deg,var(--acc) 0%,var(--acc2) 100%);
+       color:#fff;border-radius:14px;padding:22px 26px;margin-bottom:20px}
+  header.top h1{margin:0 0 6px;font-size:23px;letter-spacing:.3px}
+  header.top .sub{opacity:.94;font-size:13.5px}
+  header.top .sub b{background:rgba(255,255,255,.18);padding:1px 7px;border-radius:5px;margin-right:2px}
+
+  .banner{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .banner .b{flex:1 1 260px;background:var(--panel);border:1px solid var(--line);
+       border-left:4px solid var(--acc);border-radius:10px;padding:12px 15px}
+  .banner .b.warn{border-left-color:var(--warn)}
+  .banner .b.bad{border-left-color:var(--inc)}
+  .banner .b .t{font-weight:700;font-size:13.5px;margin-bottom:3px}
+  .banner .b .d{font-size:12.5px;color:var(--ink2)}
+  .mono{font-family:var(--mono);font-size:.94em}
+  code{font-family:var(--mono);background:var(--line2);padding:1px 5px;border-radius:4px;font-size:.92em}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:11px;margin:6px 0 24px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px 14px}
+  .card .k{font-size:11.8px;color:var(--ink3);letter-spacing:.2px}
+  .card .v{font-size:20px;font-weight:700;margin:3px 0 2px;font-variant-numeric:tabular-nums}
+  .card .s{font-size:11.5px;color:var(--ink3)}
+  .card.ok .v{color:var(--ok)} .card.warn .v{color:var(--warn)}
+
+  h2{font-size:17.5px;margin:34px 0 6px;padding-bottom:7px;border-bottom:2px solid var(--line)}
+  h2 .n{display:inline-block;background:var(--acc);color:#fff;border-radius:6px;
+        font-size:12.5px;padding:1px 8px;margin-right:9px;vertical-align:2px}
+  h3{font-size:14.6px;margin:20px 0 6px;color:var(--ink2)}
+  p.lead{color:var(--ink2);font-size:13.4px;margin:6px 0 14px}
+
+  figure{margin:0 0 22px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+         padding:12px;overflow:hidden}
+  figure img{width:100%;height:auto;display:block;border-radius:7px}
+  figcaption{font-size:12.4px;color:var(--ink2);margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
+  figcaption b{color:var(--ink)}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:20px;align-items:start}
+
+  .scroll{max-height:470px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+  table.tbl{border-collapse:separate;border-spacing:0;width:100%;font-size:12.2px}
+  table.tbl th{position:sticky;top:0;z-index:2;background:var(--acc);color:#fff;text-align:left;
+        padding:7px 9px;font-weight:600;white-space:nowrap;font-size:12px}
+  table.tbl td{padding:6px 9px;border-bottom:1px solid var(--line2);white-space:nowrap;
+        font-variant-numeric:tabular-nums}
+  table.tbl tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--line2) 55%,transparent)}
+  table.tbl tbody tr:hover td{background:color-mix(in srgb,var(--acc) 12%,transparent)}
+
+  .note{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--warn);
+        border-radius:10px;padding:12px 16px;margin:14px 0;font-size:13px;color:var(--ink2)}
+  .note.good{border-left-color:var(--ok)}
+  .note.bad{border-left-color:var(--inc)}
+  .note ul{margin:6px 0 0 18px;padding:0}
+  .note li{margin:3px 0}
+  footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);
+         font-size:11.8px;color:var(--ink3);line-height:1.75}
+  .tagline{font-size:12px;color:var(--ink3);margin:0 0 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>新加坡 MATSim 城市交通仿真 · 成果看板</h1>
+  <div class="sub">
+    基准模型 <b>v1.0</b>（7.8 FINAL，冻结） ｜ 敏感性场景 <b>SB-A5</b>（改自由流速度） ｜ 执行级验证 <b>E-SB-05</b><br>
+    生成时间 __BUILT_AT__ ｜ 数据全部取自**已封存**产物，本看板为**只读派生件**
+  </div>
+</header>
+
+<div class="banner">
+  <div class="b good">
+    <div class="t">基准模型已冻结、指标可复现</div>
+    <div class="d">7.8 <span class="mono">FINAL_MODEL_FROZEN_AND_REPRODUCIBLE</span>；
+      Sim/Obs = 0.9993，交叉验证 R01 = 0.8590。</div>
+  </div>
+  <div class="b warn">
+    <div class="t">SB-A5 观测域 Sim/Obs = 1.0601 &gt; 1.05 ⇒ <b>不晋升 v1.1</b></div>
+    <div class="d">总量偏高 6.0%。三级归因指向「负荷向快速路集中 / 路径重分配」，非需求规模变化。</div>
+  </div>
+  <div class="b bad">
+    <div class="t">原始预注册判据 <b>D5 = FAIL</b></div>
+    <div class="d">D5 要求变化最大两走廊恰为 PIE+TPE，实测为 <b>PIE+MCE</b>。
+      协议原判 16/17，严格结论 <span class="mono">EXECUTION_LEVEL_PARTIAL</span>。<b>本看板不改变该判定。</b></div>
+  </div>
+</div>
+
+<h2><span class="n">1</span>关键指标</h2>
+<div class="cards">__CARDS__</div>
+
+<h2><span class="n">2</span>口径与读出须知</h2>
+<p class="lead">本看板同时涉及三种空间口径。**同一场景在不同口径下变化的符号可以相反**，跨口径混读会直接得出错误结论。</p>
+<div class="note">
+  <ul>
+    <li><b>观测域（LTA 段 / 匹配边）</b>：用于流量标定与走廊归因。LTA 段 ↔ MATSim 边必用
+      <code>Q_sim,g = Σ_{l∈M_g} Q_l</code>（128 m ↔ 67 m，<b>禁止一对一</b>；平均 K≈5.54）。</li>
+    <li><b>全域（全网全部边）</b>：仅供总量兜底参照，<b>对空间重分配不敏感</b>，不能用于判断需求规模。</li>
+    <li><b>Sim/Obs 比值</b>：MATSim 侧为 <b>小汽车通勤</b>，观测侧为 <b>全机动车 + 全目的</b> ⇒ 比值本身含口径差；
+      但 LTA 数据<b>无车型字段</b>，无法在现有数据上消除，只能显式声明。</li>
+    <li><b>采样口径</b>：<code>SCALE = ΣT/N = 2.29897</code>；采样率 <code>s = 1/SCALE = 0.43498</code>，
+      故容量利用率满足 <code>v/c_sim ≈ 0.435 × v/c_real</code>。看板中所有"容量/拥堵"表述均已据此约束。</li>
+    <li><b>断面聚合</b>：<code>sim = median(匹配有向边 HRS8-9avg) × SCALE</code>。
+      中位数为 0 的断面被系统性压低（偏保守），看板中标为空心点，<b>不当作数值最小值</b>。</li>
+    <li><b>覆盖率陷阱</b>：匹配边仅承担高峰全网流量的约 <b>6.64%</b> ⇒ 观测域结论<b>不得外推</b>至全网。</li>
+    <li><b>断面可定位性（勿误读）</b>：1,311 个已匹配断面中，<b>1,278 个</b>有「代表性有向边」（可定位、可算 Sim/Obs），
+      另 <b>33 个</b>缺代表性边 ⇒ 无法定位。地图与散点图均只含 1,278 个；<b>「1,311」与「1,278」是两个不同口径的计数，不是矛盾</b>。
+      其中 83 个断面中位流量为 0（偏保守），单列标注。</li>
+  </ul>
+</div>
+
+<h2><span class="n">3</span>基准模型 v1.0 标定成果</h2>
+<p class="lead">7.6H 冻结口径（该口径下的总量与偏差定义见下表）；全部 236,044 辆小汽车到达，never_arrived = 0、max_stuck_car = 0。</p>
+__VAL__
+
+<h2><span class="n">4</span>统计图</h2>
+<div class="grid2">__FIGS__</div>
+
+<h2><span class="n">5</span>地图</h2>
+<p class="lead">三张地图的<b>几何全部来自 MATSim 网络自身的经纬度坐标</b>，不使用任何第三方地图底图、不内嵌任何密钥（本项目地理范围为新加坡，属海外范围，按合规要求不作第三方底图渲染）。</p>
+<div class="grid2">__MAPS__</div>
+
+<h2><span class="n">6</span>快速路走廊归因总表（三口径并列）</h2>
+<p class="lead">同一走廊同时给出「净流量变化（观测域）」「计划使用率」「执行使用率」「执行里程份额」——四者数量级与含义不同，<b>不可互相替代</b>。</p>
+__CORR__
+
+<h2><span class="n">7</span>断面标定明细（偏离最大 30 个）</h2>
+__SEC__
+<p class="tagline">完整 1,311 断面见 <code>tables/T2_section_calibration_full.csv</code>。</p>
+
+<h2><span class="n">8</span>判决与门禁</h2>
+<div class="note bad">
+  <b>两套门禁必须分开表述：</b>「信任锚建立流程 17/17」<b>不等于</b>「E-SB-05 原始协议 17/17」。
+  后者实际为 <b>16/17</b>，D 组最后一项 <b>D5 = FAIL</b>。
+</div>
+<h3>E-SB-05 执行级门禁逐项</h3>
+__GATES__
+
+<h2><span class="n">9</span>速度参照（夜间 / 早高峰 / 自由流）</h2>
+__NIGHT__
+<h3>夜间观测覆盖率</h3>
+__COV__
+
+<h2><span class="n">10</span>看板自检：与封存件对账</h2>
+<div class="note good">
+  下列为看板引用或重算的关键量，与封存产物逐项比对结果；不一致项会显式标红，不会被静默吞掉。
+</div>
+__RECON__
+
+<h2><span class="n">11</span>数据来源与只读声明</h2>
+<p class="lead">本次实际读取的每一个源产物及其 SHA-256；凡在基线封存 92 项之内的，均与封存清单哈希逐位比对。</p>
+__SRC__
+
+<footer>
+  <b>只读声明：</b>本看板由 <span class="mono">scripts/analysis/build_sim_briefing.py</span> 生成，
+  <b>仅读取</b>已封存产物，<b>未写回任何被引用文件</b>、未运行仿真、未修改模型参数、未改动冻结件。<br>
+  <b>非封存件：</b>本目录（<span class="mono">reports/sim_results_briefing_2026-10-12/</span>）为<b>附加件</b>，
+  不属于基线封存 92 项，也不在信任锚覆盖范围之内。<br>
+  <b>边界：</b>本看板只呈现<b>已有证据</b>，不提升、不降低任何门禁判定。<b>原始 D5 仍为 FAIL</b>；
+  模型 <b>不晋升 v1.1</b>；信号灯 / 交叉口实验 <b>不启动</b>。<br>
+  <b>生成：</b>__BUILT_AT__ ｜ 生成器与看板同目录交付，可复现。
+</footer>
+</div>
+</body>
+</html>
